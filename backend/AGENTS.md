@@ -6,9 +6,9 @@ Estas instrucciones aplican a todo el código dentro de `/backend`.
 ## Objetivo del backend
 Implementar una API sólida, simple y trazable para un sistema interno de préstamos manual-first.
 
-El backend **no** es una fintech ni un sistema bancario. Es una herramienta operativa para:
+El backend no es una fintech ni un sistema bancario.  
+Es una herramienta operativa para:
 - registrar personas,
-- guardar legajos separados,
 - crear préstamos manuales o semi-asistidos,
 - calcular montos simples por porcentaje fijo,
 - generar y ajustar cuotas,
@@ -19,9 +19,9 @@ El backend **no** es una fintech ni un sistema bancario. Es una herramienta oper
 ## Prioridades funcionales
 Priorizar siempre este orden:
 1. Consistencia matemática
-2. Trazabilidad de cambios
-3. Modelo simple y mantenible
-4. API clara para frontend React
+2. Modelo simple y mantenible
+3. API clara para frontend React
+4. Trazabilidad razonable de cambios
 5. Extensibilidad moderada sin sobreingeniería
 
 ## Reglas de dominio obligatorias
@@ -29,9 +29,9 @@ Priorizar siempre este orden:
 - La operadora puede ajustar manualmente importes, fechas y condiciones.
 - El cálculo automático es una ayuda, no una verdad absoluta.
 - Debe existir separación entre:
-  - `Persona` (datos operativos básicos)
-  - `LegajoPersona` (anotaciones privadas, referencias, garantías, ingresos)
-  - `Prestamo` (operación financiera)
+  - `Persona`
+  - `Prestamo`
+  - `LegajoPersona` cuando se implemente
 - Los préstamos pueden tener cuotas generadas automáticamente o manuales.
 - Los pagos pueden ser:
   - exactos,
@@ -39,34 +39,32 @@ Priorizar siempre este orden:
   - múltiples,
   - adelantados.
 - No introducir punitorios automáticos en el MVP.
-- No introducir notificaciones automáticas en el MVP.
+- No introducir recordatorios automáticos en el MVP.
 - No introducir portal cliente en el MVP.
 
 ## Principios de implementación
 - Favorecer servicios chicos y con una responsabilidad clara.
 - Evitar clases “Dios”.
 - Evitar lógica compleja en controladores.
-- Mantener la lógica de negocio en servicios de dominio/aplicación.
+- Mantener la lógica de negocio en servicios.
 - Validar inputs en DTOs y reforzar reglas en servicios.
 - No duplicar reglas entre capas sin motivo.
-- Si una decisión de dominio es discutible, documentarla en un comentario breve o en README técnico.
 
 ## Convenciones de código
-- Usar nombres del dominio en español cuando tenga sentido:
+- Usar nombres del dominio en español:
   - `Persona`, `Prestamo`, `Cuota`, `Pago`, `ImputacionPago`, etc.
 - Mantener nombres técnicos estándar cuando sea mejor para Spring/JPA.
 - No usar abreviaturas oscuras.
 - Métodos cortos y claros.
-- Evitar comentarios redundantes; comentar solo donde la regla de negocio no sea obvia.
-- No usar Lombok salvo que realmente reduzca ruido sin ocultar demasiado comportamiento.
+- No usar Lombok salvo necesidad real y justificada.
 
 ## Arquitectura sugerida
 Organizar por módulos funcionales:
 - `persona`
-- `legajo`
 - `prestamo`
 - `pago`
 - `dashboard`
+- `legajo`
 - `auth`
 - `common`
 - `audit`
@@ -90,21 +88,19 @@ Dentro de cada módulo, preferir:
 ## API REST
 - Prefijo general: `/api`
 - Responder JSON consistente.
-- Errores validados con estructura clara.
 - No filtrar entidades JPA directamente al exterior.
 - Usar DTOs para request/response.
+- Los errores deben ser claros y estables.
 
 ## Seguridad
 - Seguridad mínima para operadora interna.
 - No complejizar permisos en el MVP.
-- Proteger endpoints salvo salud/login.
-- Mantener el diseño preparado para crecer, pero sin construir ahora lo que no se usa.
+- Si la tarea no requiere auth, no expandir auth por cuenta propia.
 
 ## Testing
 Cada tarea backend debe intentar dejar:
 - tests unitarios para servicios críticos,
-- tests de controller para endpoints importantes,
-- tests de integración solo cuando agreguen valor real.
+- tests de controller para endpoints importantes.
 
 Priorizar tests en:
 - cálculo simple,
@@ -114,10 +110,8 @@ Priorizar tests en:
 - ajustes manuales.
 
 ## Qué NO hacer
-- No convertir el backend en una arquitectura enterprise innecesaria.
 - No agregar Kafka, colas, eventos distribuidos ni microservicios.
 - No meter CQRS, DDD ceremonial ni factories innecesarias.
-- No agregar recordatorios automáticos ni cron jobs si no fueron pedidos en la tarea.
 - No agregar features “por si en el futuro”.
 - No tocar módulos no relacionados sin necesidad clara.
 
@@ -125,7 +119,7 @@ Priorizar tests en:
 Verificar:
 - compila,
 - tests relevantes pasan,
-- migraciones corren,
+- migraciones corren si fueron agregadas,
 - DTOs y validaciones están alineados,
 - no se rompió una regla de negocio del MVP,
 - el cambio quedó acotado al alcance pedido.
