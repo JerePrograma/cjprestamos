@@ -1,5 +1,6 @@
 export type FrecuenciaTipo = 'MENSUAL' | 'CADA_X_DIAS' | 'FECHAS_MANUALES';
 export type EstadoPrestamo = 'ACTIVO' | 'FINALIZADO' | 'RENEGOCIADO' | 'CANCELADO';
+export type EstadoCuota = 'PENDIENTE' | 'PARCIAL' | 'PAGADA' | 'VENCIDA';
 
 export type PrestamoPayload = {
   personaId: number;
@@ -20,6 +21,15 @@ export type PrestamoResponse = PrestamoPayload & {
   id: number;
   createdAt: string | null;
   updatedAt: string | null;
+};
+
+export type CuotaPrestamo = {
+  id: number;
+  numeroCuota: number;
+  fechaVencimiento: string | null;
+  montoProgramado: number;
+  montoPagado: number;
+  estado: EstadoCuota;
 };
 
 export type CalculoPrestamoPayload = {
@@ -105,3 +115,4 @@ export function crearPayloadCalculo(formulario: PrestamoFormulario): CalculoPres
     cantidadCuotas: Number(formulario.cantidadCuotas),
   };
 }
+
