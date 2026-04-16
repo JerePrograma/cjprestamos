@@ -5,7 +5,6 @@ import com.cjprestamos.backend.persona.dto.PersonaResponse;
 import com.cjprestamos.backend.persona.model.Persona;
 import com.cjprestamos.backend.persona.repository.PersonaRepository;
 import java.util.List;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,7 +29,7 @@ public class PersonaService {
 
     @Transactional(readOnly = true)
     public List<PersonaResponse> listar() {
-        return personaRepository.findAll(Sort.by(Sort.Direction.ASC, "nombre")).stream()
+        return personaRepository.findAll().stream()
             .map(this::mapearRespuesta)
             .toList();
     }
