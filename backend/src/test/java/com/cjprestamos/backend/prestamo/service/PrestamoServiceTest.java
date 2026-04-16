@@ -7,6 +7,8 @@ import static org.mockito.Mockito.when;
 
 import com.cjprestamos.backend.persona.model.Persona;
 import com.cjprestamos.backend.persona.repository.PersonaRepository;
+import com.cjprestamos.backend.prestamo.dto.CalculoPrestamoEntrada;
+import com.cjprestamos.backend.prestamo.dto.CalculoPrestamoResultado;
 import com.cjprestamos.backend.prestamo.dto.PrestamoRequest;
 import com.cjprestamos.backend.prestamo.dto.PrestamoResponse;
 import com.cjprestamos.backend.prestamo.model.Prestamo;
@@ -34,11 +36,14 @@ class PrestamoServiceTest {
     @Mock
     private PersonaRepository personaRepository;
 
+    @Mock
+    private CalculadoraPrestamoService calculadoraPrestamoService;
+
     private PrestamoService prestamoService;
 
     @BeforeEach
     void setUp() {
-        prestamoService = new PrestamoService(prestamoRepository, personaRepository);
+        prestamoService = new PrestamoService(prestamoRepository, personaRepository, calculadoraPrestamoService);
     }
 
     @Test
@@ -132,6 +137,31 @@ class PrestamoServiceTest {
         ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> prestamoService.crear(request));
 
         assertEquals(400, exception.getStatusCode().value());
+    }
+
+    @Test
+    void calcular_deberiaDelegarEnCalculadoraPrestamoService() {
+        CalculoPrestamoEntrada entrada = new CalculoPrestamoEntrada(
+            new BigDecimal("1000.00"),
+            new BigDecimal("20"),
+            null,
+            4
+        );
+
+        CalculoPrestamoResultado esperado = new CalculoPrestamoResultado(
+            new BigDecimal("200.00"),
+            new BigDecimal("1200.00"),
+            new BigDecimal("300.00"),
+            new BigDecimal("1000.00"),
+            new BigDecimal("200.00"),
+            new BigDecimal("200.00")
+        );
+
+        when(calculadoraPrestamoService.calcular(entrada)).thenReturn(esperado);
+
+        CalculoPrestamoResultado resultado = prestamoService.calcular(entrada);
+
+        assertEquals(esperado, resultado);
     }
 
     @Test
