@@ -1,5 +1,7 @@
 package com.cjprestamos.backend.prestamo.controller;
 
+import com.cjprestamos.backend.prestamo.dto.CalculoPrestamoEntrada;
+import com.cjprestamos.backend.prestamo.dto.CalculoPrestamoResultado;
 import com.cjprestamos.backend.prestamo.dto.PrestamoRequest;
 import com.cjprestamos.backend.prestamo.dto.PrestamoResponse;
 import com.cjprestamos.backend.prestamo.service.PrestamoService;
@@ -28,6 +30,11 @@ public class PrestamoController {
     @ResponseStatus(HttpStatus.CREATED)
     public PrestamoResponse crear(@Valid @RequestBody PrestamoRequest request) {
         return prestamoService.crear(request);
+    }
+
+    @PostMapping("/calcular")
+    public CalculoPrestamoResultado calcular(@Valid @RequestBody CalculoPrestamoEntrada request) {
+        return prestamoService.calcular(request);
     }
 
     @GetMapping
