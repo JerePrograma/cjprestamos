@@ -1,0 +1,8 @@
+# IntelliJ / IDE
+backend/.idea/
+
+# Maven
+backend/target/
+
+# Node
+frontend/node_modules/
