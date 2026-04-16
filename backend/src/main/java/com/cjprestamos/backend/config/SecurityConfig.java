@@ -9,8 +9,7 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 public class SecurityConfig {
 
-    // Base técnica temporal para el bootstrap del backend (BT-0002).
-    // Solo se expone /api/health sin autenticación para validación operativa.
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
