@@ -17,7 +17,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Sort;
 import org.springframework.web.server.ResponseStatusException;
 
 @ExtendWith(MockitoExtension.class)
@@ -89,22 +88,5 @@ class PersonaServiceTest {
 
         assertFalse(persona.isActivo());
         verify(personaRepository).save(persona);
-    }
-
-    @Test
-    void listar_deberiaSolicitarOrdenPorNombreAsc() {
-        Persona ana = new Persona();
-        ana.setNombre("Ana");
-
-        Persona bruno = new Persona();
-        bruno.setNombre("Bruno");
-
-        when(personaRepository.findAll(Sort.by(Sort.Direction.ASC, "nombre"))).thenReturn(java.util.List.of(ana, bruno));
-
-        java.util.List<PersonaResponse> resultado = personaService.listar();
-
-        verify(personaRepository).findAll(Sort.by(Sort.Direction.ASC, "nombre"));
-        assertEquals("Ana", resultado.get(0).nombre());
-        assertEquals("Bruno", resultado.get(1).nombre());
     }
 }

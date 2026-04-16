@@ -5,7 +5,6 @@ import com.cjprestamos.backend.persona.dto.PersonaResponse;
 import com.cjprestamos.backend.persona.model.Persona;
 import com.cjprestamos.backend.persona.repository.PersonaRepository;
 import java.util.List;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,8 +13,6 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 @Transactional
 public class PersonaService {
-
-    private static final Sort ORDEN_NOMBRE_ASC = Sort.by(Sort.Direction.ASC, "nombre");
 
     private final PersonaRepository personaRepository;
 
@@ -32,7 +29,7 @@ public class PersonaService {
 
     @Transactional(readOnly = true)
     public List<PersonaResponse> listar() {
-        return personaRepository.findAll(ORDEN_NOMBRE_ASC).stream()
+        return personaRepository.findAll().stream()
             .map(this::mapearRespuesta)
             .toList();
     }
