@@ -37,7 +37,7 @@ public class Persona extends EntidadAuditable {
     private String colorReferencia;
 
     @Column(name = "cobra_en_fecha")
-    private Integer cobraEnFecha;
+    private Boolean cobraEnFecha;
 
     @Column(name = "tiene_ingreso_extra", nullable = false)
     private boolean tieneIngresoExtra;
@@ -92,11 +92,11 @@ public class Persona extends EntidadAuditable {
         this.colorReferencia = colorReferencia;
     }
 
-    public Integer getCobraEnFecha() {
+    public Boolean getCobraEnFecha() {
         return cobraEnFecha;
     }
 
-    public void setCobraEnFecha(Integer cobraEnFecha) {
+    public void setCobraEnFecha(Boolean cobraEnFecha) {
         this.cobraEnFecha = cobraEnFecha;
     }
 
