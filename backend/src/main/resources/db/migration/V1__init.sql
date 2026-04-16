@@ -5,7 +5,7 @@ CREATE TABLE persona (
     telefono VARCHAR(40),
     observacion_rapida VARCHAR(300),
     color_referencia VARCHAR(30),
-    cobra_en_fecha INTEGER,
+    cobra_en_fecha BOOLEAN,
     tiene_ingreso_extra BOOLEAN NOT NULL,
     activo BOOLEAN NOT NULL,
     created_at TIMESTAMP NOT NULL,
