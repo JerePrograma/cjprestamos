@@ -2,6 +2,8 @@ package com.cjprestamos.backend.prestamo.service;
 
 import com.cjprestamos.backend.persona.model.Persona;
 import com.cjprestamos.backend.persona.repository.PersonaRepository;
+import com.cjprestamos.backend.prestamo.dto.CalculoPrestamoEntrada;
+import com.cjprestamos.backend.prestamo.dto.CalculoPrestamoResultado;
 import com.cjprestamos.backend.prestamo.dto.PrestamoRequest;
 import com.cjprestamos.backend.prestamo.dto.PrestamoResponse;
 import com.cjprestamos.backend.prestamo.model.Prestamo;
@@ -20,10 +22,16 @@ public class PrestamoService {
 
     private final PrestamoRepository prestamoRepository;
     private final PersonaRepository personaRepository;
+    private final CalculadoraPrestamoService calculadoraPrestamoService;
 
-    public PrestamoService(PrestamoRepository prestamoRepository, PersonaRepository personaRepository) {
+    public PrestamoService(
+        PrestamoRepository prestamoRepository,
+        PersonaRepository personaRepository,
+        CalculadoraPrestamoService calculadoraPrestamoService
+    ) {
         this.prestamoRepository = prestamoRepository;
         this.personaRepository = personaRepository;
+        this.calculadoraPrestamoService = calculadoraPrestamoService;
     }
 
     public PrestamoResponse crear(PrestamoRequest request) {
@@ -37,6 +45,10 @@ public class PrestamoService {
         aplicarCambios(prestamo, request);
 
         return mapearRespuesta(prestamoRepository.save(prestamo));
+    }
+
+    public CalculoPrestamoResultado calcular(CalculoPrestamoEntrada entrada) {
+        return calculadoraPrestamoService.calcular(entrada);
     }
 
     @Transactional(readOnly = true)

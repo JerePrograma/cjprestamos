@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.cjprestamos.backend.config.SecurityConfig;
+import com.cjprestamos.backend.prestamo.dto.CalculoPrestamoResultado;
 import com.cjprestamos.backend.prestamo.dto.PrestamoResponse;
 import com.cjprestamos.backend.prestamo.model.enums.EstadoPrestamo;
 import com.cjprestamos.backend.prestamo.model.enums.FrecuenciaTipo;
@@ -90,6 +91,35 @@ class PrestamoControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
             .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @WithMockUser
+    void calcular_deberiaRetornar200() throws Exception {
+        when(prestamoService.calcular(org.mockito.ArgumentMatchers.any())).thenReturn(
+            new CalculoPrestamoResultado(
+                new BigDecimal("200.00"),
+                new BigDecimal("1200.00"),
+                new BigDecimal("300.00"),
+                new BigDecimal("1000.00"),
+                new BigDecimal("200.00"),
+                new BigDecimal("200.00")
+            )
+        );
+
+        String body = """
+            {
+              "montoInicial": 1000.00,
+              "porcentajeFijoSugerido": 20.0,
+              "cantidadCuotas": 4
+            }
+            """;
+
+        mockMvc.perform(post("/api/prestamos/calcular")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.totalADevolver").value(1200.00));
     }
 
     @Test
