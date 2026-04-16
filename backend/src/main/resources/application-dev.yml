@@ -1,5 +1,5 @@
 spring:
-  # Configuración base temporal de infraestructura para bootstrap técnico.
+
   datasource:
     url: jdbc:postgresql://localhost:5432/cjprestamos
     username: postgres

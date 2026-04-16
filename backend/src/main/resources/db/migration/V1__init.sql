@@ -1,0 +1,1 @@
+-- Migración inicial base del backend MVP.
