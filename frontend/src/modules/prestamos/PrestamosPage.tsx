@@ -1,4 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
+import { usePagosPrestamo, useRegistrarPago } from '../pagos/hooks/usePagos';
+import {
+  crearPayloadPago,
+  formularioInicialPago,
+  type PagoFormulario,
+} from '../pagos/types/pago';
 import { useListadoPersonas } from '../personas/hooks/usePersonas';
 import {
   useCalcularPrestamo,
@@ -79,15 +85,20 @@ export function PrestamosPage() {
   const [errorFormulario, setErrorFormulario] = useState<string | null>(null);
   const [mensajeExito, setMensajeExito] = useState<string | null>(null);
   const [seleccionId, setSeleccionId] = useState<number | null>(null);
+  const [formularioPago, setFormularioPago] = useState<PagoFormulario>(formularioInicialPago);
+  const [errorPago, setErrorPago] = useState<string | null>(null);
+  const [mensajePago, setMensajePago] = useState<string | null>(null);
 
   const personas = useListadoPersonas();
   const prestamos = useListadoPrestamos();
   const detallePrestamo = useDetallePrestamo(seleccionId);
   const cuotasPrestamo = useCuotasPrestamo(seleccionId);
   const resumenPrestamo = useResumenPrestamo(detallePrestamo.data ?? null);
+  const pagosPrestamo = usePagosPrestamo(seleccionId);
 
   const crearPrestamo = useCrearPrestamo();
   const calcularPrestamo = useCalcularPrestamo();
+  const registrarPago = useRegistrarPago();
 
   const puedeCalcularAlta = useMemo(() => esFormularioMinimoValido(formulario), [formulario]);
 
@@ -109,6 +120,11 @@ export function PrestamosPage() {
     }
   }, [prestamos.data, seleccionId]);
 
+  useEffect(() => {
+    setErrorPago(null);
+    setMensajePago(null);
+  }, [seleccionId]);
+
   const personasPorId = useMemo(() => {
     const mapa = new Map<number, string>();
     (personas.data ?? []).forEach((persona) => {
@@ -121,6 +137,12 @@ export function PrestamosPage() {
     setFormulario((actual) => ({ ...actual, [campo]: valor }));
     setMensajeExito(null);
     setErrorFormulario(null);
+  };
+
+  const actualizarCampoPago = <K extends keyof PagoFormulario>(campo: K, valor: PagoFormulario[K]) => {
+    setFormularioPago((actual) => ({ ...actual, [campo]: valor }));
+    setErrorPago(null);
+    setMensajePago(null);
   };
 
   const guardarPrestamo = async () => {
@@ -150,6 +172,36 @@ export function PrestamosPage() {
   };
 
   const resultadoAlta: CalculoPrestamoResultado | undefined = calcularPrestamo.data;
+
+  const guardarPago = async () => {
+    if (!seleccionId) {
+      setErrorPago('Seleccioná un préstamo antes de registrar un pago.');
+      return;
+    }
+
+    if (!formularioPago.fechaPago) {
+      setErrorPago('La fecha de pago es obligatoria.');
+      return;
+    }
+
+    if (Number(formularioPago.monto) <= 0) {
+      setErrorPago('El monto debe ser mayor que 0.');
+      return;
+    }
+
+    try {
+      await registrarPago.mutateAsync(crearPayloadPago(seleccionId, formularioPago));
+      setMensajePago('Pago registrado correctamente.');
+      setFormularioPago((actual) => ({
+        ...actual,
+        monto: '',
+        referencia: '',
+        observacion: '',
+      }));
+    } catch {
+      setErrorPago('No se pudo registrar el pago. Revisá los datos e intentá nuevamente.');
+    }
+  };
 
   return (
     <section className="space-y-4">
@@ -267,6 +319,87 @@ export function PrestamosPage() {
                         <p className="text-xs text-slate-500">
                           Programado: {formatearMoneda(cuota.montoProgramado)} · Pagado: {formatearMoneda(cuota.montoPagado)}
                         </p>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              <div className="rounded border border-slate-200 p-3">
+                <h3 className="mb-2 text-sm font-semibold">Registrar pago</h3>
+                <p className="mb-3 text-xs text-slate-500">
+                  El pago se imputa automáticamente en backend y actualiza cuotas según saldo pendiente.
+                </p>
+
+                <div className="grid gap-3 md:grid-cols-2">
+                  <label className="text-sm text-slate-700">Fecha de pago
+                    <input
+                      type="date"
+                      className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+                      value={formularioPago.fechaPago}
+                      onChange={(event) => actualizarCampoPago('fechaPago', event.target.value)}
+                    />
+                  </label>
+                  <label className="text-sm text-slate-700">Monto
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+                      value={formularioPago.monto}
+                      onChange={(event) => actualizarCampoPago('monto', event.target.value)}
+                    />
+                  </label>
+                  <label className="text-sm text-slate-700">Referencia
+                    <input
+                      className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+                      maxLength={120}
+                      value={formularioPago.referencia}
+                      onChange={(event) => actualizarCampoPago('referencia', event.target.value)}
+                    />
+                  </label>
+                  <label className="text-sm text-slate-700">Observación
+                    <input
+                      className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+                      maxLength={600}
+                      value={formularioPago.observacion}
+                      onChange={(event) => actualizarCampoPago('observacion', event.target.value)}
+                    />
+                  </label>
+                </div>
+
+                {errorPago && <p className="mt-3 text-sm text-red-700">{errorPago}</p>}
+                {mensajePago && <p className="mt-3 text-sm text-emerald-700">{mensajePago}</p>}
+
+                <button
+                  type="button"
+                  onClick={guardarPago}
+                  disabled={registrarPago.isPending}
+                  className="mt-3 rounded bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-60"
+                >
+                  {registrarPago.isPending ? 'Registrando pago...' : 'Registrar pago'}
+                </button>
+              </div>
+
+              <div className="rounded border border-slate-200 p-3">
+                <h3 className="mb-2 text-sm font-semibold">Historial de pagos</h3>
+                {pagosPrestamo.isLoading ? (
+                  <p className="text-sm text-slate-500">Cargando pagos...</p>
+                ) : pagosPrestamo.isError ? (
+                  <p className="text-sm text-red-700">No se pudo cargar el historial de pagos.</p>
+                ) : (pagosPrestamo.data ?? []).length === 0 ? (
+                  <p className="text-sm text-slate-500">Todavía no hay pagos registrados para este préstamo.</p>
+                ) : (
+                  <ul className="space-y-2">
+                    {(pagosPrestamo.data ?? []).map((pago) => (
+                      <li key={pago.id} className="rounded border border-slate-200 px-3 py-2 text-sm">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-medium">{formatearFecha(pago.fechaPago)}</span>
+                          <span className="text-xs text-slate-500">{pago.estado}</span>
+                        </div>
+                        <p className="text-xs text-slate-500">Monto: {formatearMoneda(pago.monto)}</p>
+                        <p className="text-xs text-slate-500">Referencia: {pago.referencia || '-'}</p>
+                        <p className="text-xs text-slate-500">Observación: {pago.observacion || '-'}</p>
                       </li>
                     ))}
                   </ul>
