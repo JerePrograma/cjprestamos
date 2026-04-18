@@ -1,14 +1,15 @@
 # cjprestamos
 
-Sistema web interno de préstamos para conocidos.
+Sistema web interno de préstamos para conocidos, con enfoque manual-first.
 
 ## Objetivo del producto
 
 El objetivo principal del sistema es:
+
 - mejorar la organización,
 - resolver cuentas matemáticas simples,
 - registrar personas, préstamos, cuotas y pagos,
-- mostrar métricas claras como:
+- mostrar métricas claras:
   - monto invertido,
   - monto ganado,
   - monto por ganar,
@@ -17,18 +18,40 @@ El objetivo principal del sistema es:
 ## Qué NO es este sistema
 
 Este sistema:
+
 - no es una fintech,
 - no es un sistema bancario,
 - no es una plataforma de cobranza automática.
 
-El enfoque es **manual-first**:
-- el sistema asiste,
-- la operadora decide,
-- el criterio humano sigue mandando.
+La operadora decide.  
+El sistema asiste.  
+El criterio humano sigue mandando.
 
 ---
 
-## Stack objetivo
+## Estado actual del MVP
+
+### Núcleo ya encaminado
+- Personas: CRUD backend y UI básica.
+- Préstamos: alta, listado, detalle y cálculo sugerido.
+- Cuotas: backend de generación automática/manual ya implementado.
+- Pagos: registro, imputación y actualización de estados.
+- Dashboard: métricas principales visibles.
+- Referencias y colores: soporte inicial implementado.
+
+### Pendiente crítico para considerar “MVP operativo cerrado”
+- cerrar desde la UI el flujo de generación/carga de cuotas,
+- alinear navegación con el estado real del producto,
+- reforzar pruebas de arranque/integración para no depender solo de tests livianos.
+
+### Estado real recomendado
+Para seguimiento de producto y priorización:
+- ver `ESTADO_REAL_MVP.md`
+- ver `BACKLOG_CODEX.md`
+
+---
+
+## Stack actual
 
 ### Backend
 - Java 21
@@ -53,23 +76,30 @@ El enfoque es **manual-first**:
 
 ---
 
-## Estructura del repositorio
+## Estructura confirmada del repositorio
 
 ```text
 /backend
 /frontend
-/docs
-/infra
 AGENTS.md
 BACKLOG_CODEX.md
 DECISIONES_MVP.md
 CHECKLIST_ENTREGA_CODEX.md
-PROMPT_MAESTRO_CODEX.txt
 ```
+
+## Estructura sugerida a futuro, pero no obligatoria hoy
+
+```text
+/docs
+/infra
+ESTADO_REAL_MVP.md
+```
+
+No listar archivos o carpetas como parte del repo estable si todavía no existen o no se usan realmente.
 
 ---
 
-## Desarrollo local (integración frontend/backend)
+## Desarrollo local
 
 ### 1) Backend
 
@@ -79,7 +109,7 @@ Requisitos:
 - base de datos `cjprestamos`
 - usuario/clave por defecto: `postgres/postgres`
 
-Credenciales Basic Auth de desarrollo (perfil `dev`):
+Credenciales Basic Auth de desarrollo:
 - usuario: `operadora`
 - contraseña: `operadora123`
 
@@ -87,7 +117,7 @@ Se pueden sobreescribir con variables de entorno:
 - `APP_BASIC_USER`
 - `APP_BASIC_PASSWORD`
 
-Ejemplo de arranque:
+Arranque:
 
 ```bash
 cd backend
@@ -98,24 +128,44 @@ La API queda en `http://localhost:8080/api`.
 
 ### 2) Frontend
 
-Crear archivo de entorno desde el ejemplo:
+Crear entorno local desde el ejemplo:
 
 ```bash
 cd frontend
 cp .env.example .env
 ```
 
-Luego iniciar:
+Instalar dependencias y levantar:
 
 ```bash
 npm install
 npm run dev
 ```
 
-El frontend usa por defecto `VITE_API_BASE_URL=/api` y Vite proxyea `/api` hacia `http://localhost:8080`, evitando problemas de CORS en desarrollo local.
+El frontend usa por defecto `VITE_API_BASE_URL=/api` y Vite proxyea `/api` a `http://localhost:8080`.
 
 ### 3) Verificación rápida
 
 - backend: `GET http://localhost:8080/api/health`
 - frontend: abrir `http://localhost:5173`
-- las llamadas API desde navegador se resuelven por proxy en `/api` y se autentican con Basic Auth.
+
+---
+
+## Criterio práctico de cierre
+
+No considerar “cerrada” una funcionalidad si:
+- existe solo en backend pero no en la UI operativa principal,
+- existe en el menú pero la pantalla es placeholder,
+- los cálculos están probados solo de manera superficial.
+
+Una entrega queda realmente cerrada cuando el flujo principal se puede usar de punta a punta sin depender de pasos manuales técnicos.
+
+---
+
+## Prioridad inmediata recomendada
+
+1. UI de generación/carga de cuotas.
+2. Visualización más clara del saldo real por préstamo.
+3. Honestidad de navegación: ocultar o marcar placeholders.
+4. Reforzar tests de arranque/integración.
+5. Recién después: legajos y adjuntos.

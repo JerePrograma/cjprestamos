@@ -7,10 +7,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public record RegistroPagoRequest(
-    @NotNull Long prestamoId,
-    @NotNull LocalDate fechaPago,
-    @NotNull @DecimalMin(value = "0.01") BigDecimal monto,
-    @Size(max = 120) String referencia,
-    @Size(max = 600) String observacion
-) {
-}
+        @NotNull Long prestamoId,
+        @NotNull LocalDate fechaPago,
+        @NotNull @DecimalMin(value = "0.01") BigDecimal monto,
+        @Size(max = 120) String referencia,
+        @Size(max = 600) String observacion
+) {}

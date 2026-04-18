@@ -24,8 +24,8 @@ El enfoque correcto es **manual-first**:
 ## Regla más importante
 
 Si hay duda entre:
-- una solución más simple y usable
-- o una solución más “elegante” pero más compleja
+- una solución más simple y usable,
+- o una solución más “elegante” pero más compleja,
 
 priorizar siempre la solución más simple y usable.
 
@@ -109,6 +109,45 @@ Si una tarea compite con otra, priorizar siempre:
 
 ---
 
+## Reglas adicionales para trabajar sobre este repo
+
+### 1. Cierre funcional real
+Una tarea no cuenta como cerrada si:
+- quedó solo en backend,
+- quedó solo en frontend,
+- el flujo principal sigue partido entre código existente y pasos manuales técnicos.
+
+Si el objetivo toca el flujo operativo principal, debe quedar usable de punta a punta.
+
+### 2. Navegación honesta
+No agregar ni mantener en el menú principal:
+- páginas placeholder,
+- pantallas vacías,
+- módulos “base” sin valor operativo real,
+
+salvo que se rotulen explícitamente como pendientes o se oculten hasta implementarlos.
+
+### 3. Tests con valor real
+No reemplazar pruebas de integración o arranque por tests triviales sin dejarlo explícito.
+
+Un smoke test que solo instancia una clase principal no equivale a validar:
+- wiring de Spring,
+- security,
+- datasource,
+- Flyway,
+- configuración mínima real.
+
+### 4. Documentación alineada con el repo real
+No prometer en `README.md` archivos, carpetas o flujos que todavía no existen o no están mantenidos.
+
+### 5. Estado real del MVP
+Cuando una entrega cambie significativamente el avance del producto:
+- actualizar `BACKLOG_CODEX.md`,
+- actualizar `ESTADO_REAL_MVP.md` si existe,
+- explicitar si la tarea quedó **hecha**, **parcial** o **pendiente**.
+
+---
+
 ## Stack objetivo
 
 ### Backend
@@ -188,10 +227,12 @@ No cambiar nombres funcionales del dominio a inglés si no es estrictamente nece
 Cuando recibas una tarea:
 1. leer el contexto,
 2. identificar el módulo afectado,
-3. hacer el cambio mínimo correcto,
-4. agregar o ajustar tests,
-5. ejecutar validaciones razonables,
-6. resumir lo que cambiaste.
+3. verificar si toca el flujo principal del MVP,
+4. hacer el cambio mínimo correcto,
+5. agregar o ajustar tests,
+6. ejecutar validaciones razonables,
+7. resumir lo que cambiaste,
+8. declarar con honestidad si quedó **cerrado**, **parcial** o **pendiente**.
 
 Si hay ambigüedad:
 - elegir la solución más simple,
@@ -204,7 +245,7 @@ Si hay ambigüedad:
 
 ### Backend
 Ejecutar, si aplica:
-- `./mvnw test` o `mvn test`
+- `mvn test`
 
 ### Frontend
 Ejecutar, si aplica:
@@ -213,7 +254,8 @@ Ejecutar, si aplica:
 ### General
 - verificar que el proyecto siga compilando,
 - verificar que no haya imports rotos,
-- verificar que no queden TODO críticos sin mencionar.
+- verificar que no queden TODO críticos sin mencionar,
+- verificar si la UI realmente expone la funcionalidad que el backend ya soporta.
 
 Si no es posible ejecutar algo, explicarlo claramente.
 
@@ -225,7 +267,8 @@ Cada entrega debe incluir:
 1. resumen breve de lo implementado,
 2. archivos principales modificados,
 3. validaciones ejecutadas,
-4. riesgos o pendientes reales.
+4. riesgos o pendientes reales,
+5. estado final de la tarea: **hecha / parcial / pendiente**.
 
 ---
 
@@ -237,4 +280,5 @@ Una tarea está bien hecha si:
 - los cálculos son correctos,
 - el cambio es simple de entender,
 - tiene pruebas razonables,
-- no introduce complejidad gratis.
+- no introduce complejidad gratis,
+- deja el flujo principal más cerrado que antes.

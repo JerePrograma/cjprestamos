@@ -1,22 +1,22 @@
 # BACKLOG_CODEX.md
 
-Backlog técnico priorizado para implementar el MVP del sistema interno de préstamos.
+Backlog técnico priorizado para cerrar el MVP operativo del sistema interno de préstamos.
 
-## Cómo usar este archivo con Codex
+## Cómo usar este archivo
 
-Este archivo no reemplaza el prompt maestro.
+Este backlog debe representar el **estado real** del repo, no solo la intención histórica.
 
-Uso recomendado:
-1. abrir Codex sobre el repositorio,
-2. pasarle primero el contenido de `PROMPT_MAESTRO_CODEX.txt`,
-3. luego pedirle que ejecute una tarea puntual de este backlog,
-4. trabajar de a una tarea o un lote pequeño por vez.
+Reglas:
+1. cada tarea debe tener estado visible,
+2. una tarea puede quedar **HECHA**, **PARCIAL** o **PENDIENTE**,
+3. si una tarea está hecha en backend pero no cerrada en UI, se considera **PARCIAL**,
+4. si una tarea impacta el flujo principal, no se mueve a “hecha” hasta poder usarla de punta a punta.
 
 ---
 
-# 0. Decisiones base del proyecto
+# 0. Estado real del producto
 
-## Enfoque funcional
+## Enfoque funcional confirmado
 - sistema interno,
 - una sola operadora principal,
 - uso manual-first,
@@ -24,549 +24,261 @@ Uso recomendado:
 - posibilidad de ajustar montos y fechas manualmente,
 - foco del dashboard en invertido, ganado, por ganar y deuda total.
 
-## Stack
-### Backend
-- Java 21
-- Spring Boot 3.x
-- Maven
-- Spring Web
-- Spring Data JPA
-- PostgreSQL
-- Flyway
-- Bean Validation
-- Spring Security simple
-- JUnit 5 + Mockito
+## Núcleo del MVP: situación actual
 
-### Frontend
-- React
-- TypeScript
-- Vite
-- React Router
-- TanStack Query
-- Axios
-- Tailwind CSS
+### HECHO
+- BT-0002 — backend base
+- BT-0003 — frontend base
+- BT-1001 — dominio mínimo
+- BT-1002 — migración inicial
+- BT-1003 — auditoría temporal base
+- BT-2001 — CRUD backend de persona
+- BT-2002 — UI de personas
+- BT-3001 — módulo backend de préstamo
+- BT-3002 — cálculo simple por porcentaje fijo
+- BT-3003 — backend de generación/listado de cuotas
+- BT-4001 — registro de pago
+- BT-4002 — imputación de pagos
+- BT-5001 — backend del dashboard
+- BT-5002 — UI del dashboard
+- BT-6001 — referencias del préstamo
+- BT-6002 — colores de referencia para persona
 
----
+### PARCIAL
+- BT-3004 — UI alta de préstamo
+- BT-3005 — listado y detalle de préstamos
+- BT-4003 — UI de pagos
+- BT-9001 — seguridad mínima backend
 
-# 1. Estructura recomendada del repositorio
+### PENDIENTE CRÍTICO
+- BT-3006 — UI de generación automática de cuotas
+- BT-3007 — UI de carga manual de cuotas
+- BT-3008 — visibilidad clara del estado de cierre operativo del préstamo
+- BT-0004 — honestidad de navegación / ocultar placeholders
+- BT-0005 — reforzar test de arranque e integración real
 
-## Monorepo
-- `/backend`
-- `/frontend`
-- `/docs`
-- `/infra`
-
-## Módulos backend sugeridos
-- `auth`
-- `persona`
-- `prestamo`
-- `cuota`
-- `pago`
-- `dashboard`
-- `legajo`
-- `audit`
-- `common`
-
-## Módulos frontend sugeridos
-- `modules/personas`
-- `modules/prestamos`
-- `modules/pagos`
-- `modules/dashboard`
-- `modules/legajos`
-- `components`
-- `services`
-- `types`
+### PENDIENTE NO CRÍTICO
+- BT-7001 — renegociación simple
+- BT-7002 — UI de ajuste manual
+- BT-8001 a BT-8004 — legajo y adjuntos
+- BT-9002 — login frontend
 
 ---
 
-# 2. Backlog priorizado
+# 1. Prioridad real desde ahora
 
-## ÉPICA 0 — Bootstrap
+## Prioridad 1 — Cerrar el flujo principal
+Estas son las tareas que realmente acercan el proyecto a “me sirve de verdad”:
 
-### BT-0001 — Estructura base del monorepo
-**Objetivo**  
-Crear la estructura inicial del repositorio.
+### BT-3006 — UI de generación automática de cuotas
+**Estado:** PENDIENTE  
+**Objetivo:** permitir generar cuotas desde la interfaz para préstamos mensuales o cada X días.
 
-**Entregable**
-- carpetas `backend`, `frontend`, `docs`, `infra`
-- README raíz
-- `.gitignore`
-- `.editorconfig`
-- `.gitattributes`
+**Archivos probables**
+- `frontend/src/services/prestamos/prestamosApi.ts`
+- `frontend/src/modules/prestamos/hooks/usePrestamos.ts`
+- `frontend/src/modules/prestamos/PrestamosPage.tsx`
+- `frontend/src/modules/prestamos/types/prestamo.ts`
 
 **Criterio de aceptación**
-- repo ordenado
-- listo para inicializar backend y frontend
+- desde el detalle del préstamo se pueden generar cuotas,
+- la UI refresca cuotas y resumen,
+- el flujo no exige llamadas manuales a la API.
 
 ---
 
-### BT-0002 — Inicializar backend Spring Boot
-**Objetivo**  
-Crear proyecto base backend funcional.
-
-**Entregable**
-- proyecto Maven Spring Boot
-- endpoint `/api/health`
-- perfiles `dev` y `test`
-- PostgreSQL + Flyway configurados
-- test de contexto
+### BT-3007 — UI de carga manual de cuotas
+**Estado:** PENDIENTE  
+**Objetivo:** permitir ingresar fechas y montos manuales cuando `frecuenciaTipo = FECHAS_MANUALES`.
 
 **Criterio de aceptación**
-- backend compila
-- endpoint responde
-- test básico pasa
+- formulario/manual editor claro,
+- validación de cantidad de cuotas,
+- validación de suma exacta,
+- feedback útil de errores.
 
 ---
 
-### BT-0003 — Inicializar frontend React + TS + Vite
-**Objetivo**  
-Crear frontend base con layout y routing.
-
-**Entregable**
-- app React + TS + Vite
-- React Router
-- TanStack Query
-- Tailwind
-- rutas base
-- layout inicial
+### BT-3008 — Cierre operativo del préstamo en UI
+**Estado:** PENDIENTE  
+**Objetivo:** que el detalle del préstamo muestre con claridad:
+- total programado,
+- total pagado,
+- saldo pendiente,
+- si las cuotas ya fueron generadas o no.
 
 **Criterio de aceptación**
-- frontend levanta
-- hay navegación mínima funcional
+- sin entrar al backend, la operadora entiende el estado real del préstamo.
 
 ---
 
-## ÉPICA 1 — Dominio mínimo y persistencia
+### BT-0004 — Honestidad de navegación
+**Estado:** PENDIENTE  
+**Objetivo:** no mostrar en el menú principal páginas placeholder sin valor operativo.
 
-### BT-1001 — Modelar entidades mínimas del MVP
-**Objetivo**  
-Crear el núcleo de dominio real del MVP.
+**Archivos probables**
+- `frontend/src/components/layout/LayoutPrincipal.tsx`
+- `frontend/src/modules/pagos/PagosPage.tsx`
+- `frontend/src/modules/legajos/LegajosPage.tsx`
 
-**Entidades mínimas**
-- `UsuarioInterno` (si auth entra en la etapa)
-- `Persona`
-- `Prestamo`
-- `Cuota`
-- `Pago`
-- `ImputacionPago`
-- `EventoPrestamo`
+**Opciones válidas**
+- ocultar las rutas,
+- marcarlas como “próximamente”,
+- o implementar lo mínimo útil real.
 
-**Nota**  
-`LegajoPersona` queda diferido para una segunda etapa del MVP.
+---
+
+### BT-0005 — Reforzar test de arranque e integración real
+**Estado:** PENDIENTE  
+**Objetivo:** reemplazar o complementar tests triviales de arranque por pruebas con valor real.
+
+**Archivos probables**
+- `backend/src/test/java/com/cjprestamos/backend/CjprestamosBackendApplicationTests.java`
+- tests de controller/integración relevantes
+- configuración de test con perfil adecuado
 
 **Criterio de aceptación**
-- entidades coherentes
-- relaciones consistentes
-- enums definidos
-- timestamps básicos
+- el proyecto no parezca más validado de lo que realmente está.
 
 ---
 
-### BT-1002 — Crear migración Flyway inicial
-**Objetivo**  
-Persistir el esquema del MVP.
-
-**Entregable**
-- `V1__init.sql`
-
-**Criterio de aceptación**
-- tablas creadas
-- FK e índices razonables
-- convenciones SQL limpias
-
----
-
-### BT-1003 — Auditoría temporal base
-**Objetivo**  
-Agregar `created_at` y `updated_at` automáticos.
-
-**Criterio de aceptación**
-- aplicado al menos a Persona, Prestamo, Cuota y Pago
-
----
-
-## ÉPICA 2 — Personas
-
-### BT-2001 — CRUD de Persona
-**Objetivo**  
-Registrar personas conocidas.
-
-**Campos mínimos**
-- nombre
-- alias
-- teléfono
-- observacionRapida
-- colorReferencia
-- cobraEnFecha
-- tieneIngresoExtra
-- activo
-
-**Criterio de aceptación**
-- CRUD REST funcional
-- validaciones
-- tests
-
----
-
-### BT-2002 — UI de Personas
-**Objetivo**  
-Alta, listado y detalle de personas.
-
-**Criterio de aceptación**
-- listado con búsqueda simple
-- alta/edición
-- detalle usable
-
----
-
-## ÉPICA 3 — Préstamos manual-first
-
-### BT-3001 — Crear módulo Prestamo
-**Objetivo**  
-Registrar préstamos según la forma real de trabajo.
-
-**Campos mínimos**
-- personaId
-- montoInicial
-- porcentajeFijoSugerido
-- interesManualOpcional
-- cantidadCuotas
-- frecuenciaTipo
-- frecuenciaCadaDias
-- fechaBase
-- usarFechasManuales
-- referenciaCodigo
-- observaciones
-- estado
-
-**Criterio de aceptación**
-- crear y consultar préstamo
-- listar activos
-- tests de negocio
-
----
-
-### BT-3002 — Servicio de cálculo simple
-**Objetivo**  
-Resolver cuentas matemáticas simples.
-
-**Debe calcular**
-- total a devolver
-- cuota sugerida
-- monto invertido
-- monto ganado estimado
-- monto por ganar
-
-**Criterio de aceptación**
-- servicio puro
-- tests robustos
-
----
-
-### BT-3003 — Generación de cuotas
-**Objetivo**  
-Permitir cuotas automáticas o manuales.
-
-**Soportar**
-- mensual
-- cada X días
-- fechas manuales
-
-**Criterio de aceptación**
-- cuotas persistidas
-- tests de escenarios
-
----
+# 2. Tareas ya adelantadas pero no cerradas del todo
 
 ### BT-3004 — UI alta de préstamo
-**Objetivo**  
-Crear pantalla operativa de alta.
+**Estado:** PARCIAL  
+**Qué ya existe**
+- formulario de alta,
+- cálculo sugerido,
+- validaciones importantes,
+- integración de creación.
 
-**Criterio de aceptación**
-- cálculo sugerido visible
-- posibilidad de ajuste manual
-- integración con API
-
----
-
-### BT-3005 — Listado y detalle de préstamos
-**Objetivo**  
-Visualizar estado de cada préstamo.
-
-**Criterio de aceptación**
-- listado funcional
-- detalle con cuotas y resumen económico
+**Qué falta para marcarla como cerrada**
+- integración natural con generación de cuotas,
+- reducción de fricción entre “crear préstamo” y “dejarlo listo para operar”.
 
 ---
 
-## ÉPICA 4 — Pagos e imputación
+### BT-3005 — listado y detalle de préstamos
+**Estado:** PARCIAL  
+**Qué ya existe**
+- listado,
+- detalle,
+- resumen económico,
+- referencia y observaciones,
+- cuotas y pagos visibles si existen.
 
-### BT-4001 — Registrar pago
-**Objetivo**  
-Asentar pago con fecha y referencia.
-
-**Campos mínimos**
-- prestamoId
-- fechaPago
-- monto
-- referencia
-- observacion
-
-**Criterio de aceptación**
-- registro de pago funcional
-- evento generado
-- tests
-
----
-
-### BT-4002 — Lógica de imputación
-**Objetivo**  
-Aplicar pagos correctamente.
-
-**Escenarios obligatorios**
-- pago exacto
-- pago parcial
-- pago múltiple
-- pago adelantado
-
-**Criterio de aceptación**
-- saldos correctos
-- tests exhaustivos
+**Qué falta**
+- indicar mejor si faltan cuotas por generar,
+- destacar saldo pendiente real,
+- evitar sensación de flujo incompleto.
 
 ---
 
 ### BT-4003 — UI de pagos
-**Objetivo**  
-Registrar pagos desde el detalle del préstamo.
+**Estado:** PARCIAL  
+**Qué ya existe**
+- registro de pagos desde el detalle,
+- historial visible,
+- refresco de queries relevantes.
 
-**Criterio de aceptación**
-- formulario simple
-- selección de cuota(s)
-- historial visible
-
----
-
-## ÉPICA 5 — Dashboard y métricas
-
-### BT-5001 — Backend del dashboard
-**Objetivo**  
-Mostrar lo que realmente le importa a la operadora.
-
-**Indicadores obligatorios**
-- monto invertido
-- monto ganado
-- monto por ganar
-- deuda total
-- préstamos activos
-
-**Criterio de aceptación**
-- endpoint resumen funcional
-- cálculos correctos
-- tests
+**Qué falta**
+- eventualmente exponer mejor la imputación/saldo por cuota,
+- decidir si la ruta `/pagos` sigue existiendo o si pagos vive solo dentro de préstamos.
 
 ---
 
-### BT-5002 — UI del dashboard
-**Objetivo**  
-Crear pantalla inicial útil.
+### BT-9001 — seguridad mínima backend
+**Estado:** PARCIAL  
+**Qué ya existe**
+- Basic Auth simple,
+- CORS de desarrollo,
+- endpoint de health libre.
 
-**Criterio de aceptación**
-- cards claras
-- tabla opcional de préstamos activos recientes
-
----
-
-## ÉPICA 6 — Referencias, colores y anotaciones
-
-### BT-6001 — Referencias del préstamo
-**Objetivo**  
-Agregar referencias humanas sin volver el sistema críptico.
-
-**Criterio de aceptación**
-- referencia y notas visibles en alta, edición y detalle
+**Qué falta**
+- validar si el enfoque actual es suficiente para producción interna,
+- evitar hardcodeo difuso en frontend si se endurece el acceso.
 
 ---
 
-### BT-6002 — Colores de referencia para persona
-**Objetivo**  
-Dar señal visual rápida.
-
-**Criterio de aceptación**
-- color editable
-- visible en listado y detalle
-
----
+# 3. Backlog diferido con intención explícita
 
 ## ÉPICA 7 — Ajustes manuales
-
 ### BT-7001 — Renegociación simple
-**Objetivo**  
-Permitir cambiar condiciones futuras sin tocar pagos ya registrados.
-
-**Criterio de aceptación**
-- se pueden ajustar cuotas futuras
-- queda evento histórico
-- no rompe integridad
-
----
+**Estado:** PENDIENTE
 
 ### BT-7002 — UI de ajuste manual
-**Objetivo**  
-Editar cuotas futuras desde la interfaz.
+**Estado:** PENDIENTE
 
-**Criterio de aceptación**
-- edición clara
-- confirmación previa
-- historial visible después
-
----
-
-## ÉPICA 8 — Legajo y adjuntos (post-MVP inicial)
-
+## ÉPICA 8 — Legajo y adjuntos
 ### BT-8001 — LegajoPersona
-**Objetivo**  
-Separar información operativa de información contextual.
-
-**Campos iniciales**
-- referenciasPersonales
-- garantias
-- detalleIngresos
-- anotacionesPrivadas
-
-**Criterio de aceptación**
-- API legajo funcional
-- separado de préstamos activos
-
----
+**Estado:** PENDIENTE
 
 ### BT-8002 — UI de Legajo
-**Objetivo**  
-Mostrar legajo como sección separada.
-
-**Criterio de aceptación**
-- legajo editable
-- claramente separado del resto
-
----
+**Estado:** PENDIENTE
 
 ### BT-8003 — Adjuntar archivos al legajo
-**Objetivo**  
-Guardar comprobantes de transferencias realizadas y documentos relevantes.
-
-**Criterio de aceptación**
-- upload básico
-- metadata persistida
-- descarga funcional
-
----
+**Estado:** PENDIENTE
 
 ### BT-8004 — UI de adjuntos del legajo
-**Objetivo**  
-Subir, listar y descargar archivos.
+**Estado:** PENDIENTE
 
-**Criterio de aceptación**
-- flujo simple y claro
-
----
-
-## ÉPICA 9 — Seguridad mínima (si hace falta en la etapa)
-
-### BT-9001 — Login interno backend
-**Objetivo**  
-Proteger la API para una sola operadora.
-
-**Criterio de aceptación**
-- login funcional
-- endpoints protegidos
-- tests básicos
-
----
-
+## ÉPICA 9 — Seguridad adicional
 ### BT-9002 — Login frontend
-**Objetivo**  
-Agregar pantalla de acceso e integración con backend.
-
-**Criterio de aceptación**
-- login funcional
-- rutas protegidas
-- logout funcional
+**Estado:** PENDIENTE
 
 ---
 
-# 3. Orden sugerido de ejecución
+# 4. Orden sugerido de ejecución desde hoy
 
-## Lote 1
-- BT-0001
-- BT-0002
-- BT-0003
+## Lote A — Cierre del MVP operativo
+- BT-3006
+- BT-3007
+- BT-3008
+- BT-0004
+- BT-0005
 
-## Lote 2
-- BT-1001
-- BT-1002
-- BT-1003
+## Lote B — Consolidación
+- revisar BT-3004 como HECHA o mantener PARCIAL
+- revisar BT-3005 como HECHA o mantener PARCIAL
+- revisar BT-4003 como HECHA o mantener PARCIAL
 
-## Lote 3
-- BT-2001
-- BT-2002
-
-## Lote 4
-- BT-3001
-- BT-3002
-- BT-3003
-- BT-3004
-- BT-3005
-
-## Lote 5
-- BT-4001
-- BT-4002
-- BT-4003
-
-## Lote 6
-- BT-5001
-- BT-5002
-- BT-6001
-- BT-6002
-
-## Lote 7
+## Lote C — Evolución post-MVP
 - BT-7001
 - BT-7002
-
-## Lote 8
 - BT-8001
 - BT-8002
 - BT-8003
 - BT-8004
-
-## Lote 9
-- BT-9001
 - BT-9002
 
 ---
 
-# 4. Fuera del MVP
+# 5. Fuera del MVP
 
-Estas tareas no entran en la primera versión:
-- recordatorios automáticos
-- mensajes automáticos para WhatsApp
-- portal cliente
-- pagaré digital
-- recibos complejos en PDF
-- scoring avanzado
-- punitorio automático
-- notificaciones push
-- reportes complejos por vencimientos
-- multiusuario con permisos finos
+Estas tareas siguen fuera de la primera versión útil:
+- recordatorios automáticos,
+- mensajes automáticos para WhatsApp,
+- portal cliente,
+- pagaré digital,
+- recibos PDF,
+- scoring avanzado,
+- punitorio automático,
+- multiusuario con permisos finos,
+- automatizaciones complejas.
 
 ---
 
-# 5. Plantilla estándar para pasar tareas a Codex
+# 6. Plantilla estándar para nuevas tareas
 
 ```text
 Contexto funcional:
-[explicar brevemente el porqué de la tarea]
+[por qué esta tarea acerca el producto al uso real]
+
+Estado actual:
+[qué ya existe y qué sigue faltando]
 
 Objetivo:
-[qué debe quedar resuelto]
+[qué debe quedar realmente resuelto]
 
 Alcance:
 [qué sí entra]
@@ -579,9 +291,12 @@ Restricciones:
 - mantener código simple
 - no sobreingenierizar
 - agregar tests
-- no romper código existente
+- no romper el flujo manual-first
+- no declarar “hecha” una tarea cerrada solo en backend
 
 Entregable esperado:
 - archivos modificados
 - tests
-- breve resumen de decisiones
+- validaciones ejecutadas
+- estado final: hecha / parcial / pendiente
+```

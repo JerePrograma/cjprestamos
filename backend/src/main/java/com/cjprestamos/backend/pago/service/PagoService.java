@@ -17,6 +17,7 @@ import com.cjprestamos.backend.prestamo.model.Prestamo;
 import com.cjprestamos.backend.prestamo.model.enums.EstadoPrestamo;
 import com.cjprestamos.backend.prestamo.repository.PrestamoRepository;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -28,6 +29,10 @@ import org.springframework.web.server.ResponseStatusException;
 @Transactional
 public class PagoService {
 
+    private static final int ESCALA_MONEDA = 2;
+    private static final RoundingMode REDONDEO = RoundingMode.HALF_UP;
+    private static final BigDecimal CERO = BigDecimal.ZERO.setScale(ESCALA_MONEDA, REDONDEO);
+
     private final PagoRepository pagoRepository;
     private final PrestamoRepository prestamoRepository;
     private final CuotaRepository cuotaRepository;
@@ -35,11 +40,11 @@ public class PagoService {
     private final EventoPrestamoRepository eventoPrestamoRepository;
 
     public PagoService(
-        PagoRepository pagoRepository,
-        PrestamoRepository prestamoRepository,
-        CuotaRepository cuotaRepository,
-        ImputacionPagoRepository imputacionPagoRepository,
-        EventoPrestamoRepository eventoPrestamoRepository
+            PagoRepository pagoRepository,
+            PrestamoRepository prestamoRepository,
+            CuotaRepository cuotaRepository,
+            ImputacionPagoRepository imputacionPagoRepository,
+            EventoPrestamoRepository eventoPrestamoRepository
     ) {
         this.pagoRepository = pagoRepository;
         this.prestamoRepository = prestamoRepository;
@@ -50,16 +55,31 @@ public class PagoService {
 
     public PagoResponse registrar(RegistroPagoRequest request) {
         Prestamo prestamo = buscarPrestamo(request.prestamoId());
+        System.out.println("[PAGO] prestamoId=" + request.prestamoId());
+        System.out.println("[PAGO] estadoPrestamo=" + prestamo.getEstado());
+
+        validarEstadoPrestamo(prestamo);
         validarMonto(request.monto());
 
         List<Cuota> cuotasOrdenadas = cuotaRepository.findByPrestamoIdOrderByNumeroCuotaAsc(request.prestamoId());
+        System.out.println("[PAGO] cuotasEncontradas=" + cuotasOrdenadas.size());
+
         validarCuotasDisponibles(cuotasOrdenadas);
-        validarMontoNoExcedido(request.monto(), cuotasOrdenadas);
+
+        BigDecimal montoPago = normalizarMoneda(request.monto());
+        BigDecimal totalPendiente = cuotasOrdenadas.stream()
+                .map(this::calcularSaldoPendiente)
+                .reduce(CERO, BigDecimal::add);
+
+        System.out.println("[PAGO] montoPago=" + montoPago);
+        System.out.println("[PAGO] totalPendiente=" + totalPendiente);
+
+        validarMontoNoExcedido(montoPago, cuotasOrdenadas);
 
         Pago pago = new Pago();
         pago.setPrestamo(prestamo);
         pago.setFechaPago(request.fechaPago());
-        pago.setMonto(request.monto().setScale(2));
+        pago.setMonto(montoPago);
         pago.setReferenciaManual(request.referencia());
         pago.setObservaciones(request.observacion());
         pago.setEstado(EstadoPago.REGISTRADO);
@@ -67,10 +87,11 @@ public class PagoService {
         Pago pagoGuardado = pagoRepository.save(pago);
 
         List<ImputacionPago> imputaciones = imputarPagoEnCuotas(cuotasOrdenadas, pagoGuardado);
+
         cuotaRepository.saveAll(cuotasOrdenadas);
         imputacionPagoRepository.saveAll(imputaciones);
-        actualizarEstadoPrestamoSiCorresponde(prestamo, cuotasOrdenadas);
 
+        actualizarEstadoPrestamoSiCorresponde(prestamo, cuotasOrdenadas);
         registrarEvento(prestamo, pagoGuardado);
 
         return mapearRespuesta(pagoGuardado);
@@ -81,13 +102,22 @@ public class PagoService {
         buscarPrestamo(prestamoId);
 
         return pagoRepository.findByPrestamoIdOrderByFechaPagoDescIdDesc(prestamoId).stream()
-            .map(this::mapearRespuesta)
-            .toList();
+                .map(this::mapearRespuesta)
+                .toList();
     }
 
     private Prestamo buscarPrestamo(Long prestamoId) {
         return prestamoRepository.findById(prestamoId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Préstamo no encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Préstamo no encontrado"));
+    }
+
+    private void validarEstadoPrestamo(Prestamo prestamo) {
+        if (prestamo.getEstado() != EstadoPrestamo.ACTIVO) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Solo se pueden registrar pagos sobre préstamos activos"
+            );
+        }
     }
 
     private void validarMonto(BigDecimal monto) {
@@ -99,70 +129,72 @@ public class PagoService {
     private void validarCuotasDisponibles(List<Cuota> cuotasOrdenadas) {
         if (cuotasOrdenadas.isEmpty()) {
             throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "El préstamo no tiene cuotas generadas. No se puede imputar el pago"
+                    HttpStatus.BAD_REQUEST,
+                    "El préstamo no tiene cuotas generadas. No se puede imputar el pago"
             );
         }
     }
 
     private void validarMontoNoExcedido(BigDecimal montoPago, List<Cuota> cuotasOrdenadas) {
         BigDecimal totalPendiente = cuotasOrdenadas.stream()
-            .map(this::calcularSaldoPendiente)
-            .reduce(BigDecimal.ZERO.setScale(2), BigDecimal::add);
+                .map(this::calcularSaldoPendiente)
+                .reduce(CERO, BigDecimal::add);
 
-        if (montoPago.setScale(2).compareTo(totalPendiente) > 0) {
+        if (montoPago.compareTo(totalPendiente) > 0) {
             throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "El monto del pago supera el total pendiente imputable del préstamo"
+                    HttpStatus.BAD_REQUEST,
+                    "El monto del pago supera el total pendiente imputable del préstamo"
             );
         }
     }
 
     private List<ImputacionPago> imputarPagoEnCuotas(List<Cuota> cuotasOrdenadas, Pago pagoGuardado) {
-        BigDecimal montoRestante = pagoGuardado.getMonto().setScale(2);
+        BigDecimal montoRestante = normalizarMoneda(pagoGuardado.getMonto());
         List<ImputacionPago> imputaciones = new ArrayList<>();
 
         for (Cuota cuota : cuotasOrdenadas) {
-            if (montoRestante.compareTo(BigDecimal.ZERO) <= 0) {
+            if (montoRestante.compareTo(CERO) <= 0) {
                 break;
             }
 
             BigDecimal saldoPendiente = calcularSaldoPendiente(cuota);
-            if (saldoPendiente.compareTo(BigDecimal.ZERO) <= 0) {
+            if (saldoPendiente.compareTo(CERO) <= 0) {
                 continue;
             }
 
-            BigDecimal montoImputado = montoRestante.min(saldoPendiente).setScale(2);
-            if (montoImputado.compareTo(BigDecimal.ZERO) <= 0) {
+            BigDecimal montoImputado = montoRestante.min(saldoPendiente);
+            if (montoImputado.compareTo(CERO) <= 0) {
                 continue;
             }
 
-            cuota.setMontoPagado(cuota.getMontoPagado().add(montoImputado).setScale(2));
+            BigDecimal montoPagadoActual = obtenerMontoPagado(cuota);
+            cuota.setMontoPagado(normalizarMoneda(montoPagadoActual.add(montoImputado)));
             cuota.setEstado(calcularEstadoCuota(cuota));
 
             ImputacionPago imputacionPago = new ImputacionPago();
             imputacionPago.setPago(pagoGuardado);
             imputacionPago.setCuota(cuota);
-            imputacionPago.setMontoImputado(montoImputado);
+            imputacionPago.setMontoImputado(normalizarMoneda(montoImputado));
             imputacionPago.setFechaImputacion(pagoGuardado.getFechaPago());
             imputaciones.add(imputacionPago);
 
-            montoRestante = montoRestante.subtract(montoImputado).setScale(2);
+            montoRestante = normalizarMoneda(montoRestante.subtract(montoImputado));
         }
 
         return imputaciones;
     }
 
     private BigDecimal calcularSaldoPendiente(Cuota cuota) {
-        BigDecimal montoPagado = cuota.getMontoPagado() == null ? BigDecimal.ZERO.setScale(2) : cuota.getMontoPagado().setScale(2);
-        return cuota.getMontoProgramado().setScale(2).subtract(montoPagado).setScale(2);
+        BigDecimal montoProgramado = obtenerMontoProgramado(cuota);
+        BigDecimal montoPagado = obtenerMontoPagado(cuota);
+        return normalizarMoneda(montoProgramado.subtract(montoPagado));
     }
 
     private EstadoCuota calcularEstadoCuota(Cuota cuota) {
-        BigDecimal montoPagado = cuota.getMontoPagado().setScale(2);
-        BigDecimal montoProgramado = cuota.getMontoProgramado().setScale(2);
+        BigDecimal montoPagado = obtenerMontoPagado(cuota);
+        BigDecimal montoProgramado = obtenerMontoProgramado(cuota);
 
-        if (montoPagado.compareTo(BigDecimal.ZERO) == 0) {
+        if (montoPagado.compareTo(CERO) == 0) {
             return EstadoCuota.PENDIENTE;
         }
 
@@ -178,9 +210,9 @@ public class PagoService {
             return;
         }
 
-        // Regla MVP: si no queda saldo pendiente en cuotas, el préstamo activo pasa a finalizado.
         boolean deudaSaldada = cuotasOrdenadas.stream()
-            .allMatch(cuota -> calcularSaldoPendiente(cuota).compareTo(BigDecimal.ZERO) == 0);
+                .allMatch(cuota -> calcularSaldoPendiente(cuota).compareTo(CERO) == 0);
+
         if (deudaSaldada) {
             prestamo.setEstado(EstadoPrestamo.FINALIZADO);
         }
@@ -191,7 +223,7 @@ public class PagoService {
         eventoPrestamo.setPrestamo(prestamo);
         eventoPrestamo.setTipoEvento(TipoEventoPrestamo.REGISTRO_PAGO);
         eventoPrestamo.setDescripcion(
-            "Se registró pago de " + pago.getMonto().setScale(2) + " con fecha " + pago.getFechaPago()
+                "Se registró pago de " + normalizarMoneda(pago.getMonto()) + " con fecha " + pago.getFechaPago()
         );
         eventoPrestamo.setFechaEvento(pago.getFechaPago().atStartOfDay());
         eventoPrestamoRepository.save(eventoPrestamo);
@@ -199,15 +231,39 @@ public class PagoService {
 
     private PagoResponse mapearRespuesta(Pago pago) {
         return new PagoResponse(
-            pago.getId(),
-            pago.getPrestamo().getId(),
-            pago.getFechaPago(),
-            pago.getMonto().setScale(2),
-            pago.getReferenciaManual(),
-            pago.getObservaciones(),
-            pago.getEstado(),
-            pago.getCreatedAt(),
-            pago.getUpdatedAt()
+                pago.getId(),
+                pago.getPrestamo().getId(),
+                pago.getFechaPago(),
+                normalizarMoneda(pago.getMonto()),
+                pago.getReferenciaManual(),
+                pago.getObservaciones(),
+                pago.getEstado(),
+                pago.getCreatedAt(),
+                pago.getUpdatedAt()
         );
+    }
+
+    private BigDecimal obtenerMontoPagado(Cuota cuota) {
+        if (cuota.getMontoPagado() == null) {
+            return CERO;
+        }
+        return normalizarMoneda(cuota.getMontoPagado());
+    }
+
+    private BigDecimal obtenerMontoProgramado(Cuota cuota) {
+        if (cuota.getMontoProgramado() == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "La cuota posee montoProgramado nulo"
+            );
+        }
+        return normalizarMoneda(cuota.getMontoProgramado());
+    }
+
+    private BigDecimal normalizarMoneda(BigDecimal valor) {
+        if (valor == null) {
+            return CERO;
+        }
+        return valor.setScale(ESCALA_MONEDA, REDONDEO);
     }
 }
