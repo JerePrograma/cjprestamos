@@ -83,6 +83,8 @@ class PrestamoControllerTest {
         String body = """
             {
               \"montoInicial\": 0,
+              \"porcentajeFijoSugerido\": -1,
+              \"interesManualOpcional\": -5,
               \"cantidadCuotas\": 0,
               \"usarFechasManuales\": false
             }
