@@ -135,6 +135,86 @@ class DashboardServiceTest {
         assertEquals(new BigDecimal("0.00"), resumen.deudaTotal());
     }
 
+    @Test
+    void obtenerResumen_activoSinPagos_deberiaReflejarDeudaYPorGanarCompletos() {
+        Prestamo prestamo = crearPrestamo(6L, "1000.00", EstadoPrestamo.ACTIVO);
+        when(prestamoRepository.findByEstadoOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO)).thenReturn(List.of(prestamo));
+        when(cuotaRepository.findByPrestamoIdIn(List.of(6L))).thenReturn(List.of());
+        when(pagoRepository.findByPrestamoIdInAndEstado(List.of(6L), EstadoPago.REGISTRADO)).thenReturn(List.of());
+
+        when(calculadoraPrestamoService.calcular(org.mockito.ArgumentMatchers.any())).thenReturn(
+            new CalculoPrestamoResultado(
+                new BigDecimal("200.00"),
+                new BigDecimal("1200.00"),
+                new BigDecimal("600.00"),
+                new BigDecimal("1000.00"),
+                new BigDecimal("200.00"),
+                new BigDecimal("200.00")
+            )
+        );
+
+        DashboardResumenResponse resumen = dashboardService.obtenerResumen();
+
+        assertEquals(1L, resumen.prestamosActivos());
+        assertEquals(new BigDecimal("1000.00"), resumen.montoInvertido());
+        assertEquals(new BigDecimal("0.00"), resumen.montoGanado());
+        assertEquals(new BigDecimal("200.00"), resumen.montoPorGanar());
+        assertEquals(new BigDecimal("1200.00"), resumen.deudaTotal());
+    }
+
+    @Test
+    void obtenerResumen_conPagosParciales_deberiaMantenerGanadoYPorGanarConsistentes() {
+        Prestamo prestamo = crearPrestamo(7L, "1000.00", EstadoPrestamo.ACTIVO);
+        when(prestamoRepository.findByEstadoOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO)).thenReturn(List.of(prestamo));
+        when(cuotaRepository.findByPrestamoIdIn(List.of(7L))).thenReturn(List.of());
+        when(pagoRepository.findByPrestamoIdInAndEstado(List.of(7L), EstadoPago.REGISTRADO))
+            .thenReturn(List.of(crearPago(prestamo, "1100.00", EstadoPago.REGISTRADO)));
+
+        when(calculadoraPrestamoService.calcular(org.mockito.ArgumentMatchers.any())).thenReturn(
+            new CalculoPrestamoResultado(
+                new BigDecimal("200.00"),
+                new BigDecimal("1200.00"),
+                new BigDecimal("600.00"),
+                new BigDecimal("1000.00"),
+                new BigDecimal("200.00"),
+                new BigDecimal("200.00")
+            )
+        );
+
+        DashboardResumenResponse resumen = dashboardService.obtenerResumen();
+
+        assertEquals(new BigDecimal("100.00"), resumen.montoGanado());
+        assertEquals(new BigDecimal("100.00"), resumen.montoPorGanar());
+        assertEquals(new BigDecimal("100.00"), resumen.deudaTotal());
+    }
+
+    @Test
+    void obtenerResumen_conCuotas_deberiaCalcularDeudaDesdeCuotasYPriorizarSaldoReal() {
+        Prestamo prestamo = crearPrestamo(8L, "1000.00", EstadoPrestamo.ACTIVO);
+        when(prestamoRepository.findByEstadoOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO)).thenReturn(List.of(prestamo));
+        when(cuotaRepository.findByPrestamoIdIn(List.of(8L))).thenReturn(List.of(
+            crearCuota(prestamo, 1, "600.00", "600.00"),
+            crearCuota(prestamo, 2, "600.00", "500.00")
+        ));
+        when(pagoRepository.findByPrestamoIdInAndEstado(List.of(8L), EstadoPago.REGISTRADO))
+            .thenReturn(List.of(crearPago(prestamo, "500.00", EstadoPago.REGISTRADO)));
+
+        when(calculadoraPrestamoService.calcular(org.mockito.ArgumentMatchers.any())).thenReturn(
+            new CalculoPrestamoResultado(
+                new BigDecimal("200.00"),
+                new BigDecimal("1200.00"),
+                new BigDecimal("600.00"),
+                new BigDecimal("1000.00"),
+                new BigDecimal("200.00"),
+                new BigDecimal("200.00")
+            )
+        );
+
+        DashboardResumenResponse resumen = dashboardService.obtenerResumen();
+
+        assertEquals(new BigDecimal("100.00"), resumen.deudaTotal());
+    }
+
     private Prestamo crearPrestamo(Long id, String montoInicial, EstadoPrestamo estado) {
         Prestamo prestamo = new Prestamo();
         Persona persona = new Persona();
