@@ -19,6 +19,7 @@ import com.cjprestamos.backend.pago.repository.ImputacionPagoRepository;
 import com.cjprestamos.backend.pago.repository.PagoRepository;
 import com.cjprestamos.backend.persona.model.Persona;
 import com.cjprestamos.backend.prestamo.model.Prestamo;
+import com.cjprestamos.backend.prestamo.model.enums.EstadoPrestamo;
 import com.cjprestamos.backend.prestamo.repository.PrestamoRepository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -79,6 +80,7 @@ class PagoServiceTest {
         assertEquals(EstadoPago.REGISTRADO, response.estado());
         assertEquals(new BigDecimal("100.00"), cuota1.getMontoPagado());
         assertEquals(EstadoCuota.PAGADA, cuota1.getEstado());
+        assertEquals(EstadoPrestamo.FINALIZADO, prestamo.getEstado());
 
         ArgumentCaptor<List<ImputacionPago>> captorImputaciones = ArgumentCaptor.forClass(List.class);
         verify(imputacionPagoRepository).saveAll(captorImputaciones.capture());
@@ -104,6 +106,7 @@ class PagoServiceTest {
 
         assertEquals(new BigDecimal("50.00"), cuota1.getMontoPagado());
         assertEquals(EstadoCuota.PARCIAL, cuota1.getEstado());
+        assertEquals(EstadoPrestamo.ACTIVO, prestamo.getEstado());
 
         ArgumentCaptor<List<ImputacionPago>> captorImputaciones = ArgumentCaptor.forClass(List.class);
         verify(imputacionPagoRepository).saveAll(captorImputaciones.capture());
@@ -237,12 +240,30 @@ class PagoServiceTest {
         assertEquals(new BigDecimal("100.00"), pagos.get(0).monto());
     }
 
+    @Test
+    void registrar_prestamoNoActivo_noDeberiaCambiarEstado() {
+        Prestamo prestamo = crearPrestamo(18L);
+        prestamo.setEstado(EstadoPrestamo.RENEGOCIADO);
+        Cuota cuota1 = crearCuota(prestamo, 1, "100.00", "0.00", EstadoCuota.PENDIENTE);
+
+        when(prestamoRepository.findById(18L)).thenReturn(Optional.of(prestamo));
+        when(cuotaRepository.findByPrestamoIdOrderByNumeroCuotaAsc(18L)).thenReturn(List.of(cuota1));
+        when(pagoRepository.save(org.mockito.ArgumentMatchers.any(Pago.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        RegistroPagoRequest request = new RegistroPagoRequest(18L, LocalDate.of(2026, 4, 16), new BigDecimal("100.00"), null, null);
+
+        pagoService.registrar(request);
+
+        assertEquals(EstadoPrestamo.RENEGOCIADO, prestamo.getEstado());
+    }
+
     private Prestamo crearPrestamo(Long id) {
         Prestamo prestamo = new Prestamo();
         Persona persona = new Persona();
         persona.setNombre("Persona test");
         prestamo.setPersona(persona);
         prestamo.setMontoInicial(new BigDecimal("1000.00"));
+        prestamo.setEstado(EstadoPrestamo.ACTIVO);
         return prestamo;
     }
 

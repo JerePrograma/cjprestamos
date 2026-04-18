@@ -141,6 +141,220 @@ class PrestamoServiceTest {
     }
 
     @Test
+    void crear_conPorcentajeFijoNegativo_deberiaLanzarBadRequest() {
+        PrestamoRequest request = new PrestamoRequest(
+            1L,
+            new BigDecimal("5000.00"),
+            new BigDecimal("-1.00"),
+            null,
+            4,
+            FrecuenciaTipo.MENSUAL,
+            null,
+            LocalDate.now(),
+            false,
+            null,
+            null,
+            EstadoPrestamo.ACTIVO
+        );
+
+        Persona persona = new Persona();
+        when(personaRepository.findById(1L)).thenReturn(Optional.of(persona));
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> prestamoService.crear(request));
+
+        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("porcentajeFijoSugerido no puede ser negativo", exception.getReason());
+    }
+
+    @Test
+    void crear_conInteresManualNegativo_deberiaLanzarBadRequest() {
+        PrestamoRequest request = new PrestamoRequest(
+            1L,
+            new BigDecimal("5000.00"),
+            null,
+            new BigDecimal("-10.00"),
+            4,
+            FrecuenciaTipo.MENSUAL,
+            null,
+            LocalDate.now(),
+            false,
+            null,
+            null,
+            EstadoPrestamo.ACTIVO
+        );
+
+        Persona persona = new Persona();
+        when(personaRepository.findById(1L)).thenReturn(Optional.of(persona));
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> prestamoService.crear(request));
+
+        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("interesManualOpcional no puede ser negativo", exception.getReason());
+    }
+
+    @Test
+    void crear_conFrecuenciaCadaDiasInformadaEnMensual_deberiaLanzarBadRequest() {
+        PrestamoRequest request = new PrestamoRequest(
+            1L,
+            new BigDecimal("5000.00"),
+            null,
+            null,
+            4,
+            FrecuenciaTipo.MENSUAL,
+            7,
+            LocalDate.now(),
+            false,
+            null,
+            null,
+            EstadoPrestamo.ACTIVO
+        );
+
+        Persona persona = new Persona();
+        when(personaRepository.findById(1L)).thenReturn(Optional.of(persona));
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> prestamoService.crear(request));
+
+        assertEquals(400, exception.getStatusCode().value());
+    }
+
+    @Test
+    void crear_conMensualYUsarFechasManualesTrue_deberiaLanzarBadRequest() {
+        PrestamoRequest request = new PrestamoRequest(
+            1L,
+            new BigDecimal("5000.00"),
+            null,
+            null,
+            4,
+            FrecuenciaTipo.MENSUAL,
+            null,
+            LocalDate.now(),
+            true,
+            null,
+            null,
+            EstadoPrestamo.ACTIVO
+        );
+
+        Persona persona = new Persona();
+        when(personaRepository.findById(1L)).thenReturn(Optional.of(persona));
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> prestamoService.crear(request));
+
+        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("usarFechasManuales solo se permite cuando frecuenciaTipo es FECHAS_MANUALES", exception.getReason());
+    }
+
+    @Test
+    void crear_conFechasManualesYUsarFechasManualesFalse_deberiaLanzarBadRequest() {
+        PrestamoRequest request = new PrestamoRequest(
+            1L,
+            new BigDecimal("5000.00"),
+            null,
+            null,
+            4,
+            FrecuenciaTipo.FECHAS_MANUALES,
+            null,
+            null,
+            false,
+            null,
+            null,
+            EstadoPrestamo.ACTIVO
+        );
+
+        Persona persona = new Persona();
+        when(personaRepository.findById(1L)).thenReturn(Optional.of(persona));
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> prestamoService.crear(request));
+
+        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("Para frecuencia FECHAS_MANUALES, usarFechasManuales debe ser true", exception.getReason());
+    }
+
+    @Test
+    void crear_conFechasManualesYFechaBaseInformada_deberiaLanzarBadRequest() {
+        PrestamoRequest request = new PrestamoRequest(
+            1L,
+            new BigDecimal("5000.00"),
+            null,
+            null,
+            4,
+            FrecuenciaTipo.FECHAS_MANUALES,
+            null,
+            LocalDate.now(),
+            true,
+            null,
+            null,
+            EstadoPrestamo.ACTIVO
+        );
+
+        Persona persona = new Persona();
+        when(personaRepository.findById(1L)).thenReturn(Optional.of(persona));
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> prestamoService.crear(request));
+
+        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("fechaBase no debe informarse cuando frecuenciaTipo es FECHAS_MANUALES", exception.getReason());
+    }
+
+    @Test
+    void crear_conCadaXDiasValido_deberiaGuardarPrestamo() {
+        PrestamoRequest request = new PrestamoRequest(
+            10L,
+            new BigDecimal("100000.00"),
+            new BigDecimal("20.0000"),
+            null,
+            6,
+            FrecuenciaTipo.CADA_X_DIAS,
+            7,
+            LocalDate.of(2026, 4, 20),
+            false,
+            "REF-1",
+            "Observación",
+            EstadoPrestamo.ACTIVO
+        );
+
+        Persona persona = new Persona();
+        persona.setNombre("Ana");
+        when(personaRepository.findById(10L)).thenReturn(Optional.of(persona));
+        when(prestamoRepository.save(org.mockito.ArgumentMatchers.any(Prestamo.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        PrestamoResponse response = prestamoService.crear(request);
+
+        assertEquals(FrecuenciaTipo.CADA_X_DIAS, response.frecuenciaTipo());
+        assertEquals(7, response.frecuenciaCadaDias());
+        assertEquals(LocalDate.of(2026, 4, 20), response.fechaBase());
+        assertEquals(false, response.usarFechasManuales());
+    }
+
+    @Test
+    void crear_conFechasManualesValido_deberiaGuardarPrestamo() {
+        PrestamoRequest request = new PrestamoRequest(
+            10L,
+            new BigDecimal("100000.00"),
+            null,
+            new BigDecimal("12000.00"),
+            6,
+            FrecuenciaTipo.FECHAS_MANUALES,
+            null,
+            null,
+            true,
+            "REF-1",
+            "Observación",
+            EstadoPrestamo.ACTIVO
+        );
+
+        Persona persona = new Persona();
+        persona.setNombre("Ana");
+        when(personaRepository.findById(10L)).thenReturn(Optional.of(persona));
+        when(prestamoRepository.save(org.mockito.ArgumentMatchers.any(Prestamo.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        PrestamoResponse response = prestamoService.crear(request);
+
+        assertEquals(FrecuenciaTipo.FECHAS_MANUALES, response.frecuenciaTipo());
+        assertEquals(true, response.usarFechasManuales());
+        assertEquals(null, response.fechaBase());
+    }
+
+    @Test
     void calcular_deberiaDelegarEnCalculadoraPrestamoService() {
         CalculoPrestamoEntrada entrada = new CalculoPrestamoEntrada(
             new BigDecimal("1000.00"),
