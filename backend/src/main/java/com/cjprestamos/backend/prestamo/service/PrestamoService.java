@@ -84,6 +84,14 @@ public class PrestamoService {
     }
 
     private void validarReglas(PrestamoRequest request) {
+        if (request.porcentajeFijoSugerido() != null && request.porcentajeFijoSugerido().signum() < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "porcentajeFijoSugerido no puede ser negativo");
+        }
+
+        if (request.interesManualOpcional() != null && request.interesManualOpcional().signum() < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "interesManualOpcional no puede ser negativo");
+        }
+
         if (request.frecuenciaTipo() == FrecuenciaTipo.CADA_X_DIAS
             && (request.frecuenciaCadaDias() == null || request.frecuenciaCadaDias() <= 0)) {
             throw new ResponseStatusException(
@@ -99,12 +107,31 @@ public class PrestamoService {
             );
         }
 
-        if (!request.usarFechasManuales()
-            && request.frecuenciaTipo() != FrecuenciaTipo.FECHAS_MANUALES
-            && request.fechaBase() == null) {
+        if (request.frecuenciaTipo() == FrecuenciaTipo.FECHAS_MANUALES && !request.usarFechasManuales()) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "Para frecuencia FECHAS_MANUALES, usarFechasManuales debe ser true"
+            );
+        }
+
+        if (request.frecuenciaTipo() != FrecuenciaTipo.FECHAS_MANUALES && request.usarFechasManuales()) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "usarFechasManuales solo se permite cuando frecuenciaTipo es FECHAS_MANUALES"
+            );
+        }
+
+        if (request.frecuenciaTipo() != FrecuenciaTipo.FECHAS_MANUALES && request.fechaBase() == null) {
             throw new ResponseStatusException(
                 HttpStatus.BAD_REQUEST,
                 "fechaBase es obligatoria cuando no se usan fechas manuales"
+            );
+        }
+
+        if (request.frecuenciaTipo() == FrecuenciaTipo.FECHAS_MANUALES && request.fechaBase() != null) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "fechaBase no debe informarse cuando frecuenciaTipo es FECHAS_MANUALES"
             );
         }
     }

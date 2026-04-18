@@ -14,6 +14,7 @@ import com.cjprestamos.backend.pago.model.enums.EstadoPago;
 import com.cjprestamos.backend.pago.repository.ImputacionPagoRepository;
 import com.cjprestamos.backend.pago.repository.PagoRepository;
 import com.cjprestamos.backend.prestamo.model.Prestamo;
+import com.cjprestamos.backend.prestamo.model.enums.EstadoPrestamo;
 import com.cjprestamos.backend.prestamo.repository.PrestamoRepository;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -68,6 +69,7 @@ public class PagoService {
         List<ImputacionPago> imputaciones = imputarPagoEnCuotas(cuotasOrdenadas, pagoGuardado);
         cuotaRepository.saveAll(cuotasOrdenadas);
         imputacionPagoRepository.saveAll(imputaciones);
+        actualizarEstadoPrestamoSiCorresponde(prestamo, cuotasOrdenadas);
 
         registrarEvento(prestamo, pagoGuardado);
 
@@ -169,6 +171,19 @@ public class PagoService {
         }
 
         return EstadoCuota.PARCIAL;
+    }
+
+    private void actualizarEstadoPrestamoSiCorresponde(Prestamo prestamo, List<Cuota> cuotasOrdenadas) {
+        if (prestamo.getEstado() != EstadoPrestamo.ACTIVO) {
+            return;
+        }
+
+        // Regla MVP: si no queda saldo pendiente en cuotas, el préstamo activo pasa a finalizado.
+        boolean deudaSaldada = cuotasOrdenadas.stream()
+            .allMatch(cuota -> calcularSaldoPendiente(cuota).compareTo(BigDecimal.ZERO) == 0);
+        if (deudaSaldada) {
+            prestamo.setEstado(EstadoPrestamo.FINALIZADO);
+        }
     }
 
     private void registrarEvento(Prestamo prestamo, Pago pago) {

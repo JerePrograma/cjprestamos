@@ -3,6 +3,7 @@ import { obtenerPagosPorPrestamo, registrarPago } from '../../../services/pagos/
 import type { RegistroPagoPayload } from '../types/pago';
 
 const QUERY_KEY_PRESTAMOS = ['prestamos'];
+const QUERY_KEY_DASHBOARD = ['dashboard'];
 
 export function usePagosPrestamo(prestamoId: number | null) {
   return useQuery({
@@ -23,6 +24,7 @@ export function useRegistrarPago() {
       queryClient.invalidateQueries({ queryKey: [...QUERY_KEY_PRESTAMOS, variables.prestamoId, 'cuotas'] });
       queryClient.invalidateQueries({ queryKey: [...QUERY_KEY_PRESTAMOS, variables.prestamoId, 'pagos'] });
       queryClient.invalidateQueries({ queryKey: [...QUERY_KEY_PRESTAMOS, variables.prestamoId, 'resumen'] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY_DASHBOARD });
     },
   });
 }

@@ -175,7 +175,27 @@ export function PrestamosPage() {
       return;
     }
 
-    if (!formulario.usarFechasManuales && formulario.frecuenciaTipo !== 'FECHAS_MANUALES' && !formulario.fechaBase) {
+    if (Number(formulario.porcentajeFijoSugerido || '0') < 0) {
+      setErrorFormulario('El porcentaje fijo sugerido no puede ser negativo.');
+      return;
+    }
+
+    if (Number(formulario.interesManualOpcional || '0') < 0) {
+      setErrorFormulario('El interés manual no puede ser negativo.');
+      return;
+    }
+
+    if (formulario.frecuenciaTipo !== 'FECHAS_MANUALES' && formulario.usarFechasManuales) {
+      setErrorFormulario('Usar fechas manuales solo aplica cuando la frecuencia es FECHAS_MANUALES.');
+      return;
+    }
+
+    if (formulario.frecuenciaTipo === 'FECHAS_MANUALES' && !formulario.usarFechasManuales) {
+      setErrorFormulario('Para FECHAS_MANUALES, activá "Usar fechas manuales".');
+      return;
+    }
+
+    if (formulario.frecuenciaTipo !== 'FECHAS_MANUALES' && !formulario.fechaBase) {
       setErrorFormulario('La fecha base es obligatoria para frecuencia automática.');
       return;
     }

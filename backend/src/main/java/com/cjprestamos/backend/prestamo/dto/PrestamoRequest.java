@@ -12,7 +12,9 @@ import java.time.LocalDate;
 public record PrestamoRequest(
     @NotNull Long personaId,
     @NotNull @DecimalMin(value = "0.01") BigDecimal montoInicial,
+    @DecimalMin(value = "0.00")
     BigDecimal porcentajeFijoSugerido,
+    @DecimalMin(value = "0.00")
     BigDecimal interesManualOpcional,
     @NotNull @Positive Integer cantidadCuotas,
     @NotNull FrecuenciaTipo frecuenciaTipo,
