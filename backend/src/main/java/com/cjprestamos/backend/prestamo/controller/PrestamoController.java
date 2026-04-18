@@ -1,5 +1,6 @@
 package com.cjprestamos.backend.prestamo.controller;
 
+import com.cjprestamos.backend.prestamo.dto.ActualizacionReferenciaPrestamoRequest;
 import com.cjprestamos.backend.prestamo.dto.CalculoPrestamoEntrada;
 import com.cjprestamos.backend.prestamo.dto.CalculoPrestamoResultado;
 import com.cjprestamos.backend.prestamo.dto.PrestamoRequest;
@@ -11,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -35,6 +37,14 @@ public class PrestamoController {
     @PostMapping("/calcular")
     public CalculoPrestamoResultado calcular(@Valid @RequestBody CalculoPrestamoEntrada request) {
         return prestamoService.calcular(request);
+    }
+
+    @PutMapping("/{id}/referencia")
+    public PrestamoResponse actualizarReferencia(
+        @PathVariable Long id,
+        @Valid @RequestBody ActualizacionReferenciaPrestamoRequest request
+    ) {
+        return prestamoService.actualizarReferencia(id, request);
     }
 
     @GetMapping

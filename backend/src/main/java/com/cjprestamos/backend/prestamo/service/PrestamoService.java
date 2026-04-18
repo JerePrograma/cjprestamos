@@ -2,6 +2,7 @@ package com.cjprestamos.backend.prestamo.service;
 
 import com.cjprestamos.backend.persona.model.Persona;
 import com.cjprestamos.backend.persona.repository.PersonaRepository;
+import com.cjprestamos.backend.prestamo.dto.ActualizacionReferenciaPrestamoRequest;
 import com.cjprestamos.backend.prestamo.dto.CalculoPrestamoEntrada;
 import com.cjprestamos.backend.prestamo.dto.CalculoPrestamoResultado;
 import com.cjprestamos.backend.prestamo.dto.PrestamoRequest;
@@ -49,6 +50,13 @@ public class PrestamoService {
 
     public CalculoPrestamoResultado calcular(CalculoPrestamoEntrada entrada) {
         return calculadoraPrestamoService.calcular(entrada);
+    }
+
+    public PrestamoResponse actualizarReferencia(Long id, ActualizacionReferenciaPrestamoRequest request) {
+        Prestamo prestamo = buscarPrestamo(id);
+        prestamo.setReferenciaCodigo(request.referenciaCodigo());
+        prestamo.setObservaciones(request.observaciones());
+        return mapearRespuesta(prestamoRepository.save(prestamo));
     }
 
     @Transactional(readOnly = true)

@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 
 import com.cjprestamos.backend.persona.model.Persona;
 import com.cjprestamos.backend.persona.repository.PersonaRepository;
+import com.cjprestamos.backend.prestamo.dto.ActualizacionReferenciaPrestamoRequest;
 import com.cjprestamos.backend.prestamo.dto.CalculoPrestamoEntrada;
 import com.cjprestamos.backend.prestamo.dto.CalculoPrestamoResultado;
 import com.cjprestamos.backend.prestamo.dto.PrestamoRequest;
@@ -200,6 +201,29 @@ class PrestamoServiceTest {
 
         assertEquals(1, response.size());
         verify(prestamoRepository).findAllByOrderByCreatedAtDesc();
+    }
+
+    @Test
+    void actualizarReferencia_deberiaActualizarReferenciaYObservaciones() {
+        Prestamo prestamo = new Prestamo();
+        Persona persona = new Persona();
+        prestamo.setPersona(persona);
+        prestamo.setMontoInicial(new BigDecimal("1000.00"));
+        prestamo.setCantidadCuotas(2);
+        prestamo.setFrecuenciaTipo(FrecuenciaTipo.MENSUAL);
+        prestamo.setUsarFechasManuales(false);
+        prestamo.setEstado(EstadoPrestamo.ACTIVO);
+
+        when(prestamoRepository.findById(8L)).thenReturn(Optional.of(prestamo));
+        when(prestamoRepository.save(org.mockito.ArgumentMatchers.any(Prestamo.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        PrestamoResponse response = prestamoService.actualizarReferencia(
+            8L,
+            new ActualizacionReferenciaPrestamoRequest("REF-AJUSTADA", "Observación ajustada")
+        );
+
+        assertEquals("REF-AJUSTADA", response.referenciaCodigo());
+        assertEquals("Observación ajustada", response.observaciones());
     }
 
     @Test

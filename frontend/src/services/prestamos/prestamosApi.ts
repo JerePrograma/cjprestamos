@@ -5,6 +5,7 @@ import type {
   CuotaPrestamo,
   PrestamoPayload,
   PrestamoResponse,
+  ReferenciaPrestamoPayload,
 } from '../../modules/prestamos/types/prestamo';
 
 export async function obtenerPrestamos(): Promise<PrestamoResponse[]> {
@@ -29,6 +30,14 @@ export async function obtenerCuotasPorPrestamo(id: number): Promise<CuotaPrestam
 
 export async function crearPrestamo(payload: PrestamoPayload): Promise<PrestamoResponse> {
   const response = await api.post<PrestamoResponse>('/prestamos', payload);
+  return response.data;
+}
+
+export async function actualizarReferenciaPrestamo(
+  id: number,
+  payload: ReferenciaPrestamoPayload,
+): Promise<PrestamoResponse> {
+  const response = await api.put<PrestamoResponse>(`/prestamos/${id}/referencia`, payload);
   return response.data;
 }
 

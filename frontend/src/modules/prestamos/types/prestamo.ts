@@ -23,6 +23,11 @@ export type PrestamoResponse = PrestamoPayload & {
   updatedAt: string | null;
 };
 
+export type ReferenciaPrestamoPayload = {
+  referenciaCodigo: string | null;
+  observaciones: string | null;
+};
+
 export type CuotaPrestamo = {
   id: number;
   numeroCuota: number;
