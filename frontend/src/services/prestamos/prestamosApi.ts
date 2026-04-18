@@ -12,6 +12,11 @@ export async function obtenerPrestamos(): Promise<PrestamoResponse[]> {
   return response.data;
 }
 
+export async function obtenerPrestamosActivos(): Promise<PrestamoResponse[]> {
+  const response = await api.get<PrestamoResponse[]>('/prestamos/activos');
+  return response.data;
+}
+
 export async function obtenerPrestamoPorId(id: number): Promise<PrestamoResponse> {
   const response = await api.get<PrestamoResponse>(`/prestamos/${id}`);
   return response.data;

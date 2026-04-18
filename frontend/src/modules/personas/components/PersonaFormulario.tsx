@@ -26,6 +26,12 @@ function actualizarCampo(
   return { ...valor, [name]: value };
 }
 
+function normalizarColorHex(colorReferencia: string) {
+  const color = colorReferencia.trim();
+  const esHex = /^#[0-9a-fA-F]{6}$/.test(color);
+  return esHex ? color : '#94a3b8';
+}
+
 export function PersonaFormulario({
   titulo,
   textoBoton,
@@ -86,12 +92,22 @@ export function PersonaFormulario({
 
         <label className="text-sm text-slate-700">
           Color de referencia
-          <input
-            name="colorReferencia"
-            value={valor.colorReferencia}
-            onChange={(e) => onChange(actualizarCampo(valor, e))}
-            className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
-          />
+          <div className="mt-1 flex items-center gap-2">
+            <input
+              type="color"
+              value={normalizarColorHex(valor.colorReferencia)}
+              onChange={(event) => onChange({ ...valor, colorReferencia: event.target.value })}
+              className="h-10 w-12 cursor-pointer rounded border border-slate-300 bg-white p-1"
+              aria-label="Selector de color de referencia"
+            />
+            <input
+              name="colorReferencia"
+              value={valor.colorReferencia}
+              onChange={(e) => onChange(actualizarCampo(valor, e))}
+              placeholder="Ej: #22c55e"
+              className="w-full rounded border border-slate-300 px-3 py-2"
+            />
+          </div>
         </label>
       </div>
 

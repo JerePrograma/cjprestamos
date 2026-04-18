@@ -28,6 +28,14 @@ function coincideBusqueda(persona: Persona, termino: string) {
     .includes(t);
 }
 
+function estiloColor(colorReferencia: string | null) {
+  if (!colorReferencia || !colorReferencia.trim()) {
+    return { backgroundColor: '#cbd5e1' };
+  }
+
+  return { backgroundColor: colorReferencia };
+}
+
 export function PersonasPage() {
   const [busqueda, setBusqueda] = useState('');
   const [seleccionId, setSeleccionId] = useState<number | null>(null);
@@ -147,7 +155,10 @@ export function PersonasPage() {
                         seleccionId === persona.id ? 'bg-slate-100' : ''
                       }`}
                     >
-                      <div className="font-medium text-slate-900">{persona.nombre}</div>
+                      <div className="flex items-center gap-2">
+                        <span className="inline-block h-2.5 w-2.5 rounded-full border border-slate-300" style={estiloColor(persona.colorReferencia)} />
+                        <span className="font-medium text-slate-900">{persona.nombre}</span>
+                      </div>
                       <div className="text-xs text-slate-500">{persona.alias || persona.telefono || 'Sin dato extra'}</div>
                     </button>
                   </li>
