@@ -3,6 +3,7 @@ package com.cjprestamos.backend.prestamo.controller;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -120,6 +121,43 @@ class PrestamoControllerTest {
                 .content(body))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.totalADevolver").value(1200.00));
+    }
+
+    @Test
+    @WithMockUser
+    void actualizarReferencia_deberiaRetornar200() throws Exception {
+        when(prestamoService.actualizarReferencia(org.mockito.ArgumentMatchers.eq(4L), org.mockito.ArgumentMatchers.any())).thenReturn(
+            new PrestamoResponse(
+                4L,
+                10L,
+                new BigDecimal("2000.00"),
+                null,
+                null,
+                4,
+                FrecuenciaTipo.MENSUAL,
+                null,
+                LocalDate.of(2026, 4, 20),
+                false,
+                "REF-NUEVA",
+                "Obs nueva",
+                EstadoPrestamo.ACTIVO,
+                null,
+                null
+            )
+        );
+
+        String body = """
+            {
+              "referenciaCodigo": "REF-NUEVA",
+              "observaciones": "Obs nueva"
+            }
+            """;
+
+        mockMvc.perform(put("/api/prestamos/4/referencia")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.referenciaCodigo").value("REF-NUEVA"));
     }
 
     @Test

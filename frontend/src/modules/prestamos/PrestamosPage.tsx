@@ -7,6 +7,7 @@ import {
 } from '../pagos/types/pago';
 import { useListadoPersonas } from '../personas/hooks/usePersonas';
 import {
+  useActualizarReferenciaPrestamo,
   useCalcularPrestamo,
   useCrearPrestamo,
   useCuotasPrestamo,
@@ -22,6 +23,7 @@ import {
   type FrecuenciaTipo,
   type PrestamoFormulario,
   type PrestamoResponse,
+  type ReferenciaPrestamoPayload,
 } from './types/prestamo';
 
 function esFormularioMinimoValido(formulario: PrestamoFormulario) {
@@ -88,6 +90,9 @@ export function PrestamosPage() {
   const [formularioPago, setFormularioPago] = useState<PagoFormulario>(formularioInicialPago);
   const [errorPago, setErrorPago] = useState<string | null>(null);
   const [mensajePago, setMensajePago] = useState<string | null>(null);
+  const [formularioReferencia, setFormularioReferencia] = useState({ referenciaCodigo: '', observaciones: '' });
+  const [errorReferencia, setErrorReferencia] = useState<string | null>(null);
+  const [mensajeReferencia, setMensajeReferencia] = useState<string | null>(null);
 
   const personas = useListadoPersonas();
   const prestamos = useListadoPrestamos();
@@ -99,6 +104,7 @@ export function PrestamosPage() {
   const crearPrestamo = useCrearPrestamo();
   const calcularPrestamo = useCalcularPrestamo();
   const registrarPago = useRegistrarPago();
+  const actualizarReferenciaPrestamo = useActualizarReferenciaPrestamo();
 
   const puedeCalcularAlta = useMemo(() => esFormularioMinimoValido(formulario), [formulario]);
 
@@ -124,6 +130,19 @@ export function PrestamosPage() {
     setErrorPago(null);
     setMensajePago(null);
   }, [seleccionId]);
+
+  useEffect(() => {
+    if (!detallePrestamo.data) {
+      return;
+    }
+
+    setFormularioReferencia({
+      referenciaCodigo: detallePrestamo.data.referenciaCodigo ?? '',
+      observaciones: detallePrestamo.data.observaciones ?? '',
+    });
+    setErrorReferencia(null);
+    setMensajeReferencia(null);
+  }, [detallePrestamo.data?.id]);
 
   const personasPorId = useMemo(() => {
     const mapa = new Map<number, string>();
@@ -168,6 +187,36 @@ export function PrestamosPage() {
       setMensajeExito('Préstamo creado correctamente.');
     } catch {
       setErrorFormulario('No se pudo crear el préstamo. Revisá los datos e intentá nuevamente.');
+    }
+  };
+
+  const guardarReferenciaPrestamo = async () => {
+    if (!detallePrestamo.data) {
+      return;
+    }
+
+    if (formularioReferencia.referenciaCodigo.length > 80) {
+      setErrorReferencia('La referencia no puede superar 80 caracteres.');
+      return;
+    }
+
+    if (formularioReferencia.observaciones.length > 600) {
+      setErrorReferencia('Las observaciones no pueden superar 600 caracteres.');
+      return;
+    }
+
+    const payload: ReferenciaPrestamoPayload = {
+      referenciaCodigo: formularioReferencia.referenciaCodigo.trim() || null,
+      observaciones: formularioReferencia.observaciones.trim() || null,
+    };
+
+    setErrorReferencia(null);
+
+    try {
+      await actualizarReferenciaPrestamo.mutateAsync({ id: detallePrestamo.data.id, payload });
+      setMensajeReferencia('Referencia del préstamo actualizada.');
+    } catch {
+      setErrorReferencia('No se pudo actualizar la referencia del préstamo.');
     }
   };
 
@@ -281,6 +330,48 @@ export function PrestamosPage() {
                 <div><dt className="text-xs text-slate-500">Referencia</dt><dd>{detallePrestamo.data.referenciaCodigo ?? '-'}</dd></div>
                 <div className="md:col-span-2"><dt className="text-xs text-slate-500">Observaciones</dt><dd>{detallePrestamo.data.observaciones ?? '-'}</dd></div>
               </dl>
+
+              <div className="rounded border border-slate-200 p-3">
+                <h3 className="mb-2 text-sm font-semibold">Referencia y notas</h3>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <label className="text-sm text-slate-700">Referencia
+                    <input
+                      className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+                      maxLength={80}
+                      value={formularioReferencia.referenciaCodigo}
+                      onChange={(event) => {
+                        setFormularioReferencia((actual) => ({ ...actual, referenciaCodigo: event.target.value }));
+                        setErrorReferencia(null);
+                        setMensajeReferencia(null);
+                      }}
+                    />
+                  </label>
+                  <label className="text-sm text-slate-700">Observaciones
+                    <textarea
+                      className="mt-1 h-20 w-full rounded border border-slate-300 px-3 py-2"
+                      maxLength={600}
+                      value={formularioReferencia.observaciones}
+                      onChange={(event) => {
+                        setFormularioReferencia((actual) => ({ ...actual, observaciones: event.target.value }));
+                        setErrorReferencia(null);
+                        setMensajeReferencia(null);
+                      }}
+                    />
+                  </label>
+                </div>
+
+                {errorReferencia && <p className="mt-2 text-sm text-red-700">{errorReferencia}</p>}
+                {mensajeReferencia && <p className="mt-2 text-sm text-emerald-700">{mensajeReferencia}</p>}
+
+                <button
+                  type="button"
+                  onClick={guardarReferenciaPrestamo}
+                  disabled={actualizarReferenciaPrestamo.isPending}
+                  className="mt-3 rounded bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-60"
+                >
+                  {actualizarReferenciaPrestamo.isPending ? 'Guardando referencia...' : 'Guardar referencia'}
+                </button>
+              </div>
 
               <div className="rounded border border-slate-200 bg-slate-50 p-3">
                 <h3 className="mb-2 text-sm font-semibold">Resumen económico</h3>
