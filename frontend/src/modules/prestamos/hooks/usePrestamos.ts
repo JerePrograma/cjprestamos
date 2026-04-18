@@ -5,6 +5,7 @@ import {
   obtenerCuotasPorPrestamo,
   obtenerPrestamoPorId,
   obtenerPrestamos,
+  obtenerPrestamosActivos,
 } from '../../../services/prestamos/prestamosApi';
 import type { CalculoPrestamoPayload, PrestamoPayload, PrestamoResponse } from '../types/prestamo';
 
@@ -14,6 +15,13 @@ export function useListadoPrestamos() {
   return useQuery({
     queryKey: QUERY_KEY_PRESTAMOS,
     queryFn: obtenerPrestamos,
+  });
+}
+
+export function useListadoPrestamosActivos() {
+  return useQuery({
+    queryKey: [...QUERY_KEY_PRESTAMOS, 'activos'],
+    queryFn: obtenerPrestamosActivos,
   });
 }
 
