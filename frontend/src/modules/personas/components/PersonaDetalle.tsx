@@ -13,6 +13,14 @@ function valorTexto(valor: string | null | undefined) {
   return valor && valor.trim() ? valor : '—';
 }
 
+function estiloColor(colorReferencia: string | null) {
+  if (!colorReferencia || !colorReferencia.trim()) {
+    return { backgroundColor: '#cbd5e1' };
+  }
+
+  return { backgroundColor: colorReferencia };
+}
+
 export function PersonaDetalle({
   persona,
   loading,
@@ -57,7 +65,10 @@ export function PersonaDetalle({
         </div>
         <div>
           <dt className="text-slate-500">Color de referencia</dt>
-          <dd className="font-medium">{valorTexto(persona.colorReferencia)}</dd>
+          <dd className="mt-1 flex items-center gap-2 font-medium">
+            <span className="inline-block h-3 w-3 rounded-full border border-slate-300" style={estiloColor(persona.colorReferencia)} />
+            {valorTexto(persona.colorReferencia)}
+          </dd>
         </div>
         <div>
           <dt className="text-slate-500">Cobra en fecha</dt>
