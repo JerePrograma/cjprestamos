@@ -197,13 +197,17 @@ Las siguientes tareas quedan como referencia de cierre ya alcanzado:
 ---
 
 ### BT-9001 — seguridad mínima backend/frontend coherente
-**Estado:** HECHA  
+**Estado:** PARCIAL  
 **Qué quedó cerrado**
 - Basic Auth simple en backend mantenido,
 - `/api/health` sigue libre,
 - frontend sin credenciales hardcodeadas automáticas,
-- envío de Authorization solo con sesión activa.
+- contraseña no se persiste en `sessionStorage` (solo usuario recordado).
 
+**Concesión vigente**
+- la autenticación sigue basada en Basic Auth manual,
+- la sesión del frontend es en memoria y se pierde al recargar,
+- no existe todavía sesión backend dedicada (cookie/token).
 
 ---
 
@@ -228,7 +232,9 @@ Las siguientes tareas quedan como referencia de cierre ya alcanzado:
 
 **Cierre implementado**
 - pantalla de acceso antes de entrar a la app,
-- sesión simple en `sessionStorage`,
+- validación de credenciales contra `/dashboard/resumen`,
+- sesión activa en memoria (sin persistir contraseña en storage),
+- recordatorio de usuario para reingreso manual,
 - botón de cierre de sesión,
 - limpieza de sesión y retorno a login cuando la API responde `401`.
 

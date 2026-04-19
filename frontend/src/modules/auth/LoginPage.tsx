@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useAuth } from '../../app/auth';
+import { leerSesionOperadora } from '../../services/sesionOperadora';
 
 export function LoginPage() {
   const { iniciarSesion } = useAuth();
-  const [usuario, setUsuario] = useState('');
+  const [usuario, setUsuario] = useState(() => leerSesionOperadora()?.usuario ?? '');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
@@ -15,6 +16,7 @@ export function LoginPage() {
 
     try {
       await iniciarSesion({ usuario: usuario.trim(), password });
+      setPassword('');
     } catch {
       setError('No se pudo iniciar sesión. Verificá usuario y contraseña.');
     } finally {

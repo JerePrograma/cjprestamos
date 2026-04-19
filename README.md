@@ -139,8 +139,9 @@ El frontend usa por defecto `VITE_API_BASE_URL=/api` y Vite proxyea `/api` a `ht
 
 Autenticación frontend (mínima):
 - al abrir la app, se solicita usuario y contraseña,
-- la sesión se guarda en `sessionStorage`,
-- Axios envía Basic Auth solo si hay sesión activa,
+- la contraseña no se persiste en `sessionStorage` (solo se recuerda el usuario),
+- la sesión activa del frontend vive en memoria y se pierde al recargar la página,
+- Axios envía Basic Auth solo mientras la sesión esté activa,
 - ante `401` se limpia sesión y se vuelve a login automáticamente.
 
 ### 3) Verificación rápida
