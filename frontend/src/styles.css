@@ -2,6 +2,58 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  @apply text-slate-800;
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  body {
+    @apply bg-slate-100 text-slate-800 antialiased;
+    background-image: radial-gradient(circle at top, rgba(148, 163, 184, 0.12), transparent 48%);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply tracking-tight;
+  }
+
+  input,
+  select,
+  textarea {
+    @apply transition-colors duration-150;
+  }
+
+  input:focus,
+  select:focus,
+  textarea:focus {
+    @apply border-slate-500 outline-none ring-2 ring-slate-300;
+  }
+}
+
+@layer components {
+  .panel {
+    @apply rounded-xl border border-slate-200 bg-white shadow-sm;
+  }
+
+  .panel-soft {
+    @apply rounded-xl border border-slate-200 bg-slate-50;
+  }
+
+  .titulo-seccion {
+    @apply text-xl font-semibold text-slate-900;
+  }
+
+  .subtitulo-seccion {
+    @apply text-sm text-slate-600;
+  }
+
+  .boton-principal {
+    @apply rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .boton-secundario {
+    @apply rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60;
+  }
 }

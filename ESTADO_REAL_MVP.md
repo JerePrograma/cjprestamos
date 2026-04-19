@@ -51,6 +51,9 @@ Lista estado real.
 - backend: **HECHO**
 - UI: **HECHO**
 
+### Experiencia visual
+- UI responsive sobria en layout y módulos principales: **HECHO**
+
 ### Colores y señales rápidas
 - color de referencia en persona: **HECHO**
 

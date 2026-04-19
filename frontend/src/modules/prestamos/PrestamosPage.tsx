@@ -559,17 +559,17 @@ export function PrestamosPage() {
   };
 
   return (
-    <section className="space-y-4">
+    <section className="space-y-5">
       <header className="space-y-1">
-        <h1 className="text-xl font-semibold text-slate-900">Préstamos</h1>
-        <p className="text-sm text-slate-600">
+        <h1 className="titulo-seccion">Préstamos</h1>
+        <p className="subtitulo-seccion">
           Listado, detalle operativo y alta de préstamo en una sola vista
           manual-first.
         </p>
       </header>
 
-      <div className="grid gap-4 xl:grid-cols-[320px_1fr_420px]">
-        <aside className="rounded-lg border border-slate-200 p-3">
+      <div className="grid gap-4 2xl:grid-cols-[300px_1fr_380px]">
+        <aside className="panel p-3 sm:p-4">
           <h2 className="mb-2 text-sm font-semibold text-slate-900">Listado</h2>
 
           {prestamos.isLoading ? (
@@ -583,7 +583,7 @@ export function PrestamosPage() {
               Todavía no hay préstamos cargados.
             </p>
           ) : (
-            <ul className="max-h-[680px] space-y-2 overflow-auto">
+            <ul className="max-h-[62vh] space-y-2 overflow-auto pr-1">
               {(prestamos.data ?? []).map((prestamo) => (
                 <li key={prestamo.id}>
                   <button
@@ -636,7 +636,7 @@ export function PrestamosPage() {
           )}
         </aside>
 
-        <div className="space-y-3 rounded-lg border border-slate-200 p-4">
+        <div className="panel space-y-3 p-4">
           <h2 className="text-sm font-semibold text-slate-900">
             Detalle del préstamo
           </h2>
@@ -774,7 +774,7 @@ export function PrestamosPage() {
                   type="button"
                   onClick={guardarReferenciaPrestamo}
                   disabled={actualizarReferenciaPrestamo.isPending}
-                  className="mt-3 rounded bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-60"
+                  className="boton-principal mt-3"
                 >
                   {actualizarReferenciaPrestamo.isPending
                     ? "Guardando referencia..."
@@ -782,7 +782,7 @@ export function PrestamosPage() {
                 </button>
               </div>
 
-              <div className="rounded border border-slate-200 bg-slate-50 p-3">
+              <div className="panel-soft p-3">
                 <h3 className="mb-2 text-sm font-semibold">
                   Resumen económico
                 </h3>
@@ -872,13 +872,13 @@ export function PrestamosPage() {
                 {detalleActual && (
                   <div className="mb-3 rounded border border-slate-200 bg-slate-50 p-3">
                     {tieneCuotasGeneradas ? (
-                      <p className="text-sm text-slate-600">
+                      <p className="subtitulo-seccion">
                         Este préstamo ya tiene cuotas generadas. No se permite
                         regeneración desde esta vista.
                       </p>
                     ) : detalleActual.frecuenciaTipo === "FECHAS_MANUALES" ? (
                       <div className="space-y-3">
-                        <p className="text-sm text-slate-600">
+                        <p className="subtitulo-seccion">
                           Cargá las cuotas manuales para este préstamo.
                         </p>
                         <div className="space-y-2">
@@ -943,7 +943,7 @@ export function PrestamosPage() {
                           type="button"
                           onClick={generarCuotas}
                           disabled={generarCuotasPrestamo.isPending}
-                          className="rounded bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-60"
+                          className="boton-principal"
                         >
                           {generarCuotasPrestamo.isPending
                             ? "Guardando cuotas..."
@@ -952,7 +952,7 @@ export function PrestamosPage() {
                       </div>
                     ) : (
                       <div className="space-y-3">
-                        <p className="text-sm text-slate-600">
+                        <p className="subtitulo-seccion">
                           Este préstamo todavía no tiene cuotas. Generalas para
                           comenzar a operar pagos e imputaciones.
                         </p>
@@ -960,7 +960,7 @@ export function PrestamosPage() {
                           type="button"
                           onClick={generarCuotas}
                           disabled={generarCuotasPrestamo.isPending}
-                          className="rounded bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-60"
+                          className="boton-principal"
                         >
                           {generarCuotasPrestamo.isPending
                             ? "Generando cuotas..."
@@ -1083,7 +1083,7 @@ export function PrestamosPage() {
                   type="button"
                   onClick={guardarPago}
                   disabled={registrarPago.isPending || !puedeRegistrarPago}
-                  className="mt-3 rounded bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-60"
+                  className="boton-principal mt-3"
                 >
                   {registrarPago.isPending
                     ? "Registrando pago..."
@@ -1138,7 +1138,7 @@ export function PrestamosPage() {
           )}
         </div>
 
-        <aside className="space-y-3 rounded-lg border border-slate-200 p-4">
+        <aside className="panel space-y-3 p-4">
           <h2 className="text-sm font-semibold text-slate-900">
             Alta de préstamo
           </h2>
@@ -1335,12 +1335,12 @@ export function PrestamosPage() {
             type="button"
             onClick={guardarPrestamo}
             disabled={crearPrestamo.isPending || personas.isLoading}
-            className="rounded bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-60"
+            className="boton-principal"
           >
             {crearPrestamo.isPending ? "Guardando..." : "Guardar préstamo"}
           </button>
 
-          <div className="rounded border border-slate-200 bg-slate-50 p-3">
+          <div className="panel-soft p-3">
             <h3 className="mb-2 text-sm font-semibold">
               Cálculo sugerido del alta
             </h3>

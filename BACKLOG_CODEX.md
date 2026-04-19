@@ -27,6 +27,7 @@ Reglas:
 ## Núcleo del MVP: situación actual
 
 ### HECHO
+- BT-7001 — refactor visual responsive del frontend (layout + módulos principales)
 - BT-0002 — backend base
 - BT-0003 — frontend base
 - BT-1001 — dominio mínimo
@@ -299,3 +300,13 @@ Entregable esperado:
 - validaciones ejecutadas
 - estado final: hecha / parcial / pendiente
 ```
+
+
+### BT-7001 — refactor visual responsive del frontend
+**Estado:** HECHA  
+**Objetivo:** mejorar legibilidad y uso en distintas resoluciones con estética sobria y operativa.
+
+**Cierre implementado**
+- layout principal adaptativo con navegación usable en mobile y desktop,
+- actualización visual consistente de login, dashboard, personas y préstamos,
+- clases base reutilizables para paneles, botones y títulos sin sobreingeniería.
