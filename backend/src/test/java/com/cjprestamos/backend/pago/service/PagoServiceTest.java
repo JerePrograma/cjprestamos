@@ -2,6 +2,7 @@ package com.cjprestamos.backend.pago.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -241,20 +242,23 @@ class PagoServiceTest {
     }
 
     @Test
-    void registrar_prestamoNoActivo_noDeberiaCambiarEstado() {
+    void registrar_prestamoNoActivo_deberiaRetornar400SinPersistirNiImputar() {
         Prestamo prestamo = crearPrestamo(18L);
         prestamo.setEstado(EstadoPrestamo.RENEGOCIADO);
-        Cuota cuota1 = crearCuota(prestamo, 1, "100.00", "0.00", EstadoCuota.PENDIENTE);
 
         when(prestamoRepository.findById(18L)).thenReturn(Optional.of(prestamo));
-        when(cuotaRepository.findByPrestamoIdOrderByNumeroCuotaAsc(18L)).thenReturn(List.of(cuota1));
-        when(pagoRepository.save(org.mockito.ArgumentMatchers.any(Pago.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         RegistroPagoRequest request = new RegistroPagoRequest(18L, LocalDate.of(2026, 4, 16), new BigDecimal("100.00"), null, null);
 
-        pagoService.registrar(request);
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> pagoService.registrar(request));
 
+        assertEquals(400, exception.getStatusCode().value());
         assertEquals(EstadoPrestamo.RENEGOCIADO, prestamo.getEstado());
+        verify(pagoRepository, never()).save(org.mockito.ArgumentMatchers.any(Pago.class));
+        verify(cuotaRepository, never()).findByPrestamoIdOrderByNumeroCuotaAsc(18L);
+        verify(cuotaRepository, never()).saveAll(org.mockito.ArgumentMatchers.anyList());
+        verify(imputacionPagoRepository, never()).saveAll(org.mockito.ArgumentMatchers.anyList());
+        verify(eventoPrestamoRepository, never()).save(org.mockito.ArgumentMatchers.any(EventoPrestamo.class));
     }
 
     private Prestamo crearPrestamo(Long id) {

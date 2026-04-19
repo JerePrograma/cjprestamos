@@ -55,24 +55,15 @@ public class PagoService {
 
     public PagoResponse registrar(RegistroPagoRequest request) {
         Prestamo prestamo = buscarPrestamo(request.prestamoId());
-        System.out.println("[PAGO] prestamoId=" + request.prestamoId());
-        System.out.println("[PAGO] estadoPrestamo=" + prestamo.getEstado());
 
         validarEstadoPrestamo(prestamo);
         validarMonto(request.monto());
 
         List<Cuota> cuotasOrdenadas = cuotaRepository.findByPrestamoIdOrderByNumeroCuotaAsc(request.prestamoId());
-        System.out.println("[PAGO] cuotasEncontradas=" + cuotasOrdenadas.size());
 
         validarCuotasDisponibles(cuotasOrdenadas);
 
         BigDecimal montoPago = normalizarMoneda(request.monto());
-        BigDecimal totalPendiente = cuotasOrdenadas.stream()
-                .map(this::calcularSaldoPendiente)
-                .reduce(CERO, BigDecimal::add);
-
-        System.out.println("[PAGO] montoPago=" + montoPago);
-        System.out.println("[PAGO] totalPendiente=" + totalPendiente);
 
         validarMontoNoExcedido(montoPago, cuotasOrdenadas);
 
