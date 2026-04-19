@@ -28,8 +28,8 @@ Lista estado real.
 
 ### Préstamos
 - backend base: **HECHO**
-- alta UI: **PARCIAL**
-- listado/detalle UI: **PARCIAL**
+- alta UI: **HECHO**
+- listado/detalle UI: **HECHO**
 - referencias/observaciones: **HECHO**
 
 ### Cálculo
@@ -37,14 +37,15 @@ Lista estado real.
 
 ### Cuotas
 - backend de generación automática/manual: **HECHO**
-- UI de generación automática: **PENDIENTE**
-- UI de carga manual: **PENDIENTE**
+- UI de generación automática: **HECHO**
+- UI de carga manual: **HECHO**
+- cierre operativo visible en detalle (programado/pagado/saldo/estado): **HECHO**
 
 ### Pagos
 - backend de registro: **HECHO**
 - imputación: **HECHO**
-- UI de pagos dentro del detalle: **PARCIAL**
-- pantalla separada `/pagos`: **NO RELEVANTE / PLACEHOLDER**
+- UI de pagos dentro del detalle: **HECHO**
+- pantalla separada `/pagos`: **REMOVIDA DE NAVEGACIÓN (intencional)**
 
 ### Dashboard
 - backend: **HECHO**
@@ -56,7 +57,7 @@ Lista estado real.
 ### Legajos
 - backend: **PENDIENTE**
 - UI real: **PENDIENTE**
-- pantalla placeholder: **EXISTE PERO NO CUENTA COMO FEATURE**
+- pantalla placeholder: **FUERA DE NAVEGACIÓN PRINCIPAL**
 
 ### Seguridad
 - Basic Auth simple: **PARCIAL**
@@ -64,8 +65,9 @@ Lista estado real.
 
 ### Calidad técnica
 - tests unitarios del núcleo: **BIEN ENCAMINADOS**
-- test de arranque real: **PENDIENTE / DÉBIL**
-- documentación alineada al repo: **PARCIAL**
+- test de arranque real (contexto + endpoint health): **HECHO (alcance básico)**
+- integración con datasource/Flyway en test automatizado: **PENDIENTE**
+- documentación alineada al repo: **HECHO EN ESTA ETAPA**
 
 ---
 
@@ -73,10 +75,9 @@ Lista estado real.
 
 El repo está en estado:
 
-**MVP encaminado, pero no cerrado.**
+**MVP operativo principal cerrado, con evolución pendiente en legajos y robustez técnica avanzada.**
 
-La barrera para pasar a “operativo de verdad” está en:
-1. cerrar cuotas desde UI,
-2. mostrar mejor el saldo real del préstamo,
-3. dejar de vender placeholders como módulos reales,
-4. endurecer un poco la validación técnica básica.
+Pendientes reales para la siguiente etapa:
+1. legajo separado y adjuntos,
+2. decidir alcance de seguridad frontend (si aplica),
+3. agregar pruebas de integración con base real de test (datasource/Flyway).

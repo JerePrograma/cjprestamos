@@ -37,25 +37,26 @@ Reglas:
 - BT-3001 — módulo backend de préstamo
 - BT-3002 — cálculo simple por porcentaje fijo
 - BT-3003 — backend de generación/listado de cuotas
+- BT-3004 — UI alta de préstamo
+- BT-3005 — listado y detalle de préstamos
+- BT-3006 — UI de generación automática de cuotas
+- BT-3007 — UI de carga manual de cuotas
+- BT-3008 — visibilidad clara del estado de cierre operativo del préstamo
 - BT-4001 — registro de pago
 - BT-4002 — imputación de pagos
+- BT-4003 — UI de pagos dentro del detalle de préstamo
 - BT-5001 — backend del dashboard
 - BT-5002 — UI del dashboard
 - BT-6001 — referencias del préstamo
 - BT-6002 — colores de referencia para persona
+- BT-0004 — honestidad de navegación / ocultar placeholders
+- BT-0005 — reforzar test de arranque e integración real (alcance básico)
 
 ### PARCIAL
-- BT-3004 — UI alta de préstamo
-- BT-3005 — listado y detalle de préstamos
-- BT-4003 — UI de pagos
 - BT-9001 — seguridad mínima backend
 
 ### PENDIENTE CRÍTICO
-- BT-3006 — UI de generación automática de cuotas
-- BT-3007 — UI de carga manual de cuotas
-- BT-3008 — visibilidad clara del estado de cierre operativo del préstamo
-- BT-0004 — honestidad de navegación / ocultar placeholders
-- BT-0005 — reforzar test de arranque e integración real
+- BT-0006 — pruebas de integración con datasource/Flyway en entorno de test dedicado
 
 ### PENDIENTE NO CRÍTICO
 - BT-7001 — renegociación simple
@@ -71,7 +72,7 @@ Reglas:
 Estas son las tareas que realmente acercan el proyecto a “me sirve de verdad”:
 
 ### BT-3006 — UI de generación automática de cuotas
-**Estado:** PENDIENTE  
+**Estado:** HECHA  
 **Objetivo:** permitir generar cuotas desde la interfaz para préstamos mensuales o cada X días.
 
 **Archivos probables**
@@ -88,7 +89,7 @@ Estas son las tareas que realmente acercan el proyecto a “me sirve de verdad�
 ---
 
 ### BT-3007 — UI de carga manual de cuotas
-**Estado:** PENDIENTE  
+**Estado:** HECHA  
 **Objetivo:** permitir ingresar fechas y montos manuales cuando `frecuenciaTipo = FECHAS_MANUALES`.
 
 **Criterio de aceptación**
@@ -100,7 +101,7 @@ Estas son las tareas que realmente acercan el proyecto a “me sirve de verdad�
 ---
 
 ### BT-3008 — Cierre operativo del préstamo en UI
-**Estado:** PENDIENTE  
+**Estado:** HECHA  
 **Objetivo:** que el detalle del préstamo muestre con claridad:
 - total programado,
 - total pagado,
@@ -113,7 +114,7 @@ Estas son las tareas que realmente acercan el proyecto a “me sirve de verdad�
 ---
 
 ### BT-0004 — Honestidad de navegación
-**Estado:** PENDIENTE  
+**Estado:** HECHA  
 **Objetivo:** no mostrar en el menú principal páginas placeholder sin valor operativo.
 
 **Archivos probables**
@@ -129,8 +130,8 @@ Estas son las tareas que realmente acercan el proyecto a “me sirve de verdad�
 ---
 
 ### BT-0005 — Reforzar test de arranque e integración real
-**Estado:** PENDIENTE  
-**Objetivo:** reemplazar o complementar tests triviales de arranque por pruebas con valor real.
+**Estado:** HECHA (alcance básico)  
+**Objetivo:** reemplazar tests triviales de arranque por una validación real de contexto web + endpoint de health.
 
 **Archivos probables**
 - `backend/src/test/java/com/cjprestamos/backend/CjprestamosBackendApplicationTests.java`
@@ -140,50 +141,49 @@ Estas son las tareas que realmente acercan el proyecto a “me sirve de verdad�
 **Criterio de aceptación**
 - el proyecto no parezca más validado de lo que realmente está.
 
+**Nota de alcance**
+- hoy valida contexto Spring + seguridad mínima + `/api/health` con perfil `test`,
+- todavía no valida datasource ni Flyway en test de integración real.
+
 ---
 
 # 2. Tareas ya adelantadas pero no cerradas del todo
 
 ### BT-3004 — UI alta de préstamo
-**Estado:** PARCIAL  
+**Estado:** HECHA  
 **Qué ya existe**
 - formulario de alta,
 - cálculo sugerido,
 - validaciones importantes,
 - integración de creación.
 
-**Qué falta para marcarla como cerrada**
-- integración natural con generación de cuotas,
-- reducción de fricción entre “crear préstamo” y “dejarlo listo para operar”.
+**Estado de cierre**
+- la misma vista permite crear préstamo y continuar con generación de cuotas.
 
 ---
 
 ### BT-3005 — listado y detalle de préstamos
-**Estado:** PARCIAL  
+**Estado:** HECHA  
 **Qué ya existe**
 - listado,
 - detalle,
 - resumen económico,
 - referencia y observaciones,
-- cuotas y pagos visibles si existen.
-
-**Qué falta**
-- indicar mejor si faltan cuotas por generar,
-- destacar saldo pendiente real,
-- evitar sensación de flujo incompleto.
+- cuotas y pagos visibles si existen,
+- estado operativo de cuotas (generadas o pendientes),
+- total programado, total pagado y saldo pendiente.
 
 ---
 
 ### BT-4003 — UI de pagos
-**Estado:** PARCIAL  
+**Estado:** HECHA para el MVP  
 **Qué ya existe**
 - registro de pagos desde el detalle,
 - historial visible,
 - refresco de queries relevantes.
 
-**Qué falta**
-- eventualmente exponer mejor la imputación/saldo por cuota,
-- decidir si la ruta `/pagos` sigue existiendo o si pagos vive solo dentro de préstamos.
+**Qué queda fuera**
+- no hay pantalla separada `/pagos` porque el flujo operativo vive en detalle de préstamo.
 
 ---
 
@@ -231,16 +231,10 @@ Estas son las tareas que realmente acercan el proyecto a “me sirve de verdad�
 # 4. Orden sugerido de ejecución desde hoy
 
 ## Lote A — Cierre del MVP operativo
-- BT-3006
-- BT-3007
-- BT-3008
-- BT-0004
-- BT-0005
+- BT-0006
 
 ## Lote B — Consolidación
-- revisar BT-3004 como HECHA o mantener PARCIAL
-- revisar BT-3005 como HECHA o mantener PARCIAL
-- revisar BT-4003 como HECHA o mantener PARCIAL
+- revisar BT-9001 (seguridad mínima) según operación interna real
 
 ## Lote C — Evolución post-MVP
 - BT-7001

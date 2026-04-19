@@ -394,6 +394,22 @@ export function PrestamosPage() {
   const detalleActual = detallePrestamo.data;
   const cuotasActuales = cuotasPrestamo.data ?? [];
   const tieneCuotasGeneradas = cuotasActuales.length > 0;
+  const totalProgramado = useMemo(() => {
+    if (resumenPrestamo.data) {
+      return resumenPrestamo.data.totalADevolver;
+    }
+
+    return cuotasActuales.reduce(
+      (acumulado, cuota) => acumulado + cuota.montoProgramado,
+      0,
+    );
+  }, [resumenPrestamo.data, cuotasActuales]);
+  const totalPagado = useMemo(
+    () =>
+      cuotasActuales.reduce((acumulado, cuota) => acumulado + cuota.montoPagado, 0),
+    [cuotasActuales],
+  );
+  const saldoPendiente = Math.max(totalProgramado - totalPagado, 0);
 
   const actualizarFilaCuotaManual = (
     index: number,
@@ -826,6 +842,33 @@ export function PrestamosPage() {
 
               <div className="rounded border border-slate-200 p-3">
                 <h3 className="mb-2 text-sm font-semibold">Cuotas asociadas</h3>
+                <div className="mb-3 rounded border border-slate-200 bg-slate-50 p-3">
+                  <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+                    Cierre operativo
+                  </h4>
+                  <dl className="mt-2 grid gap-2 text-sm md:grid-cols-2">
+                    <div className="md:col-span-2">
+                      <dt className="text-xs text-slate-500">Estado de cuotas</dt>
+                      <dd className="font-medium text-slate-800">
+                        {tieneCuotasGeneradas
+                          ? "Cuotas generadas"
+                          : "Pendiente de generación de cuotas"}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-slate-500">Total programado</dt>
+                      <dd>{formatearMoneda(totalProgramado)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-slate-500">Total pagado</dt>
+                      <dd>{formatearMoneda(totalPagado)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-slate-500">Saldo pendiente</dt>
+                      <dd>{formatearMoneda(saldoPendiente)}</dd>
+                    </div>
+                  </dl>
+                </div>
                 {detalleActual && (
                   <div className="mb-3 rounded border border-slate-200 bg-slate-50 p-3">
                     {tieneCuotasGeneradas ? (
