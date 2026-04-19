@@ -34,15 +34,16 @@ El criterio humano sigue mandando.
 ### Núcleo ya encaminado
 - Personas: CRUD backend y UI básica.
 - Préstamos: alta, listado, detalle y cálculo sugerido.
-- Cuotas: backend de generación automática/manual ya implementado.
+- Cuotas: generación automática/manual disponible desde UI y backend.
 - Pagos: registro, imputación y actualización de estados.
 - Dashboard: métricas principales visibles.
 - Referencias y colores: soporte inicial implementado.
+- Detalle operativo del préstamo: estado de cuotas, total programado, total pagado y saldo pendiente.
 
-### Pendiente crítico para considerar “MVP operativo cerrado”
-- cerrar desde la UI el flujo de generación/carga de cuotas,
-- alinear navegación con el estado real del producto,
-- reforzar pruebas de arranque/integración para no depender solo de tests livianos.
+### Pendiente principal para considerar “MVP operativo cerrado”
+- completar módulo de legajos (hoy fuera del flujo principal),
+- definir si habrá pantalla operativa separada de pagos o si pagos vive solo en préstamos,
+- endurecer cobertura de integración de backend con datasource/Flyway en entorno de test dedicado.
 
 ### Estado real recomendado
 Para seguimiento de producto y priorización:
@@ -83,19 +84,11 @@ Para seguimiento de producto y priorización:
 /frontend
 AGENTS.md
 BACKLOG_CODEX.md
+ESTADO_REAL_MVP.md
+CHECKLIST_CIERRE_MVP.md
 DECISIONES_MVP.md
 CHECKLIST_ENTREGA_CODEX.md
 ```
-
-## Estructura sugerida a futuro, pero no obligatoria hoy
-
-```text
-/docs
-/infra
-ESTADO_REAL_MVP.md
-```
-
-No listar archivos o carpetas como parte del repo estable si todavía no existen o no se usan realmente.
 
 ---
 
@@ -164,8 +157,6 @@ Una entrega queda realmente cerrada cuando el flujo principal se puede usar de p
 
 ## Prioridad inmediata recomendada
 
-1. UI de generación/carga de cuotas.
-2. Visualización más clara del saldo real por préstamo.
-3. Honestidad de navegación: ocultar o marcar placeholders.
-4. Reforzar tests de arranque/integración.
-5. Recién después: legajos y adjuntos.
+1. Consolidar calidad técnica de integración backend (DB/Flyway en test controlado).
+2. Definir alcance real de navegación para módulos no operativos (legajos y pagos separados).
+3. Recién después: legajos y adjuntos.

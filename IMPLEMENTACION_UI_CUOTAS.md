@@ -2,8 +2,8 @@
 
 ## Objetivo
 
-Cerrar el faltante principal del MVP:
-**permitir generar o cargar cuotas desde la UI principal de préstamos**.
+Dejar documentado el flujo vigente para:
+**generar o cargar cuotas desde la UI principal de préstamos**.
 
 ---
 
@@ -21,25 +21,27 @@ Además:
 
 ---
 
-## Qué falta en frontend
+## Estado actual en frontend
 
-Hoy la pantalla de préstamos:
+La pantalla de préstamos hoy:
 - crea préstamo,
 - calcula,
-- lista cuotas si existen,
+- genera cuotas automáticas,
+- guarda cuotas manuales para `FECHAS_MANUALES`,
+- lista cuotas,
 - registra pagos,
-- edita referencia,
-
-pero **no permite generar las cuotas**.
+- muestra historial de pagos,
+- permite editar referencia y observaciones,
+- muestra cierre operativo del préstamo (estado cuotas, total programado, total pagado, saldo pendiente).
 
 ---
 
-## Propuesta concreta
+## Implementación aplicada
 
 ### Paso 1 — API frontend
 Modificar `frontend/src/services/prestamos/prestamosApi.ts`
 
-Agregar:
+Implementado:
 - `generarCuotasPrestamo(id: number, payload?: GenerarCuotasPayload)`
 
 Payload esperado:
@@ -51,14 +53,13 @@ Payload esperado:
 ### Paso 2 — Hook de React Query
 Modificar `frontend/src/modules/prestamos/hooks/usePrestamos.ts`
 
-Agregar:
+Implementado:
 - `useGenerarCuotasPrestamo()`
 
-En `onSuccess` invalidar:
+En `onSuccess` invalida:
 - `['prestamos']`
 - `['prestamos', id]`
 - `['prestamos', id, 'cuotas']`
-- `['prestamos', id, 'resumen']`
 - `['dashboard']`
 
 ---
@@ -66,10 +67,9 @@ En `onSuccess` invalidar:
 ### Paso 3 — Tipos
 Modificar `frontend/src/modules/prestamos/types/prestamo.ts`
 
-Agregar:
-- `CuotaManualFormulario`
+Implementado:
+- `CuotaManualPayload`
 - `GenerarCuotasPayload`
-- helpers para convertir formulario -> payload
 
 ---
 
@@ -136,10 +136,14 @@ Mostrar el listado como hoy.
 
 ---
 
-## Criterio de aceptación
+## Criterio de aceptación vigente
 
-Esta tarea queda cerrada cuando:
+Este frente se considera **HECHO** cuando:
 - puedo crear un préstamo,
 - puedo generar o cargar sus cuotas desde la UI,
 - puedo verlas sin salir de la pantalla,
-- y el flujo deja de depender de backend “escondido”.
+- y el flujo no depende de llamadas manuales escondidas al backend.
+
+## Pendientes relacionados (fuera de este documento)
+- pruebas frontend automatizadas del flujo de cuotas (si el proyecto incorpora suite de UI),
+- integración backend de mayor profundidad con DB/Flyway en test end-to-end.

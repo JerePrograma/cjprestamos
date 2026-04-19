@@ -3,11 +3,8 @@
 ## 1. Documentación / gobernanza
 
 ### `README.md`
-**Acción sugerida**
-- corregir estructura prometida,
-- agregar estado real del MVP,
-- documentar criterio de cierre,
-- dejar de vender archivos/carpetas no confirmados.
+**Estado actual**
+- alineado con estado real del MVP y prioridades vigentes.
 
 ### `AGENTS.md`
 **Acción sugerida**
@@ -17,70 +14,59 @@
 - forzar actualización del estado real del MVP.
 
 ### `BACKLOG_CODEX.md`
-**Acción sugerida**
-- pasar de backlog ideal a backlog con estado real,
-- marcar tareas hechas / parciales / pendientes,
-- agregar nuevas tareas críticas de UI de cuotas y honestidad de navegación.
+**Estado actual**
+- backlog orientado a estado real con tareas en HECHA / PARCIAL / PENDIENTE.
 
 ### `ESTADO_REAL_MVP.md`
-**Archivo nuevo sugerido**
-- snapshot corto y honesto del estado del producto.
+**Estado actual**
+- snapshot activo del estado operativo del MVP.
 
 ### `CHECKLIST_CIERRE_MVP.md`
-**Archivo nuevo sugerido**
-- checklist práctico para no declarar cosas cerradas antes de tiempo.
+**Estado actual**
+- checklist disponible para cierre funcional real.
 
 ---
 
 ## 2. Frontend / producto
 
 ### `frontend/src/modules/prestamos/PrestamosPage.tsx`
-**Acción sugerida**
-- agregar bloque para generar cuotas automáticas,
-- agregar editor para cuotas manuales cuando `FECHAS_MANUALES`,
-- mostrar estado “cuotas generadas / pendientes de generar”,
-- mostrar saldo pendiente real.
+**Estado actual**
+- bloque de generación automática implementado,
+- editor de cuotas manuales implementado para `FECHAS_MANUALES`,
+- estado de cuotas y cierre operativo visible en detalle.
 
 ### `frontend/src/modules/prestamos/hooks/usePrestamos.ts`
-**Acción sugerida**
-- agregar hooks de generación de cuotas,
-- invalidar detalle, cuotas, resumen y dashboard cuando corresponda.
+**Estado actual**
+- `useGenerarCuotasPrestamo` implementado con invalidaciones de queries relevantes.
 
 ### `frontend/src/services/prestamos/prestamosApi.ts`
-**Acción sugerida**
-- agregar llamadas a:
-  - `POST /prestamos/{id}/cuotas/generar`
-  - eventual helper para cuotas manuales.
+**Estado actual**
+- `generarCuotasPrestamo` ya implementado con payload opcional manual.
 
 ### `frontend/src/modules/prestamos/types/prestamo.ts`
-**Acción sugerida**
-- agregar tipos para cuotas manuales / request de generación.
+**Estado actual**
+- tipos de cuotas manuales y payload de generación disponibles.
 
 ### `frontend/src/components/layout/LayoutPrincipal.tsx`
-**Acción sugerida**
-- ocultar `Pagos` y `Legajos`,
-- o marcarlos explícitamente como pendientes,
-- o dejar una sola entrada principal de trabajo si todavía no hay módulo real separado.
+**Estado actual**
+- navegación principal enfocada en módulos operativos (sin placeholders).
 
 ### `frontend/src/modules/pagos/PagosPage.tsx`
-**Acción sugerida**
-- o se elimina del menú,
-- o se transforma en pantalla real,
-- o se deja como futura y no navegable.
+**Estado actual**
+- no se expone como ruta principal; pagos se operan desde detalle de préstamo.
 
 ### `frontend/src/modules/legajos/LegajosPage.tsx`
-**Acción sugerida**
-- mismo criterio que Pagos.
+**Estado actual**
+- no se expone como ruta principal hasta tener valor operativo real.
 
 ---
 
 ## 3. Backend / calidad técnica
 
 ### `backend/src/test/java/com/cjprestamos/backend/CjprestamosBackendApplicationTests.java`
-**Acción sugerida**
-- restaurar o complementar con prueba de arranque real,
-- no dejar solo una instanciación de clase.
+**Estado actual**
+- prueba de arranque con contexto Spring + health endpoint implementada.
 
 ### tests de integración o controller relevantes
-**Acción sugerida**
-- asegurar que el wiring mínimo importante siga vivo.
+**Pendiente real**
+- sumar integración con datasource/Flyway en un entorno de test controlado.
