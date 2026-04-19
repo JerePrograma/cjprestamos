@@ -1,5 +1,4 @@
 import axios from 'axios';
-import type { SesionOperadora } from './sesionOperadora';
 
 const baseURL = import.meta.env.VITE_API_BASE_URL ?? '/api';
 
@@ -10,8 +9,13 @@ export const api = axios.create({
   timeout: 10_000,
 });
 
-export function configurarSesionApi(sesion: SesionOperadora) {
-  api.defaults.headers.common.Authorization = `Basic ${btoa(`${sesion.usuario}:${sesion.password}`)}`;
+type CredencialesOperadora = {
+  usuario: string;
+  password: string;
+};
+
+export function configurarSesionApi(credenciales: CredencialesOperadora) {
+  api.defaults.headers.common.Authorization = `Basic ${btoa(`${credenciales.usuario}:${credenciales.password}`)}`;
 }
 
 export function limpiarSesionApi() {

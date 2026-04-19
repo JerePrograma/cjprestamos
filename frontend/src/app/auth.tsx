@@ -1,46 +1,40 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { api, configurarSesionApi, limpiarSesionApi, registrarManejadorNoAutorizado } from '../services/api';
-import {
-  guardarSesionOperadora,
-  leerSesionOperadora,
-  limpiarSesionOperadora,
-  type SesionOperadora,
-} from '../services/sesionOperadora';
+import { guardarSesionOperadora, type SesionOperadora } from '../services/sesionOperadora';
 import { queryClient } from './queryClient';
+
+type CredencialesOperadora = {
+  usuario: string;
+  password: string;
+};
 
 type AuthContextType = {
   sesion: SesionOperadora | null;
-  iniciarSesion: (sesion: SesionOperadora) => Promise<void>;
+  iniciarSesion: (credenciales: CredencialesOperadora) => Promise<void>;
   cerrarSesion: () => void;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 function limpiarSesionGlobal() {
-  limpiarSesionOperadora();
   limpiarSesionApi();
   queryClient.clear();
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [sesion, setSesion] = useState<SesionOperadora | null>(() => {
-    const sesionInicial = leerSesionOperadora();
-    if (sesionInicial) {
-      configurarSesionApi(sesionInicial);
-    }
-    return sesionInicial;
-  });
+  const [sesion, setSesion] = useState<SesionOperadora | null>(null);
 
   const cerrarSesion = useCallback(() => {
     limpiarSesionGlobal();
     setSesion(null);
   }, []);
 
-  const iniciarSesion = async (nuevaSesion: SesionOperadora) => {
-    configurarSesionApi(nuevaSesion);
+  const iniciarSesion = async (credenciales: CredencialesOperadora) => {
+    configurarSesionApi(credenciales);
 
     try {
       await api.get('/dashboard/resumen');
+      const nuevaSesion = { usuario: credenciales.usuario };
       guardarSesionOperadora(nuevaSesion);
       setSesion(nuevaSesion);
       queryClient.clear();

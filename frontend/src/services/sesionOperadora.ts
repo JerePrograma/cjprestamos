@@ -1,35 +1,26 @@
 export type SesionOperadora = {
   usuario: string;
-  password: string;
 };
 
-const CLAVE_SESION = 'cjprestamos.sesion.operadora';
+const CLAVE_USUARIO_RECORDADO = 'cjprestamos.sesion.operadora.usuario';
 
 export function leerSesionOperadora(): SesionOperadora | null {
-  const valor = sessionStorage.getItem(CLAVE_SESION);
-  if (!valor) {
+  const usuario = sessionStorage.getItem(CLAVE_USUARIO_RECORDADO);
+  if (!usuario) {
     return null;
   }
 
-  try {
-    const sesionParseada = JSON.parse(valor) as Partial<SesionOperadora>;
-    if (!sesionParseada.usuario || !sesionParseada.password) {
-      return null;
-    }
-
-    return {
-      usuario: sesionParseada.usuario,
-      password: sesionParseada.password,
-    };
-  } catch {
-    return null;
-  }
+  return { usuario };
 }
 
 export function guardarSesionOperadora(sesion: SesionOperadora) {
-  sessionStorage.setItem(CLAVE_SESION, JSON.stringify(sesion));
+  sessionStorage.setItem(CLAVE_USUARIO_RECORDADO, sesion.usuario);
 }
 
 export function limpiarSesionOperadora() {
-  sessionStorage.removeItem(CLAVE_SESION);
+  // Se conserva el último usuario para facilitar reingreso manual.
+}
+
+export function olvidarUsuarioRecordado() {
+  sessionStorage.removeItem(CLAVE_USUARIO_RECORDADO);
 }
