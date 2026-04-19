@@ -37,6 +37,16 @@ export type CuotaPrestamo = {
   estado: EstadoCuota;
 };
 
+export type CuotaManualPayload = {
+  numeroCuota: number;
+  fechaVencimiento: string;
+  montoProgramado: number;
+};
+
+export type GenerarCuotasPayload = {
+  cuotasManuales?: CuotaManualPayload[];
+};
+
 export type CalculoPrestamoPayload = {
   montoInicial: number;
   porcentajeFijoSugerido: number | null;
@@ -120,4 +130,3 @@ export function crearPayloadCalculo(formulario: PrestamoFormulario): CalculoPres
     cantidadCuotas: Number(formulario.cantidadCuotas),
   };
 }
-

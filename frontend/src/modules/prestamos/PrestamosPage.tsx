@@ -12,6 +12,7 @@ import {
   useCrearPrestamo,
   useCuotasPrestamo,
   useDetallePrestamo,
+  useGenerarCuotasPrestamo,
   useListadoPrestamos,
   useResumenPrestamo,
 } from "./hooks/usePrestamos";
@@ -20,11 +21,19 @@ import {
   crearPayloadPrestamo,
   formularioInicialPrestamo,
   type CalculoPrestamoResultado,
+  type CuotaManualPayload,
   type FrecuenciaTipo,
+  type GenerarCuotasPayload,
   type PrestamoFormulario,
   type PrestamoResponse,
   type ReferenciaPrestamoPayload,
 } from "./types/prestamo";
+
+type CuotaManualFila = {
+  numeroCuota: string;
+  fechaVencimiento: string;
+  montoProgramado: string;
+};
 
 function esFormularioMinimoValido(formulario: PrestamoFormulario) {
   return (
@@ -85,6 +94,14 @@ function etiquetaEstado(estado: PrestamoResponse["estado"]) {
   return "bg-red-100 text-red-700";
 }
 
+function construirFilasCuotasManuales(cantidadCuotas: number): CuotaManualFila[] {
+  return Array.from({ length: cantidadCuotas }, (_, index) => ({
+    numeroCuota: String(index + 1),
+    fechaVencimiento: "",
+    montoProgramado: "",
+  }));
+}
+
 export function PrestamosPage() {
   const [formulario, setFormulario] = useState<PrestamoFormulario>(
     formularioInicialPrestamo,
@@ -105,6 +122,11 @@ export function PrestamosPage() {
   const [mensajeReferencia, setMensajeReferencia] = useState<string | null>(
     null,
   );
+  const [filasCuotasManuales, setFilasCuotasManuales] = useState<
+    CuotaManualFila[]
+  >([]);
+  const [errorCuotas, setErrorCuotas] = useState<string | null>(null);
+  const [mensajeCuotas, setMensajeCuotas] = useState<string | null>(null);
 
   const personas = useListadoPersonas();
   const prestamos = useListadoPrestamos();
@@ -115,6 +137,7 @@ export function PrestamosPage() {
 
   const crearPrestamo = useCrearPrestamo();
   const calcularPrestamo = useCalcularPrestamo();
+  const generarCuotasPrestamo = useGenerarCuotasPrestamo();
   const registrarPago = useRegistrarPago();
   const actualizarReferenciaPrestamo = useActualizarReferenciaPrestamo();
   const puedeRegistrarPago = detallePrestamo.data?.estado === "ACTIVO";
@@ -144,6 +167,8 @@ export function PrestamosPage() {
   useEffect(() => {
     setErrorPago(null);
     setMensajePago(null);
+    setErrorCuotas(null);
+    setMensajeCuotas(null);
   }, [seleccionId]);
 
   useEffect(() => {
@@ -158,6 +183,20 @@ export function PrestamosPage() {
     setErrorReferencia(null);
     setMensajeReferencia(null);
   }, [detallePrestamo.data?.id]);
+
+  useEffect(() => {
+    const detalle = detallePrestamo.data;
+    if (!detalle || detalle.frecuenciaTipo !== "FECHAS_MANUALES") {
+      setFilasCuotasManuales([]);
+      return;
+    }
+
+    setFilasCuotasManuales(construirFilasCuotasManuales(detalle.cantidadCuotas));
+  }, [
+    detallePrestamo.data?.id,
+    detallePrestamo.data?.frecuenciaTipo,
+    detallePrestamo.data?.cantidadCuotas,
+  ]);
 
   const personasPorId = useMemo(() => {
     const mapa = new Map<number, string>();
@@ -341,6 +380,163 @@ export function PrestamosPage() {
         obtenerMensajeError(
           error,
           "No se pudo registrar el pago. Revisá los datos e intentá nuevamente.",
+        ),
+      );
+    }
+  };
+
+  const detalleActual = detallePrestamo.data;
+  const cuotasActuales = cuotasPrestamo.data ?? [];
+  const tieneCuotasGeneradas = cuotasActuales.length > 0;
+
+  const actualizarFilaCuotaManual = (
+    index: number,
+    campo: keyof CuotaManualFila,
+    valor: string,
+  ) => {
+    setFilasCuotasManuales((actual) =>
+      actual.map((fila, filaIndex) =>
+        filaIndex === index ? { ...fila, [campo]: valor } : fila,
+      ),
+    );
+    setErrorCuotas(null);
+    setMensajeCuotas(null);
+  };
+
+  const validarCuotasManuales = (
+    filas: CuotaManualFila[],
+    cantidadCuotas: number,
+    totalADevolver: number,
+  ): { valido: true; payload: GenerarCuotasPayload } | { valido: false; mensaje: string } => {
+    if (filas.length !== cantidadCuotas) {
+      return {
+        valido: false,
+        mensaje: "La cantidad de cuotas cargadas no coincide con la cantidad esperada.",
+      };
+    }
+
+    const numeros = new Set<number>();
+    const cuotasManuales: CuotaManualPayload[] = [];
+
+    for (let index = 0; index < filas.length; index += 1) {
+      const fila = filas[index];
+      const numero = Number(fila.numeroCuota);
+      const monto = Number(fila.montoProgramado);
+
+      if (!Number.isInteger(numero)) {
+        return {
+          valido: false,
+          mensaje: `La cuota ${index + 1} debe tener número obligatorio.`,
+        };
+      }
+
+      if (numero < 1 || numero > cantidadCuotas) {
+        return {
+          valido: false,
+          mensaje: `La cuota ${index + 1} debe tener un número entre 1 y ${cantidadCuotas}.`,
+        };
+      }
+
+      if (numeros.has(numero)) {
+        return {
+          valido: false,
+          mensaje: "No puede haber números de cuota repetidos.",
+        };
+      }
+      numeros.add(numero);
+
+      if (!fila.fechaVencimiento) {
+        return {
+          valido: false,
+          mensaje: `La cuota ${numero} debe tener fecha de vencimiento.`,
+        };
+      }
+
+      if (!(monto > 0)) {
+        return {
+          valido: false,
+          mensaje: `La cuota ${numero} debe tener un monto mayor a 0.`,
+        };
+      }
+
+      cuotasManuales.push({
+        numeroCuota: numero,
+        fechaVencimiento: fila.fechaVencimiento,
+        montoProgramado: monto,
+      });
+    }
+
+    const totalCargado = cuotasManuales.reduce(
+      (acumulado, cuota) => acumulado + cuota.montoProgramado,
+      0,
+    );
+
+    if (Math.round(totalCargado * 100) !== Math.round(totalADevolver * 100)) {
+      return {
+        valido: false,
+        mensaje: "La suma de las cuotas debe coincidir con el total a devolver.",
+      };
+    }
+
+    return {
+      valido: true,
+      payload: { cuotasManuales },
+    };
+  };
+
+  const generarCuotas = async () => {
+    if (!detallePrestamo.data) {
+      return;
+    }
+
+    if ((cuotasPrestamo.data ?? []).length > 0) {
+      setErrorCuotas("Este préstamo ya tiene cuotas generadas. No se puede regenerar.");
+      return;
+    }
+
+    let payload: GenerarCuotasPayload | undefined;
+
+    if (detallePrestamo.data.frecuenciaTipo === "FECHAS_MANUALES") {
+      if (!resumenPrestamo.data) {
+        setErrorCuotas("No se pudo obtener el total a devolver para validar cuotas manuales.");
+        return;
+      }
+
+      const validacion = validarCuotasManuales(
+        filasCuotasManuales,
+        detallePrestamo.data.cantidadCuotas,
+        resumenPrestamo.data.totalADevolver,
+      );
+
+      if (!validacion.valido) {
+        setErrorCuotas(validacion.mensaje);
+        return;
+      }
+
+      payload = validacion.payload;
+    }
+
+    try {
+      await generarCuotasPrestamo.mutateAsync({
+        id: detallePrestamo.data.id,
+        payload,
+      });
+      setErrorCuotas(null);
+      setMensajeCuotas(
+        detallePrestamo.data.frecuenciaTipo === "FECHAS_MANUALES"
+          ? "Cuotas manuales guardadas correctamente."
+          : "Cuotas generadas correctamente.",
+      );
+      if (detallePrestamo.data.frecuenciaTipo === "FECHAS_MANUALES") {
+        setFilasCuotasManuales(
+          construirFilasCuotasManuales(detallePrestamo.data.cantidadCuotas),
+        );
+      }
+    } catch (error) {
+      setErrorCuotas(
+        obtenerMensajeError(
+          error,
+          "No se pudo generar las cuotas del préstamo. Revisá los datos e intentá nuevamente.",
         ),
       );
     }
@@ -630,19 +826,128 @@ export function PrestamosPage() {
 
               <div className="rounded border border-slate-200 p-3">
                 <h3 className="mb-2 text-sm font-semibold">Cuotas asociadas</h3>
+                {detalleActual && (
+                  <div className="mb-3 rounded border border-slate-200 bg-slate-50 p-3">
+                    {tieneCuotasGeneradas ? (
+                      <p className="text-sm text-slate-600">
+                        Este préstamo ya tiene cuotas generadas. No se permite
+                        regeneración desde esta vista.
+                      </p>
+                    ) : detalleActual.frecuenciaTipo === "FECHAS_MANUALES" ? (
+                      <div className="space-y-3">
+                        <p className="text-sm text-slate-600">
+                          Cargá las cuotas manuales para este préstamo.
+                        </p>
+                        <div className="space-y-2">
+                          {filasCuotasManuales.map((fila, index) => (
+                            <div
+                              key={`cuota-manual-${index}`}
+                              className="grid gap-2 md:grid-cols-3"
+                            >
+                              <label className="text-xs text-slate-600">
+                                Número de cuota
+                                <input
+                                  type="number"
+                                  min="1"
+                                  max={detalleActual.cantidadCuotas}
+                                  value={fila.numeroCuota}
+                                  onChange={(event) =>
+                                    actualizarFilaCuotaManual(
+                                      index,
+                                      "numeroCuota",
+                                      event.target.value,
+                                    )
+                                  }
+                                  className="mt-1 w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
+                                />
+                              </label>
+                              <label className="text-xs text-slate-600">
+                                Fecha de vencimiento
+                                <input
+                                  type="date"
+                                  value={fila.fechaVencimiento}
+                                  onChange={(event) =>
+                                    actualizarFilaCuotaManual(
+                                      index,
+                                      "fechaVencimiento",
+                                      event.target.value,
+                                    )
+                                  }
+                                  className="mt-1 w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
+                                />
+                              </label>
+                              <label className="text-xs text-slate-600">
+                                Monto programado
+                                <input
+                                  type="number"
+                                  min="0.01"
+                                  step="0.01"
+                                  value={fila.montoProgramado}
+                                  onChange={(event) =>
+                                    actualizarFilaCuotaManual(
+                                      index,
+                                      "montoProgramado",
+                                      event.target.value,
+                                    )
+                                  }
+                                  className="mt-1 w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
+                                />
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={generarCuotas}
+                          disabled={generarCuotasPrestamo.isPending}
+                          className="rounded bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-60"
+                        >
+                          {generarCuotasPrestamo.isPending
+                            ? "Guardando cuotas..."
+                            : "Guardar cuotas manuales"}
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <p className="text-sm text-slate-600">
+                          Este préstamo todavía no tiene cuotas. Generalas para
+                          comenzar a operar pagos e imputaciones.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={generarCuotas}
+                          disabled={generarCuotasPrestamo.isPending}
+                          className="rounded bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-60"
+                        >
+                          {generarCuotasPrestamo.isPending
+                            ? "Generando cuotas..."
+                            : "Generar cuotas"}
+                        </button>
+                      </div>
+                    )}
+                    {errorCuotas && (
+                      <p className="mt-2 text-sm text-red-700">{errorCuotas}</p>
+                    )}
+                    {mensajeCuotas && (
+                      <p className="mt-2 text-sm text-emerald-700">
+                        {mensajeCuotas}
+                      </p>
+                    )}
+                  </div>
+                )}
                 {cuotasPrestamo.isLoading ? (
                   <p className="text-sm text-slate-500">Cargando cuotas...</p>
                 ) : cuotasPrestamo.isError ? (
                   <p className="text-sm text-red-700">
                     No se pudo cargar las cuotas del préstamo.
                   </p>
-                ) : (cuotasPrestamo.data ?? []).length === 0 ? (
+                ) : cuotasActuales.length === 0 ? (
                   <p className="text-sm text-slate-500">
                     Este préstamo todavía no tiene cuotas generadas.
                   </p>
                 ) : (
                   <ul className="space-y-2">
-                    {(cuotasPrestamo.data ?? []).map((cuota) => (
+                    {cuotasActuales.map((cuota) => (
                       <li
                         key={cuota.id}
                         className="rounded border border-slate-200 px-3 py-2 text-sm"
