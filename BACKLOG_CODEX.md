@@ -221,10 +221,10 @@ Las siguientes tareas quedan como referencia de cierre ya alcanzado:
 
 # 4. Orden sugerido de ejecución desde hoy
 
-## Lote A — Robustez técnica
+## Lote A — Cierre del MVP operativo
 - BT-0006
 
-## Lote B — Consolidación mínima
+## Lote B — Consolidación
 - revisar BT-9001 (seguridad mínima) según operación interna real
 
 ## Lote C — Evolución post-MVP

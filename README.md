@@ -39,12 +39,11 @@ El criterio humano sigue mandando.
 - Dashboard: métricas principales visibles.
 - Referencias y colores: soporte inicial implementado.
 - Detalle operativo del préstamo: estado de cuotas, total programado, total pagado y saldo pendiente.
-- Navegación principal sin placeholders: pagos operativos dentro de préstamos y legajos fuera del menú principal.
 
-### Pendientes post-MVP (reales hoy)
-- completar módulo de legajos y adjuntos (hoy fuera del flujo principal),
-- endurecer cobertura de integración backend con datasource/Flyway en tests automatizados,
-- evaluar seguridad frontend adicional si la operación lo requiere.
+### Pendiente principal para considerar “MVP operativo cerrado”
+- completar módulo de legajos (hoy fuera del flujo principal),
+- definir si habrá pantalla operativa separada de pagos o si pagos vive solo en préstamos,
+- endurecer cobertura de integración de backend con datasource/Flyway en entorno de test dedicado.
 
 ### Estado real recomendado
 Para seguimiento de producto y priorización:
@@ -159,5 +158,5 @@ Una entrega queda realmente cerrada cuando el flujo principal se puede usar de p
 ## Prioridad inmediata recomendada
 
 1. Consolidar calidad técnica de integración backend (DB/Flyway en test controlado).
-2. Implementar legajos/adjuntos fuera del flujo operativo principal.
-3. Evaluar seguridad frontend adicional solo si agrega valor operativo real.
+2. Definir alcance real de navegación para módulos no operativos (legajos y pagos separados).
+3. Recién después: legajos y adjuntos.

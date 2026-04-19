@@ -145,4 +145,5 @@ Este frente se considera **HECHO** cuando:
 - y el flujo no depende de llamadas manuales escondidas al backend.
 
 ## Pendientes relacionados (fuera de este documento)
+- pruebas frontend automatizadas del flujo de cuotas (si el proyecto incorpora suite de UI),
 - integración backend de mayor profundidad con DB/Flyway en test end-to-end.

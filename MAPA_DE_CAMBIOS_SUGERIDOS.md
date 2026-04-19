@@ -67,11 +67,3 @@
 ### tests de integración o controller relevantes
 **Pendiente real**
 - sumar integración con datasource/Flyway en un entorno de test controlado.
-
----
-
-## 4. Pendientes reales post-MVP operativo
-
-- robustez de tests de integración backend (datasource/Flyway),
-- legajos y adjuntos fuera del flujo principal actual,
-- seguridad frontend adicional solo si la operación real lo requiere.
