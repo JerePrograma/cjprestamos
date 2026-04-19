@@ -58,7 +58,7 @@ Lista estado real.
 - color de referencia en persona: **HECHO**
 
 ### Legajos
-- backend: **PENDIENTE**
+- backend: **HECHO** (backend mínimo usable de legajo por persona)
 - UI real: **PENDIENTE**
 - pantalla placeholder: **FUERA DE NAVEGACIÓN PRINCIPAL**
 
@@ -81,7 +81,7 @@ Lista estado real.
 
 El repo está en estado:
 
-**MVP operativo principal cerrado, con evolución pendiente en legajos y robustez técnica avanzada.**
+**MVP operativo principal cerrado, con evolución pendiente en UI de legajos, adjuntos y robustez técnica avanzada.**
 
 Pendientes reales para la siguiente etapa:
-1. legajo separado y adjuntos.
+1. UI de legajo separado y adjuntos.

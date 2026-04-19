@@ -216,7 +216,14 @@ Las siguientes tareas quedan como referencia de cierre ya alcanzado:
 
 ## ÉPICA 8 — Legajo y adjuntos
 ### BT-8001 — LegajoPersona
-**Estado:** PENDIENTE
+**Estado:** HECHA
+
+**Cierre implementado**
+- backend mínimo usable de `LegajoPersona` con relación 1 a 1 con `Persona`,
+- migración Flyway para persistencia (`legajo_persona`),
+- endpoints backend para obtener, crear y actualizar por `personaId`,
+- validaciones mínimas de payload,
+- tests unitarios, de controller e integración para el flujo principal.
 
 ### BT-8002 — UI de Legajo
 **Estado:** PENDIENTE
