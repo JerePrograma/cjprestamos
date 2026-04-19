@@ -39,10 +39,11 @@ El criterio humano sigue mandando.
 - Dashboard: métricas principales visibles.
 - Referencias y colores: soporte inicial implementado.
 - Detalle operativo del préstamo: estado de cuotas, total programado, total pagado y saldo pendiente.
+- Pagos en MVP: decisión cerrada, se operan dentro del detalle de préstamo (sin pantalla separada en navegación principal).
 
-### Pendiente principal para considerar “MVP operativo cerrado”
-- completar módulo de legajos (hoy fuera del flujo principal),
-- definir si habrá pantalla operativa separada de pagos o si pagos vive solo en préstamos.
+### Pendiente post-MVP operativo (evolución)
+- legajos y adjuntos (fuera del flujo principal actual),
+- robustez técnica adicional de seguridad/autenticación frontend.
 
 ### Estado real recomendado
 Para seguimiento de producto y priorización:
@@ -156,7 +157,9 @@ Una entrega queda realmente cerrada cuando el flujo principal se puede usar de p
 
 ## Prioridad inmediata recomendada
 
-1. Definir alcance real de navegación para módulos no operativos (legajos y pagos separados).
+1. Consolidar seguridad mínima según operación interna real.
 2. Recién después: legajos y adjuntos.
 
-> Nota técnica: el backend ya incluye pruebas de integración con PostgreSQL real de test mediante Testcontainers (perfil `test`), con ejecución automática cuando hay Docker disponible.
+> Nota técnica (BT-0006): los tests de integración usan PostgreSQL real con Testcontainers (perfil `test`).  
+> En desarrollo local sin Docker pueden quedar skipeados por `@Testcontainers(disabledWithoutDocker = true)`.  
+> En CI oficial (`.github/workflows/backend-tests.yml`) se ejecuta `mvn test` en runner Ubuntu con Docker disponible, por lo que esa integración corre de forma obligatoria.
