@@ -54,14 +54,13 @@ Reglas:
 - BT-0006 — pruebas de integración con datasource/Flyway en entorno de test dedicado (respaldadas por CI con Docker)
 
 ### PARCIAL
-- BT-9001 — seguridad mínima backend
+- (sin tareas parciales activas en seguridad mínima)
 
 ### PENDIENTE CRÍTICO
 - (sin pendientes críticos activos en testing de integración)
 
 ### PENDIENTE NO CRÍTICO
 - BT-8001 a BT-8004 — legajo y adjuntos
-- BT-9002 — login frontend
 
 ---
 
@@ -197,16 +196,14 @@ Las siguientes tareas quedan como referencia de cierre ya alcanzado:
 
 ---
 
-### BT-9001 — seguridad mínima backend
-**Estado:** PARCIAL  
-**Qué ya existe**
-- Basic Auth simple,
-- CORS de desarrollo,
-- endpoint de health libre.
+### BT-9001 — seguridad mínima backend/frontend coherente
+**Estado:** HECHA  
+**Qué quedó cerrado**
+- Basic Auth simple en backend mantenido,
+- `/api/health` sigue libre,
+- frontend sin credenciales hardcodeadas automáticas,
+- envío de Authorization solo con sesión activa.
 
-**Qué falta**
-- validar si el enfoque actual es suficiente para producción interna,
-- evitar hardcodeo difuso en frontend si se endurece el acceso.
 
 ---
 
@@ -226,22 +223,26 @@ Las siguientes tareas quedan como referencia de cierre ya alcanzado:
 **Estado:** PENDIENTE
 
 ## ÉPICA 9 — Seguridad adicional
-### BT-9002 — Login frontend
-**Estado:** PENDIENTE
+### BT-9002 — Login frontend mínimo
+**Estado:** HECHA
+
+**Cierre implementado**
+- pantalla de acceso antes de entrar a la app,
+- sesión simple en `sessionStorage`,
+- botón de cierre de sesión,
+- limpieza de sesión y retorno a login cuando la API responde `401`.
 
 ---
 
 # 4. Orden sugerido de ejecución desde hoy
 
 ## Lote A — Consolidación
-- revisar BT-9001 (seguridad mínima) según operación interna real
-
-## Lote C — Evolución post-MVP
 - BT-8001
 - BT-8002
+
+## Lote C — Evolución post-MVP
 - BT-8003
 - BT-8004
-- BT-9002
 
 ---
 

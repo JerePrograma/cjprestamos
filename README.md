@@ -43,7 +43,7 @@ El criterio humano sigue mandando.
 
 ### Pendiente post-MVP operativo (evolución)
 - legajos y adjuntos (fuera del flujo principal actual),
-- robustez técnica adicional de seguridad/autenticación frontend.
+- robustez técnica adicional de seguridad interna (sin sistema de identidad avanzado).
 
 ### Estado real recomendado
 Para seguimiento de producto y priorización:
@@ -102,7 +102,7 @@ Requisitos:
 - base de datos `cjprestamos`
 - usuario/clave por defecto: `postgres/postgres`
 
-Credenciales Basic Auth de desarrollo:
+Credenciales Basic Auth de desarrollo (backend):
 - usuario: `operadora`
 - contraseña: `operadora123`
 
@@ -136,6 +136,12 @@ npm run dev
 ```
 
 El frontend usa por defecto `VITE_API_BASE_URL=/api` y Vite proxyea `/api` a `http://localhost:8080`.
+
+Autenticación frontend (mínima):
+- al abrir la app, se solicita usuario y contraseña,
+- la sesión se guarda en `sessionStorage`,
+- Axios envía Basic Auth solo si hay sesión activa,
+- ante `401` se limpia sesión y se vuelve a login automáticamente.
 
 ### 3) Verificación rápida
 

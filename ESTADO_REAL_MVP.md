@@ -60,8 +60,8 @@ Lista estado real.
 - pantalla placeholder: **FUERA DE NAVEGACIÓN PRINCIPAL**
 
 ### Seguridad
-- Basic Auth simple: **PARCIAL**
-- login frontend real: **PENDIENTE**
+- Basic Auth simple: **HECHO**
+- login frontend real (sessionStorage + logout + manejo 401): **HECHO**
 
 ### Calidad técnica
 - tests unitarios del núcleo: **BIEN ENCAMINADOS**
@@ -80,5 +80,4 @@ El repo está en estado:
 **MVP operativo principal cerrado, con evolución pendiente en legajos y robustez técnica avanzada.**
 
 Pendientes reales para la siguiente etapa:
-1. legajo separado y adjuntos,
-2. decidir alcance de seguridad frontend (si aplica).
+1. legajo separado y adjuntos.
