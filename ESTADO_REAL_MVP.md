@@ -66,7 +66,7 @@ Lista estado real.
 ### Calidad técnica
 - tests unitarios del núcleo: **BIEN ENCAMINADOS**
 - test de arranque real (contexto + endpoint health): **HECHO (alcance básico)**
-- integración con datasource/Flyway en test automatizado: **PENDIENTE**
+- integración con datasource/Flyway en test automatizado (PostgreSQL con Testcontainers): **HECHO**
 - documentación alineada al repo: **HECHO EN ESTA ETAPA**
 
 ---
@@ -79,5 +79,4 @@ El repo está en estado:
 
 Pendientes reales para la siguiente etapa:
 1. legajo separado y adjuntos,
-2. decidir alcance de seguridad frontend (si aplica),
-3. agregar pruebas de integración con base real de test (datasource/Flyway).
+2. decidir alcance de seguridad frontend (si aplica).
