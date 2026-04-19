@@ -47,7 +47,7 @@ public abstract class IntegrationTestBase {
 
     @BeforeEach
     void limpiarBase() {
-        jdbcTemplate.execute("TRUNCATE TABLE imputacion_pago, evento_prestamo, pago, cuota, prestamo, persona RESTART IDENTITY CASCADE");
+        jdbcTemplate.execute("TRUNCATE TABLE legajo_persona, imputacion_pago, evento_prestamo, pago, cuota, prestamo, persona RESTART IDENTITY CASCADE");
     }
 
     protected RequestPostProcessor authBasica() {
@@ -57,6 +57,14 @@ public abstract class IntegrationTestBase {
     protected int contarMigracionV1Aplicada() {
         Integer total = jdbcTemplate.queryForObject(
             "SELECT count(*) FROM flyway_schema_history WHERE version = '1' AND success = true",
+            Integer.class
+        );
+        return total == null ? 0 : total;
+    }
+
+    protected int contarMigracionV2Aplicada() {
+        Integer total = jdbcTemplate.queryForObject(
+            "SELECT count(*) FROM flyway_schema_history WHERE version = '2' AND success = true",
             Integer.class
         );
         return total == null ? 0 : total;
