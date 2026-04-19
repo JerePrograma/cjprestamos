@@ -3,12 +3,19 @@ import {
   actualizarReferenciaPrestamo,
   calcularPrestamo,
   crearPrestamo,
+  generarCuotasPrestamo,
   obtenerCuotasPorPrestamo,
   obtenerPrestamoPorId,
   obtenerPrestamos,
   obtenerPrestamosActivos,
 } from '../../../services/prestamos/prestamosApi';
-import type { CalculoPrestamoPayload, PrestamoPayload, PrestamoResponse, ReferenciaPrestamoPayload } from '../types/prestamo';
+import type {
+  CalculoPrestamoPayload,
+  GenerarCuotasPayload,
+  PrestamoPayload,
+  PrestamoResponse,
+  ReferenciaPrestamoPayload,
+} from '../types/prestamo';
 
 const QUERY_KEY_PRESTAMOS = ['prestamos'];
 
@@ -85,5 +92,20 @@ export function useActualizarReferenciaPrestamo() {
 export function useCalcularPrestamo() {
   return useMutation({
     mutationFn: (payload: CalculoPrestamoPayload) => calcularPrestamo(payload),
+  });
+}
+
+export function useGenerarCuotasPrestamo() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: number; payload?: GenerarCuotasPayload }) =>
+      generarCuotasPrestamo(id, payload),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: [...QUERY_KEY_PRESTAMOS, variables.id] });
+      queryClient.invalidateQueries({ queryKey: [...QUERY_KEY_PRESTAMOS, variables.id, 'cuotas'] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY_PRESTAMOS });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    },
   });
 }

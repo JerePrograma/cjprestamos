@@ -3,6 +3,7 @@ import type {
   CalculoPrestamoPayload,
   CalculoPrestamoResultado,
   CuotaPrestamo,
+  GenerarCuotasPayload,
   PrestamoPayload,
   PrestamoResponse,
   ReferenciaPrestamoPayload,
@@ -25,6 +26,11 @@ export async function obtenerPrestamoPorId(id: number): Promise<PrestamoResponse
 
 export async function obtenerCuotasPorPrestamo(id: number): Promise<CuotaPrestamo[]> {
   const response = await api.get<CuotaPrestamo[]>(`/prestamos/${id}/cuotas`);
+  return response.data;
+}
+
+export async function generarCuotasPrestamo(id: number, payload?: GenerarCuotasPayload): Promise<CuotaPrestamo[]> {
+  const response = await api.post<CuotaPrestamo[]>(`/prestamos/${id}/cuotas/generar`, payload);
   return response.data;
 }
 
