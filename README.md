@@ -42,8 +42,7 @@ El criterio humano sigue mandando.
 
 ### Pendiente principal para considerar “MVP operativo cerrado”
 - completar módulo de legajos (hoy fuera del flujo principal),
-- definir si habrá pantalla operativa separada de pagos o si pagos vive solo en préstamos,
-- endurecer cobertura de integración de backend con datasource/Flyway en entorno de test dedicado.
+- definir si habrá pantalla operativa separada de pagos o si pagos vive solo en préstamos.
 
 ### Estado real recomendado
 Para seguimiento de producto y priorización:
@@ -157,6 +156,7 @@ Una entrega queda realmente cerrada cuando el flujo principal se puede usar de p
 
 ## Prioridad inmediata recomendada
 
-1. Consolidar calidad técnica de integración backend (DB/Flyway en test controlado).
-2. Definir alcance real de navegación para módulos no operativos (legajos y pagos separados).
-3. Recién después: legajos y adjuntos.
+1. Definir alcance real de navegación para módulos no operativos (legajos y pagos separados).
+2. Recién después: legajos y adjuntos.
+
+> Nota técnica: el backend ya incluye pruebas de integración con PostgreSQL real de test mediante Testcontainers (perfil `test`), con ejecución automática cuando hay Docker disponible.

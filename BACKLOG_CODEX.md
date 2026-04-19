@@ -51,12 +51,13 @@ Reglas:
 - BT-6002 — colores de referencia para persona
 - BT-0004 — honestidad de navegación / ocultar placeholders
 - BT-0005 — reforzar test de arranque e integración real (alcance básico)
+- BT-0006 — pruebas de integración con datasource/Flyway en entorno de test dedicado
 
 ### PARCIAL
 - BT-9001 — seguridad mínima backend
 
 ### PENDIENTE CRÍTICO
-- BT-0006 — pruebas de integración con datasource/Flyway en entorno de test dedicado
+- (sin pendientes críticos activos en testing de integración)
 
 ### PENDIENTE NO CRÍTICO
 - BT-8001 a BT-8004 — legajo y adjuntos
@@ -221,10 +222,7 @@ Las siguientes tareas quedan como referencia de cierre ya alcanzado:
 
 # 4. Orden sugerido de ejecución desde hoy
 
-## Lote A — Cierre del MVP operativo
-- BT-0006
-
-## Lote B — Consolidación
+## Lote A — Consolidación
 - revisar BT-9001 (seguridad mínima) según operación interna real
 
 ## Lote C — Evolución post-MVP
