@@ -4,8 +4,6 @@ const itemsNavegacion = [
   { to: '/', etiqueta: 'Dashboard' },
   { to: '/personas', etiqueta: 'Personas' },
   { to: '/prestamos', etiqueta: 'Préstamos' },
-  { to: '/pagos', etiqueta: 'Pagos' },
-  { to: '/legajos', etiqueta: 'Legajos' },
 ];
 
 export function LayoutPrincipal() {
