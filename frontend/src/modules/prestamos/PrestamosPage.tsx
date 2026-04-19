@@ -191,7 +191,13 @@ export function PrestamosPage() {
       return;
     }
 
-    setFilasCuotasManuales(construirFilasCuotasManuales(detalle.cantidadCuotas));
+    setFilasCuotasManuales((actual) => {
+      if (actual.length === detalle.cantidadCuotas) {
+        return actual;
+      }
+
+      return construirFilasCuotasManuales(detalle.cantidadCuotas);
+    });
   }, [
     detallePrestamo.data?.id,
     detallePrestamo.data?.frecuenciaTipo,
@@ -521,17 +527,11 @@ export function PrestamosPage() {
         id: detallePrestamo.data.id,
         payload,
       });
-      setErrorCuotas(null);
       setMensajeCuotas(
         detallePrestamo.data.frecuenciaTipo === "FECHAS_MANUALES"
           ? "Cuotas manuales guardadas correctamente."
           : "Cuotas generadas correctamente.",
       );
-      if (detallePrestamo.data.frecuenciaTipo === "FECHAS_MANUALES") {
-        setFilasCuotasManuales(
-          construirFilasCuotasManuales(detallePrestamo.data.cantidadCuotas),
-        );
-      }
     } catch (error) {
       setErrorCuotas(
         obtenerMensajeError(

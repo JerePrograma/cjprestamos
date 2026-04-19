@@ -105,6 +105,7 @@ export function useGenerarCuotasPrestamo() {
       queryClient.invalidateQueries({ queryKey: [...QUERY_KEY_PRESTAMOS, variables.id] });
       queryClient.invalidateQueries({ queryKey: [...QUERY_KEY_PRESTAMOS, variables.id, 'cuotas'] });
       queryClient.invalidateQueries({ queryKey: QUERY_KEY_PRESTAMOS });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 }
