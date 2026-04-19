@@ -31,7 +31,7 @@ El criterio humano sigue mandando.
 
 ## Estado actual del MVP
 
-### Núcleo ya encaminado
+### Núcleo operativo principal (MVP) — CERRADO
 - Personas: CRUD backend y UI básica.
 - Préstamos: alta, listado, detalle y cálculo sugerido.
 - Cuotas: generación automática/manual disponible desde UI y backend.

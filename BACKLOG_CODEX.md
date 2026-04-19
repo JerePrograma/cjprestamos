@@ -59,17 +59,15 @@ Reglas:
 - BT-0006 — pruebas de integración con datasource/Flyway en entorno de test dedicado
 
 ### PENDIENTE NO CRÍTICO
-- BT-7001 — renegociación simple
-- BT-7002 — UI de ajuste manual
 - BT-8001 a BT-8004 — legajo y adjuntos
 - BT-9002 — login frontend
 
 ---
 
-# 1. Prioridad real desde ahora
+# 1. Estado de cierre del núcleo operativo
 
-## Prioridad 1 — Cerrar el flujo principal
-Estas son las tareas que realmente acercan el proyecto a “me sirve de verdad”:
+## Núcleo principal del MVP (cerrado)
+Las siguientes tareas quedan como referencia de cierre ya alcanzado:
 
 ### BT-3006 — UI de generación automática de cuotas
 **Estado:** HECHA  
@@ -147,7 +145,7 @@ Estas son las tareas que realmente acercan el proyecto a “me sirve de verdad�
 
 ---
 
-# 2. Tareas ya adelantadas pero no cerradas del todo
+# 2. Estado complementario del MVP
 
 ### BT-3004 — UI alta de préstamo
 **Estado:** HECHA  
@@ -200,14 +198,7 @@ Estas son las tareas que realmente acercan el proyecto a “me sirve de verdad�
 
 ---
 
-# 3. Backlog diferido con intención explícita
-
-## ÉPICA 7 — Ajustes manuales
-### BT-7001 — Renegociación simple
-**Estado:** PENDIENTE
-
-### BT-7002 — UI de ajuste manual
-**Estado:** PENDIENTE
+# 3. Backlog diferido post-MVP operativo
 
 ## ÉPICA 8 — Legajo y adjuntos
 ### BT-8001 — LegajoPersona
@@ -237,8 +228,6 @@ Estas son las tareas que realmente acercan el proyecto a “me sirve de verdad�
 - revisar BT-9001 (seguridad mínima) según operación interna real
 
 ## Lote C — Evolución post-MVP
-- BT-7001
-- BT-7002
 - BT-8001
 - BT-8002
 - BT-8003

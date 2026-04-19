@@ -39,7 +39,7 @@ La pantalla de préstamos hoy:
 ## Implementación aplicada
 
 ### Paso 1 — API frontend
-Modificar `frontend/src/services/prestamos/prestamosApi.ts`
+Archivo: `frontend/src/services/prestamos/prestamosApi.ts`
 
 Implementado:
 - `generarCuotasPrestamo(id: number, payload?: GenerarCuotasPayload)`
@@ -51,7 +51,7 @@ Payload esperado:
 ---
 
 ### Paso 2 — Hook de React Query
-Modificar `frontend/src/modules/prestamos/hooks/usePrestamos.ts`
+Archivo: `frontend/src/modules/prestamos/hooks/usePrestamos.ts`
 
 Implementado:
 - `useGenerarCuotasPrestamo()`
@@ -65,7 +65,7 @@ En `onSuccess` invalida:
 ---
 
 ### Paso 3 — Tipos
-Modificar `frontend/src/modules/prestamos/types/prestamo.ts`
+Archivo: `frontend/src/modules/prestamos/types/prestamo.ts`
 
 Implementado:
 - `CuotaManualPayload`
@@ -74,7 +74,7 @@ Implementado:
 ---
 
 ### Paso 4 — UI en `PrestamosPage.tsx`
-Agregar dentro del detalle del préstamo:
+Estado en el detalle del préstamo:
 
 #### Caso A — préstamo sin cuotas y frecuencia automática
 Mostrar botón:
@@ -122,7 +122,7 @@ Mostrar el listado como hoy.
 
 ---
 
-## Archivos a tocar
+## Archivos involucrados
 
 ### Obligatorios
 - `frontend/src/services/prestamos/prestamosApi.ts`
@@ -130,7 +130,7 @@ Mostrar el listado como hoy.
 - `frontend/src/modules/prestamos/types/prestamo.ts`
 - `frontend/src/modules/prestamos/PrestamosPage.tsx`
 
-### Recomendados
+### Relacionados
 - tests frontend si el proyecto los incorpora más adelante
 - documentación breve del flujo
 

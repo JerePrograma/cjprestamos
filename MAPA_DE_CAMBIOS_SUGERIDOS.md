@@ -7,11 +7,8 @@
 - alineado con estado real del MVP y prioridades vigentes.
 
 ### `AGENTS.md`
-**Acción sugerida**
-- agregar criterio de cierre end-to-end,
-- prohibir placeholders engañosos en navegación,
-- exigir honestidad sobre tests débiles,
-- forzar actualización del estado real del MVP.
+**Estado actual**
+- criterio de cierre end-to-end y navegación honesta ya definidos en el repositorio.
 
 ### `BACKLOG_CODEX.md`
 **Estado actual**
