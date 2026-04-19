@@ -51,7 +51,7 @@ Reglas:
 - BT-6002 — colores de referencia para persona
 - BT-0004 — honestidad de navegación / ocultar placeholders
 - BT-0005 — reforzar test de arranque e integración real (alcance básico)
-- BT-0006 — pruebas de integración con datasource/Flyway en entorno de test dedicado
+- BT-0006 — pruebas de integración con datasource/Flyway en entorno de test dedicado (respaldadas por CI con Docker)
 
 ### PARCIAL
 - BT-9001 — seguridad mínima backend
@@ -142,7 +142,18 @@ Las siguientes tareas quedan como referencia de cierre ya alcanzado:
 
 **Nota de alcance**
 - hoy valida contexto Spring + seguridad mínima + `/api/health` con perfil `test`,
-- todavía no valida datasource ni Flyway en test de integración real.
+- la validación de datasource/Flyway se cubre en BT-0006.
+
+---
+
+### BT-0006 — Integración real datasource/Flyway en entorno de test dedicado
+**Estado:** HECHA  
+**Objetivo:** ejecutar integración real contra PostgreSQL de test (Testcontainers) para validar wiring de datasource + migraciones Flyway.
+
+**Cierre real**
+- base reusable de integración con perfil `test`,
+- tests de integración con `@Testcontainers(disabledWithoutDocker = true)` para DX local,
+- workflow oficial de backend en GitHub Actions ejecutando `mvn test` en runner con Docker (`backend-tests.yml`), lo que fuerza esa integración en CI.
 
 ---
 

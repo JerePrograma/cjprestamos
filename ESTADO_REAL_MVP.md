@@ -67,6 +67,8 @@ Lista estado real.
 - tests unitarios del núcleo: **BIEN ENCAMINADOS**
 - test de arranque real (contexto + endpoint health): **HECHO (alcance básico)**
 - integración con datasource/Flyway en test automatizado (PostgreSQL con Testcontainers): **HECHO**
+- CI backend ejecutando `mvn test` con Docker para forzar integración Testcontainers: **HECHO**
+- ejecución local sin Docker: **PARCIAL ESPERADO** (tests de integración se pueden skippear por diseño)
 - documentación alineada al repo: **HECHO EN ESTA ETAPA**
 
 ---
