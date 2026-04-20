@@ -15,10 +15,6 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
-  security:
-    user:
-      name: ${APP_BASIC_USER:operadora}
-      password: ${APP_BASIC_PASSWORD:operadora123}
 
 logging:
   level:

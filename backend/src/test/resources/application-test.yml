@@ -9,10 +9,6 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
-  security:
-    user:
-      name: operadora-test
-      password: operadora-test-123
 
 logging:
   level:

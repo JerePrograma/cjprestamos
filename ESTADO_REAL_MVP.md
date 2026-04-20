@@ -65,7 +65,8 @@ Lista estado real.
 ### Seguridad
 - Basic Auth simple: **HECHO**
 - login frontend mínimo (sin persistir contraseña, logout + manejo 401): **HECHO**
-- seguridad mínima backend/frontend coherente (sin sesión backend dedicada): **PARCIAL**
+- módulo de usuarios de sistema (persistidos en DB) + endpoint de sesión `/api/auth/me`: **HECHO**
+- seguridad mínima backend/frontend coherente (sin sesión backend dedicada): **HECHO EN MVP**
 
 ### Calidad técnica
 - tests unitarios del núcleo: **BIEN ENCAMINADOS**

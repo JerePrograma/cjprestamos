@@ -33,8 +33,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     configurarSesionApi(credenciales);
 
     try {
-      await api.get('/dashboard/resumen');
-      const nuevaSesion = { usuario: credenciales.usuario };
+      const respuesta = await api.get<{ username: string; rol: string }>('/auth/me');
+      const nuevaSesion = { usuario: respuesta.data.username || credenciales.usuario };
       guardarSesionOperadora(nuevaSesion);
       setSesion(nuevaSesion);
       queryClient.clear();
