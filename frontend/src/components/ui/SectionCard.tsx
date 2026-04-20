@@ -10,11 +10,11 @@ type SectionCardProps = {
 
 export function SectionCard({ titulo, descripcion, acciones, children, suave = false }: SectionCardProps) {
   return (
-    <section className={suave ? 'panel-soft p-4 sm:p-5' : 'panel p-4 sm:p-5'}>
-      <header className="mb-3 flex flex-wrap items-start justify-between gap-2">
+    <section className={suave ? 'panel-soft p-5 sm:p-6' : 'panel p-5 sm:p-6'}>
+      <header className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-sm font-semibold text-slate-900 sm:text-base">{titulo}</h2>
-          {descripcion && <p className="mt-0.5 text-xs text-slate-500 sm:text-sm">{descripcion}</p>}
+          <h2 className="text-sm font-semibold text-slate-900 sm:text-base dark:text-slate-100">{titulo}</h2>
+          {descripcion && <p className="mt-0.5 text-xs text-slate-500 sm:text-sm dark:text-slate-400">{descripcion}</p>}
         </div>
         {acciones}
       </header>
