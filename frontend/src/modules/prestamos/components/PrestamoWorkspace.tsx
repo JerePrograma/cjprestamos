@@ -460,7 +460,21 @@ export function PrestamoWorkspace({
 
   return (
     <div className="panel space-y-3 p-4 sm:p-5">
-      <h2 className="text-sm font-semibold text-slate-900">Detalle del préstamo</h2>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <h2 className="text-sm font-semibold text-slate-900">Workspace del préstamo</h2>
+          <p className="text-xs text-slate-500">
+            Resumen, cuotas y pagos del préstamo seleccionado.
+          </p>
+        </div>
+        {detallePrestamo.data && (
+          <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-600">
+            #{detallePrestamo.data.id} ·{" "}
+            {personasPorId.get(detallePrestamo.data.personaId) ??
+              `Persona ${detallePrestamo.data.personaId}`}
+          </span>
+        )}
+      </div>
 
       {prestamoId === null ? (
         <p className="text-sm text-slate-500">Seleccioná un préstamo para ver el detalle.</p>

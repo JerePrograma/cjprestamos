@@ -50,10 +50,13 @@ El criterio humano sigue mandando.
 
 ### Ajustes de operación y UX/UI (abril 2026) — CERRADOS
 - Workspace de préstamos reorganizado por secciones (`Resumen`, `Cuotas`, `Pagos`) para reducir saturación visual.
+- Vista de préstamos simplificada en 2 columnas (exploración + workspace) y alta en panel dedicado bajo demanda.
+- Segmentación interna de `Cuotas` por subtareas (`Generación/Carga`, `Listado`, `Renegociación`) para evitar pared de formularios.
 - Persistencia de contexto operativo en URL para préstamos/personas (selección y filtros principales).
 - Dashboard más accionable con acceso directo al detalle operativo del préstamo.
 - Manejo explícito de rutas no encontradas y error de navegación en frontend.
 - Formularios y focos visuales con mejor accesibilidad base.
+- Regla unificada para `FECHAS_MANUALES`: `fechaBase` se acepta como fecha inicial auxiliar opcional (no obligatoria) y se usa para precompletar la primera cuota en UI.
 
 ### Estado real recomendado
 Para seguimiento de producto y priorización:

@@ -6,12 +6,11 @@ import { PrestamosListadoPanel } from "./components/PrestamosListadoPanel";
 import { PrestamoWorkspace } from "./components/PrestamoWorkspace";
 import { useListadoPrestamos } from "./hooks/usePrestamos";
 
-type VistaMovilPrestamos = "listado" | "detalle" | "alta";
+type VistaMovilPrestamos = "listado" | "workspace";
 
 const vistasMoviles: Array<{ id: VistaMovilPrestamos; etiqueta: string }> = [
-  { id: "listado", etiqueta: "Listado" },
-  { id: "detalle", etiqueta: "Detalle" },
-  { id: "alta", etiqueta: "Alta" },
+  { id: "listado", etiqueta: "Explorar" },
+  { id: "workspace", etiqueta: "Operar" },
 ];
 
 export function PrestamosPage() {
@@ -22,8 +21,9 @@ export function PrestamosPage() {
   });
   const [vistaMovil, setVistaMovil] = useState<VistaMovilPrestamos>(() => {
     const vista = searchParams.get("vista");
-    return vista === "detalle" || vista === "alta" || vista === "listado" ? vista : "listado";
+    return vista === "workspace" || vista === "listado" ? vista : "listado";
   });
+  const [mostrarAlta, setMostrarAlta] = useState(() => searchParams.get("alta") === "1");
 
   const personas = useListadoPersonas();
   const prestamos = useListadoPrestamos();
@@ -45,9 +45,14 @@ export function PrestamosPage() {
         siguiente.delete("prestamoId");
       }
       siguiente.set("vista", vistaMovil);
+      if (mostrarAlta) {
+        siguiente.set("alta", "1");
+      } else {
+        siguiente.delete("alta");
+      }
       return siguiente;
     });
-  }, [seleccionId, vistaMovil, setSearchParams]);
+  }, [seleccionId, vistaMovil, mostrarAlta, setSearchParams]);
 
   const personasPorId = useMemo(() => {
     const mapa = new Map<number, string>();
@@ -59,20 +64,37 @@ export function PrestamosPage() {
 
   const onCreado = (prestamoId: number) => {
     setSeleccionId(prestamoId);
-    setVistaMovil("detalle");
+    setMostrarAlta(false);
+    setVistaMovil("workspace");
   };
+
+  const prestamosTotal = prestamos.data?.length ?? 0;
 
   return (
     <section className="space-y-5">
-      <header className="space-y-1">
-        <h1 className="titulo-seccion">Préstamos</h1>
-        <p className="subtitulo-seccion">
-          Flujo operativo completo: listado, detalle, cuotas, pagos y alta en una sola vista.
-        </p>
+      <header className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50/80 p-4">
+        <div className="space-y-1">
+          <h1 className="titulo-seccion">Préstamos</h1>
+          <p className="subtitulo-seccion max-w-2xl">
+            Explorá préstamos y operá cuotas/pagos en un workspace dedicado. El alta se abre en panel separado para evitar saturación.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 border border-slate-200">
+            {prestamosTotal} préstamo{prestamosTotal === 1 ? "" : "s"}
+          </span>
+          <button
+            type="button"
+            onClick={() => setMostrarAlta((actual) => !actual)}
+            className={mostrarAlta ? "boton-secundario" : "boton-principal"}
+          >
+            {mostrarAlta ? "Cerrar alta" : "Nuevo préstamo"}
+          </button>
+        </div>
       </header>
 
       <div className="panel p-1.5 sm:hidden">
-        <nav className="grid grid-cols-3 gap-1" aria-label="Navegación de préstamos en móvil">
+        <nav className="grid grid-cols-2 gap-1" aria-label="Navegación de préstamos en móvil">
           {vistasMoviles.map((vista) => (
             <button
               key={vista.id}
@@ -91,6 +113,14 @@ export function PrestamosPage() {
       </div>
 
       <div className="space-y-4 xl:hidden">
+        {mostrarAlta && (
+          <PrestamoAltaPanel
+            personas={personas.data ?? []}
+            personasLoading={personas.isLoading}
+            onCreado={onCreado}
+          />
+        )}
+
         {vistaMovil === "listado" && (
           <PrestamosListadoPanel
             isLoading={prestamos.isLoading}
@@ -100,25 +130,17 @@ export function PrestamosPage() {
             seleccionId={seleccionId}
             onSeleccionar={(prestamoId) => {
               setSeleccionId(prestamoId);
-              setVistaMovil("detalle");
+              setVistaMovil("workspace");
             }}
           />
         )}
 
-        {vistaMovil === "detalle" && (
+        {vistaMovil === "workspace" && (
           <PrestamoWorkspace prestamoId={seleccionId} personasPorId={personasPorId} />
-        )}
-
-        {vistaMovil === "alta" && (
-          <PrestamoAltaPanel
-            personas={personas.data ?? []}
-            personasLoading={personas.isLoading}
-            onCreado={onCreado}
-          />
         )}
       </div>
 
-      <div className="hidden gap-4 xl:grid xl:grid-cols-[300px_minmax(0,1fr)_360px] 2xl:grid-cols-[340px_minmax(0,1fr)_380px]">
+      <div className="hidden gap-4 xl:grid xl:grid-cols-[320px_minmax(0,1fr)]">
         <PrestamosListadoPanel
           isLoading={prestamos.isLoading}
           isError={prestamos.isError}
@@ -128,13 +150,16 @@ export function PrestamosPage() {
           onSeleccionar={setSeleccionId}
         />
 
-        <PrestamoWorkspace prestamoId={seleccionId} personasPorId={personasPorId} />
-
-        <PrestamoAltaPanel
-          personas={personas.data ?? []}
-          personasLoading={personas.isLoading}
-          onCreado={onCreado}
-        />
+        <div className="space-y-4">
+          {mostrarAlta && (
+            <PrestamoAltaPanel
+              personas={personas.data ?? []}
+              personasLoading={personas.isLoading}
+              onCreado={onCreado}
+            />
+          )}
+          <PrestamoWorkspace prestamoId={seleccionId} personasPorId={personasPorId} />
+        </div>
       </div>
     </section>
   );

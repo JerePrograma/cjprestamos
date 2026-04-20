@@ -76,7 +76,12 @@ Responder de forma honesta:
 - dashboard con acceso directo al detalle operativo de préstamos: **HECHO**
 - persistencia de contexto principal en URL (personas/préstamos): **HECHO**
 - reorganización del detalle de préstamo por secciones para reducir saturación: **HECHO**
+- vista de préstamos en 2 columnas + alta en panel dedicado para reducir ruido operativo: **HECHO**
+- segmentación de cuotas en subtareas (generación/carga, listado, renegociación): **HECHO**
 - manejo de ruta no encontrada/error de navegación en frontend: **HECHO**
+
+### Regla funcional crítica alineada
+- `FECHAS_MANUALES` acepta `fechaBase` opcional como fecha inicial auxiliar (backend + frontend + validaciones): **HECHO**
 
 ---
 
