@@ -104,31 +104,6 @@ function construirFilasCuotasManuales(
 
 export function PrestamosPage() {
   const [seleccionId, setSeleccionId] = useState<number | null>(null);
-  const [formularioPago, setFormularioPago] = useState<PagoFormulario>(
-    formularioInicialPago,
-  );
-  const [errorPago, setErrorPago] = useState<string | null>(null);
-  const [mensajePago, setMensajePago] = useState<string | null>(null);
-  const [formularioReferencia, setFormularioReferencia] = useState({
-    referenciaCodigo: "",
-    observaciones: "",
-  });
-  const [errorReferencia, setErrorReferencia] = useState<string | null>(null);
-  const [mensajeReferencia, setMensajeReferencia] = useState<string | null>(
-    null,
-  );
-  const [filasCuotasManuales, setFilasCuotasManuales] = useState<
-    CuotaManualFila[]
-  >([]);
-  const [errorCuotas, setErrorCuotas] = useState<string | null>(null);
-  const [mensajeCuotas, setMensajeCuotas] = useState<string | null>(null);
-  const [cuotasAjuste, setCuotasAjuste] = useState<CuotaAjusteFila[]>([]);
-  const [errorAjusteCuotas, setErrorAjusteCuotas] = useState<string | null>(
-    null,
-  );
-  const [mensajeAjusteCuotas, setMensajeAjusteCuotas] = useState<string | null>(
-    null,
-  );
 
   const personas = useListadoPersonas();
   const prestamos = useListadoPrestamos();
@@ -580,8 +555,7 @@ export function PrestamosPage() {
       <header className="space-y-1">
         <h1 className="titulo-seccion">Préstamos</h1>
         <p className="subtitulo-seccion">
-          Listado, detalle operativo y alta de préstamo en una sola vista
-          manual-first.
+          Listado, detalle operativo y alta de préstamo en una sola vista manual-first.
         </p>
       </header>
 
@@ -1282,92 +1256,4 @@ export function PrestamosPage() {
       </div>
     </section>
   );
-}
-
-function obtenerMensajeError(error: unknown, fallback: string) {
-  if (typeof error === "object" && error !== null) {
-    const axiosError = error as {
-      response?: {
-        status?: number;
-        data?:
-          | {
-              message?: string;
-              detail?: string;
-              error?: string;
-              title?: string;
-              errors?: Array<{
-                field?: string;
-                defaultMessage?: string;
-                message?: string;
-              }>;
-              violations?: Array<{
-                field?: string;
-                message?: string;
-              }>;
-            }
-          | string;
-      };
-      message?: string;
-    };
-
-    const data = axiosError.response?.data;
-
-    if (typeof data === "string" && data.trim()) {
-      return data;
-    }
-
-    if (data && typeof data === "object") {
-      if (typeof data.message === "string" && data.message.trim()) {
-        return data.message;
-      }
-
-      if (typeof data.detail === "string" && data.detail.trim()) {
-        return data.detail;
-      }
-
-      if (typeof data.error === "string" && data.error.trim()) {
-        return data.error;
-      }
-
-      if (typeof data.title === "string" && data.title.trim()) {
-        return data.title;
-      }
-
-      if (Array.isArray(data.errors) && data.errors.length > 0) {
-        const primerError = data.errors[0];
-        if (
-          typeof primerError.defaultMessage === "string" &&
-          primerError.defaultMessage.trim()
-        ) {
-          return primerError.defaultMessage;
-        }
-        if (
-          typeof primerError.message === "string" &&
-          primerError.message.trim()
-        ) {
-          return primerError.message;
-        }
-      }
-
-      if (Array.isArray(data.violations) && data.violations.length > 0) {
-        const primeraViolacion = data.violations[0];
-        if (
-          typeof primeraViolacion.message === "string" &&
-          primeraViolacion.message.trim()
-        ) {
-          return primeraViolacion.message;
-        }
-      }
-    }
-
-    if (typeof axiosError.message === "string" && axiosError.message.trim()) {
-      return axiosError.message;
-    }
-  }
-
-  if (error instanceof Error && error.message.trim()) {
-    return error.message;
-  }
-
-  return fallback;
 }
