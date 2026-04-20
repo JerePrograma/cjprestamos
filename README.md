@@ -14,6 +14,7 @@ Una libreta digital operativa para registrar personas, préstamos, cuotas y pago
 - Un sistema interno para control diario de operación.
 - Un asistente de cálculo y orden administrativo.
 - Un punto de control económico con métricas claras.
+- Matemática monetaria sin centavos: los importes se normalizan sin decimales con redondeo hacia arriba.
 
 ### No es
 - Fintech.

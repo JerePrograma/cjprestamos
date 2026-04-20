@@ -1,5 +1,6 @@
 package com.cjprestamos.backend.prestamo.service;
 
+import com.cjprestamos.backend.common.model.MonedaUtils;
 import com.cjprestamos.backend.persona.model.Persona;
 import com.cjprestamos.backend.persona.repository.PersonaRepository;
 import com.cjprestamos.backend.prestamo.dto.ActualizacionReferenciaPrestamoRequest;
@@ -131,9 +132,9 @@ public class PrestamoService {
     }
 
     private void aplicarCambios(Prestamo prestamo, PrestamoRequest request) {
-        prestamo.setMontoInicial(request.montoInicial());
+        prestamo.setMontoInicial(MonedaUtils.normalizar(request.montoInicial()));
         prestamo.setPorcentajeFijoSugerido(request.porcentajeFijoSugerido());
-        prestamo.setInteresManualOpcional(request.interesManualOpcional());
+        prestamo.setInteresManualOpcional(request.interesManualOpcional() == null ? null : MonedaUtils.normalizar(request.interesManualOpcional()));
         prestamo.setCantidadCuotas(request.cantidadCuotas());
         prestamo.setFrecuenciaTipo(request.frecuenciaTipo());
         prestamo.setFrecuenciaCadaDias(request.frecuenciaCadaDias());
@@ -148,9 +149,9 @@ public class PrestamoService {
         return new PrestamoResponse(
             prestamo.getId(),
             prestamo.getPersona().getId(),
-            prestamo.getMontoInicial(),
+            MonedaUtils.normalizar(prestamo.getMontoInicial()),
             prestamo.getPorcentajeFijoSugerido(),
-            prestamo.getInteresManualOpcional(),
+            prestamo.getInteresManualOpcional() == null ? null : MonedaUtils.normalizar(prestamo.getInteresManualOpcional()),
             prestamo.getCantidadCuotas(),
             prestamo.getFrecuenciaTipo(),
             prestamo.getFrecuenciaCadaDias(),

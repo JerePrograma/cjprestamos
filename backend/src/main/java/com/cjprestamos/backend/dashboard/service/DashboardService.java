@@ -1,5 +1,6 @@
 package com.cjprestamos.backend.dashboard.service;
 
+import com.cjprestamos.backend.common.model.MonedaUtils;
 import com.cjprestamos.backend.cuota.model.Cuota;
 import com.cjprestamos.backend.cuota.repository.CuotaRepository;
 import com.cjprestamos.backend.dashboard.dto.DashboardResumenResponse;
@@ -13,7 +14,6 @@ import com.cjprestamos.backend.prestamo.model.enums.EstadoPrestamo;
 import com.cjprestamos.backend.prestamo.repository.PrestamoRepository;
 import com.cjprestamos.backend.prestamo.service.CalculadoraPrestamoService;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -131,10 +131,10 @@ public class DashboardService {
     }
 
     private BigDecimal cero() {
-        return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+        return MonedaUtils.cero();
     }
 
     private BigDecimal escalar(BigDecimal valor) {
-        return valor.setScale(2, RoundingMode.HALF_UP);
+        return MonedaUtils.normalizar(valor);
     }
 }

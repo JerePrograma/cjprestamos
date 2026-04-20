@@ -1,5 +1,6 @@
 package com.cjprestamos.backend.prestamo.service;
 
+import com.cjprestamos.backend.common.model.MonedaUtils;
 import com.cjprestamos.backend.prestamo.dto.CalculoPrestamoEntrada;
 import com.cjprestamos.backend.prestamo.dto.CalculoPrestamoResultado;
 import java.math.BigDecimal;
@@ -14,34 +15,35 @@ public class CalculadoraPrestamoService {
     public CalculoPrestamoResultado calcular(CalculoPrestamoEntrada entrada) {
         validarEntrada(entrada);
 
-        BigDecimal interesAplicado = calcularInteresAplicado(entrada);
-        BigDecimal totalADevolver = entrada.montoInicial().add(interesAplicado);
-        BigDecimal cuotaSugerida = totalADevolver.divide(BigDecimal.valueOf(entrada.cantidadCuotas()), 2, RoundingMode.HALF_UP);
+        BigDecimal montoInicial = MonedaUtils.normalizar(entrada.montoInicial());
+        BigDecimal interesAplicado = calcularInteresAplicado(entrada, montoInicial);
+        BigDecimal totalADevolver = MonedaUtils.normalizar(montoInicial.add(interesAplicado));
+        BigDecimal cuotaSugerida = totalADevolver
+            .divide(BigDecimal.valueOf(entrada.cantidadCuotas()), 0, RoundingMode.CEILING);
 
-        BigDecimal montoInvertido = entrada.montoInicial();
         BigDecimal montoGanadoEstimado = interesAplicado;
-        BigDecimal montoPorGanar = montoGanadoEstimado;
 
         return new CalculoPrestamoResultado(
-            escalar(interesAplicado),
-            escalar(totalADevolver),
-            escalar(cuotaSugerida),
-            escalar(montoInvertido),
-            escalar(montoGanadoEstimado),
-            escalar(montoPorGanar)
+            MonedaUtils.normalizar(interesAplicado),
+            MonedaUtils.normalizar(totalADevolver),
+            MonedaUtils.normalizar(cuotaSugerida),
+            MonedaUtils.normalizar(montoInicial),
+            MonedaUtils.normalizar(montoGanadoEstimado),
+            MonedaUtils.normalizar(montoGanadoEstimado)
         );
     }
 
-    private BigDecimal calcularInteresAplicado(CalculoPrestamoEntrada entrada) {
+    private BigDecimal calcularInteresAplicado(CalculoPrestamoEntrada entrada, BigDecimal montoInicial) {
         if (entrada.interesManualOpcional() != null) {
-            return entrada.interesManualOpcional();
+            return MonedaUtils.normalizar(entrada.interesManualOpcional());
         }
 
         if (entrada.porcentajeFijoSugerido() != null) {
-            return entrada.montoInicial().multiply(entrada.porcentajeFijoSugerido()).divide(CIEN, 2, RoundingMode.HALF_UP);
+            BigDecimal interesCalculado = montoInicial.multiply(entrada.porcentajeFijoSugerido()).divide(CIEN, 8, RoundingMode.CEILING);
+            return MonedaUtils.normalizar(interesCalculado);
         }
 
-        return BigDecimal.ZERO;
+        return MonedaUtils.cero();
     }
 
     private void validarEntrada(CalculoPrestamoEntrada entrada) {
@@ -64,9 +66,5 @@ public class CalculadoraPrestamoService {
         if (entrada.interesManualOpcional() != null && entrada.interesManualOpcional().compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("interesManualOpcional no puede ser negativo");
         }
-    }
-
-    private BigDecimal escalar(BigDecimal monto) {
-        return monto.setScale(2, RoundingMode.HALF_UP);
     }
 }

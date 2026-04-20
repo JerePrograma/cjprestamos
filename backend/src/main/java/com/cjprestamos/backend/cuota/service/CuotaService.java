@@ -1,5 +1,6 @@
 package com.cjprestamos.backend.cuota.service;
 
+import com.cjprestamos.backend.common.model.MonedaUtils;
 import com.cjprestamos.backend.cuota.dto.AjustarCuotasFuturasRequest;
 import com.cjprestamos.backend.cuota.dto.AjusteCuotaFuturaRequest;
 import com.cjprestamos.backend.cuota.dto.CuotaManualRequest;
@@ -104,16 +105,16 @@ public class CuotaService {
         }
 
         Map<Long, Cuota> cuotasPorId = cuotas.stream().collect(java.util.stream.Collectors.toMap(Cuota::getId, Function.identity()));
-        BigDecimal totalProgramadoAnterior = BigDecimal.ZERO.setScale(2);
-        BigDecimal totalProgramadoNuevo = BigDecimal.ZERO.setScale(2);
+        BigDecimal totalProgramadoAnterior = MonedaUtils.cero();
+        BigDecimal totalProgramadoNuevo = MonedaUtils.cero();
 
         for (AjusteCuotaFuturaRequest ajuste : request.cuotas()) {
             Cuota cuota = cuotasPorId.get(ajuste.cuotaId());
-            BigDecimal montoPagado = cuota.getMontoPagado().setScale(2);
-            BigDecimal montoAnterior = cuota.getMontoProgramado().setScale(2);
-            BigDecimal montoNuevo = ajuste.montoProgramado().setScale(2);
+            BigDecimal montoPagado = MonedaUtils.normalizar(cuota.getMontoPagado());
+            BigDecimal montoAnterior = MonedaUtils.normalizar(cuota.getMontoProgramado());
+            BigDecimal montoNuevo = MonedaUtils.normalizar(ajuste.montoProgramado());
 
-            if (montoPagado.compareTo(BigDecimal.ZERO.setScale(2)) > 0) {
+            if (montoPagado.compareTo(MonedaUtils.cero()) > 0) {
                 throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Solo se permite renegociar cuotas futuras sin pagos imputados"
@@ -210,7 +211,7 @@ public class CuotaService {
                 cuota.setNumeroCuota(numero);
                 cuota.setFechaVencimiento(fechaPorNumero.apply(numero));
                 cuota.setMontoProgramado(montosDistribuidos.get(numero - 1));
-                cuota.setMontoPagado(BigDecimal.ZERO.setScale(2));
+                cuota.setMontoPagado(MonedaUtils.cero());
                 cuota.setEstado(EstadoCuota.PENDIENTE);
                 return cuota;
             })
@@ -240,8 +241,8 @@ public class CuotaService {
                 cuota.setPrestamo(prestamo);
                 cuota.setNumeroCuota(cuotaManual.numeroCuota());
                 cuota.setFechaVencimiento(cuotaManual.fechaVencimiento());
-                cuota.setMontoProgramado(cuotaManual.montoProgramado().setScale(2));
-                cuota.setMontoPagado(BigDecimal.ZERO.setScale(2));
+                cuota.setMontoProgramado(MonedaUtils.normalizar(cuotaManual.montoProgramado()));
+                cuota.setMontoPagado(MonedaUtils.cero());
                 cuota.setEstado(EstadoCuota.PENDIENTE);
                 return cuota;
             })
@@ -250,7 +251,7 @@ public class CuotaService {
 
     private void validarCuotasManuales(List<CuotaManualRequest> cuotasManuales, Integer cantidadCuotas, BigDecimal totalADevolver) {
         Set<Integer> numeros = new HashSet<>();
-        BigDecimal sumaMontos = BigDecimal.ZERO.setScale(2);
+        BigDecimal sumaMontos = MonedaUtils.cero();
 
         for (CuotaManualRequest cuotaManual : cuotasManuales) {
             if (cuotaManual.numeroCuota() == null || cuotaManual.numeroCuota() <= 0 || cuotaManual.numeroCuota() > cantidadCuotas) {
@@ -269,21 +270,21 @@ public class CuotaService {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "montoProgramado debe ser mayor que 0");
             }
 
-            sumaMontos = sumaMontos.add(cuotaManual.montoProgramado().setScale(2));
+            sumaMontos = MonedaUtils.normalizar(sumaMontos.add(MonedaUtils.normalizar(cuotaManual.montoProgramado())));
         }
 
-        if (sumaMontos.compareTo(totalADevolver.setScale(2)) != 0) {
+        if (sumaMontos.compareTo(MonedaUtils.normalizar(totalADevolver)) != 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La suma manual de montos no coincide con totalADevolver");
         }
     }
 
     private List<BigDecimal> distribuirMontos(Integer cantidadCuotas, BigDecimal totalADevolver) {
-        long totalCentavos = totalADevolver.movePointRight(2).longValueExact();
-        long montoBaseCentavos = totalCentavos / cantidadCuotas;
-        long resto = totalCentavos % cantidadCuotas;
+        long totalPesos = MonedaUtils.normalizar(totalADevolver).longValueExact();
+        long montoBase = totalPesos / cantidadCuotas;
+        long resto = totalPesos % cantidadCuotas;
 
         return IntStream.range(0, cantidadCuotas)
-            .mapToObj(indice -> BigDecimal.valueOf(montoBaseCentavos + (indice < resto ? 1 : 0), 2))
+            .mapToObj(indice -> MonedaUtils.normalizar(BigDecimal.valueOf(montoBase + (indice < resto ? 1 : 0))))
             .toList();
     }
 
@@ -292,16 +293,16 @@ public class CuotaService {
             cuota.getId(),
             cuota.getNumeroCuota(),
             cuota.getFechaVencimiento(),
-            cuota.getMontoProgramado().setScale(2),
-            cuota.getMontoPagado().setScale(2),
+            MonedaUtils.normalizar(cuota.getMontoProgramado()),
+            MonedaUtils.normalizar(cuota.getMontoPagado()),
             cuota.getEstado()
         );
     }
 
     private EstadoCuota calcularEstadoCuota(Cuota cuota) {
-        BigDecimal montoPagado = cuota.getMontoPagado().setScale(2);
-        BigDecimal montoProgramado = cuota.getMontoProgramado().setScale(2);
-        if (montoPagado.compareTo(BigDecimal.ZERO.setScale(2)) == 0) {
+        BigDecimal montoPagado = MonedaUtils.normalizar(cuota.getMontoPagado());
+        BigDecimal montoProgramado = MonedaUtils.normalizar(cuota.getMontoProgramado());
+        if (montoPagado.compareTo(MonedaUtils.cero()) == 0) {
             return EstadoCuota.PENDIENTE;
         }
         if (montoPagado.compareTo(montoProgramado) >= 0) {
@@ -323,7 +324,7 @@ public class CuotaService {
         eventoPrestamo.setTipoEvento(TipoEventoPrestamo.REPROGRAMACION_CUOTAS);
         eventoPrestamo.setDescripcion(
             "Renegociación manual de " + request.cuotas().size() + " cuota(s). Total previo "
-                + totalProgramadoAnterior.setScale(2) + ", total nuevo " + totalProgramadoNuevo.setScale(2) + observacionGeneral
+                + MonedaUtils.normalizar(totalProgramadoAnterior) + ", total nuevo " + MonedaUtils.normalizar(totalProgramadoNuevo) + observacionGeneral
         );
         eventoPrestamo.setFechaEvento(LocalDateTime.of(fechaRenegociacion, java.time.LocalTime.MIDNIGHT));
         eventoPrestamoRepository.save(eventoPrestamo);

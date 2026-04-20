@@ -63,12 +63,12 @@ class CuotaServiceTest {
         when(cuotaRepository.existsByPrestamoId(1L)).thenReturn(false);
         when(calculadoraPrestamoService.calcular(org.mockito.ArgumentMatchers.any())).thenReturn(
             new CalculoPrestamoResultado(
-                new BigDecimal("0.01"),
-                new BigDecimal("1000.01"),
-                new BigDecimal("333.34"),
+                new BigDecimal("1.00"),
+                new BigDecimal("1001.00"),
+                new BigDecimal("334.00"),
                 new BigDecimal("1000.00"),
-                new BigDecimal("0.01"),
-                new BigDecimal("0.01")
+                new BigDecimal("1.00"),
+                new BigDecimal("1.00")
             )
         );
         when(cuotaRepository.saveAll(org.mockito.ArgumentMatchers.anyList())).thenAnswer(invocation -> invocation.getArgument(0));
@@ -76,15 +76,15 @@ class CuotaServiceTest {
         List<CuotaResponse> response = cuotaService.generar(1L, null);
 
         assertEquals(3, response.size());
-        assertEquals(new BigDecimal("333.34"), response.get(0).montoProgramado());
-        assertEquals(new BigDecimal("333.34"), response.get(1).montoProgramado());
-        assertEquals(new BigDecimal("333.33"), response.get(2).montoProgramado());
+        assertEquals(new BigDecimal("334.00"), response.get(0).montoProgramado());
+        assertEquals(new BigDecimal("334.00"), response.get(1).montoProgramado());
+        assertEquals(new BigDecimal("333.00"), response.get(2).montoProgramado());
         assertEquals(LocalDate.of(2026, 4, 20), response.get(0).fechaVencimiento());
         assertEquals(LocalDate.of(2026, 5, 20), response.get(1).fechaVencimiento());
         assertEquals(LocalDate.of(2026, 6, 20), response.get(2).fechaVencimiento());
 
         BigDecimal suma = response.stream().map(CuotaResponse::montoProgramado).reduce(BigDecimal.ZERO, BigDecimal::add);
-        assertEquals(new BigDecimal("1000.01"), suma);
+        assertEquals(new BigDecimal("1001.00"), suma);
     }
 
     @Test

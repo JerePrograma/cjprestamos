@@ -7,7 +7,8 @@ import { StatusPill } from '../../components/ui/StatusPill';
 import { useListadoPersonas } from '../personas/hooks/usePersonas';
 import { useListadoPrestamosActivos } from '../prestamos/hooks/usePrestamos';
 import type { PrestamoResponse } from '../prestamos/types/prestamo';
-import { formatearFecha, formatearMoneda } from '../prestamos/utils/prestamoUi';
+import { formatearFecha } from '../prestamos/utils/prestamoUi';
+import { formatearMonedaSinCentavos } from '../../utils/moneda';
 import { useResumenDashboard } from './hooks/useDashboard';
 
 function etiquetaEstado(estado: PrestamoResponse['estado']) {
@@ -84,7 +85,7 @@ export function DashboardPage() {
                   : valor === undefined
                     ? 'Sin datos'
                     : tarjeta.esMoneda
-                      ? formatearMoneda(valor)
+                      ? formatearMonedaSinCentavos(valor)
                       : String(valor)}
               </p>
               <p className="mt-1 text-xs text-slate-500">{tarjeta.descripcion}</p>
@@ -135,7 +136,7 @@ export function DashboardPage() {
                   </div>
                   <p className="text-slate-700">{personasPorId.get(prestamo.personaId) ?? `Persona ${prestamo.personaId}`}</p>
                   <p className="text-xs text-slate-500">
-                    {formatearMoneda(prestamo.montoInicial)} · {prestamo.cantidadCuotas} cuotas · base {formatearFecha(prestamo.fechaBase)}
+                    {formatearMonedaSinCentavos(prestamo.montoInicial)} · {prestamo.cantidadCuotas} cuotas · base {formatearFecha(prestamo.fechaBase)}
                   </p>
                   <Link to={`/prestamos?prestamoId=${prestamo.id}&vista=workspace`} className="mt-2 inline-flex text-xs font-medium text-slate-700 underline decoration-slate-300 underline-offset-2 hover:text-slate-900">
                     Abrir workspace

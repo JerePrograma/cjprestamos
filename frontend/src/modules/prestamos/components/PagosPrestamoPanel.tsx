@@ -58,7 +58,7 @@ export function PagosPrestamoPanel({
             <input
               type="number"
               min="0"
-              step="0.01"
+              step="1"
               className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
               value={formularioPago.monto}
               onChange={(event) => onCambiarCampoPago("monto", event.target.value)}
