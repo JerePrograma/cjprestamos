@@ -464,7 +464,7 @@ export function PrestamoWorkspace({
         <div>
           <h2 className="text-sm font-semibold text-slate-900">Workspace del préstamo</h2>
           <p className="text-xs text-slate-500">
-            Resumen, cuotas y pagos del préstamo seleccionado.
+            Resumen económico, cuotas y pagos del préstamo seleccionado.
           </p>
         </div>
         {detallePrestamo.data && (

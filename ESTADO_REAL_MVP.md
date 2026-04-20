@@ -79,6 +79,7 @@ Responder de forma honesta:
 - vista de préstamos en 2 columnas + alta en panel dedicado para reducir ruido operativo: **HECHO**
 - segmentación de cuotas en subtareas (generación/carga, listado, renegociación): **HECHO**
 - manejo de ruta no encontrada/error de navegación en frontend: **HECHO**
+- sistema de UI consistente con encabezados de módulo, estados visibles, quick actions y componentes reutilizables: **HECHO**
 
 ### Regla funcional crítica alineada
 - `FECHAS_MANUALES` acepta `fechaBase` opcional como fecha inicial auxiliar (backend + frontend + validaciones): **HECHO**

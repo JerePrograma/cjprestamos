@@ -1,35 +1,81 @@
-import { useState } from "react";
-import { Link, NavLink, Outlet } from "react-router-dom";
-import { useAuth } from "../../app/auth";
+import { FormEvent, useMemo, useState } from 'react';
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../app/auth';
 
-const itemsNavegacion = [
-  { to: "/", etiqueta: "Dashboard" },
-  { to: "/personas", etiqueta: "Personas" },
-  { to: "/prestamos", etiqueta: "Préstamos" },
-  { to: "/legajos", etiqueta: "Legajos" },
+type ItemNavegacion = {
+  to: string;
+  etiqueta: string;
+  descripcion: string;
+};
+
+const itemsNavegacion: ItemNavegacion[] = [
+  { to: '/', etiqueta: 'Dashboard', descripcion: 'Control general y accesos rápidos' },
+  { to: '/personas', etiqueta: 'Personas', descripcion: 'Registro y libreta operativa' },
+  { to: '/prestamos', etiqueta: 'Préstamos', descripcion: 'Alta, cuotas, pagos y seguimiento' },
+  { to: '/legajos', etiqueta: 'Legajos', descripcion: 'Información contextual y adjuntos' },
+];
+
+const accesosRapidos = [
+  { etiqueta: 'Nueva persona', to: '/personas' },
+  { etiqueta: 'Nuevo préstamo', to: '/prestamos?alta=1&vista=workspace' },
+  { etiqueta: 'Ir a legajos', to: '/legajos' },
 ];
 
 export function LayoutPrincipal() {
   const { sesion, cerrarSesion } = useAuth();
   const [menuAbierto, setMenuAbierto] = useState(false);
+  const [busquedaGlobal, setBusquedaGlobal] = useState('');
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const moduloActual = useMemo(
+    () => itemsNavegacion.find((item) => (item.to === '/' ? location.pathname === '/' : location.pathname.startsWith(item.to))),
+    [location.pathname],
+  );
+
+  const ejecutarBusquedaGlobal = (event: FormEvent) => {
+    event.preventDefault();
+    const termino = busquedaGlobal.trim();
+
+    if (!termino) {
+      return;
+    }
+
+    navigate(`/personas?q=${encodeURIComponent(termino)}`);
+    setMenuAbierto(false);
+  };
 
   return (
     <div className="min-h-screen bg-transparent">
       <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-3">
+        <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3">
           <div>
             <Link to="/" className="text-base font-semibold text-slate-900 sm:text-lg">
               Sistema interno de préstamos
             </Link>
-            <p className="hidden text-xs text-slate-500 sm:block">
-              Operación manual y control económico claro.
-            </p>
+            <p className="text-xs text-slate-500">Operación manual-first con foco en claridad y control.</p>
           </div>
 
+          <form onSubmit={ejecutarBusquedaGlobal} className="order-3 w-full sm:order-none sm:w-auto">
+            <label className="sr-only" htmlFor="busqueda-global">
+              Búsqueda global por persona
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                id="busqueda-global"
+                value={busquedaGlobal}
+                onChange={(event) => setBusquedaGlobal(event.target.value)}
+                placeholder="Buscar persona por nombre, alias o teléfono"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm sm:w-80"
+              />
+              <button type="submit" className="boton-secundario px-3 py-2 text-xs sm:text-sm">
+                Buscar
+              </button>
+            </div>
+          </form>
+
           <div className="flex items-center gap-2">
-            <span className="hidden max-w-[240px] truncate text-sm text-slate-500 sm:block">
-              Operadora: {sesion?.usuario}
-            </span>
+            <span className="hidden max-w-[240px] truncate text-sm text-slate-500 lg:block">Operadora: {sesion?.usuario}</span>
             <button
               type="button"
               onClick={() => setMenuAbierto((actual) => !actual)}
@@ -39,46 +85,57 @@ export function LayoutPrincipal() {
             >
               ☰
             </button>
-            <button
-              type="button"
-              onClick={cerrarSesion}
-              className="boton-secundario px-3 py-1.5 text-xs sm:text-sm"
-            >
+            <button type="button" onClick={cerrarSesion} className="boton-secundario px-3 py-1.5 text-xs sm:text-sm">
               Cerrar sesión
             </button>
           </div>
         </div>
       </header>
 
-      <div className="mx-auto grid w-full max-w-7xl gap-4 px-4 py-4 lg:grid-cols-[250px_minmax(0,1fr)] lg:py-6">
-        <aside
-          className={`panel p-2 lg:p-3 ${menuAbierto ? "block" : "hidden"} lg:sticky lg:top-[84px] lg:block lg:h-fit`}
-        >
-          <p className="mb-2 px-2 text-xs text-slate-500 sm:hidden">Operadora: {sesion?.usuario}</p>
-          <nav
-            className="grid gap-1"
-            aria-label="Navegación principal"
-            onClick={() => setMenuAbierto(false)}
-          >
+      <div className="mx-auto grid w-full max-w-7xl gap-4 px-4 py-4 lg:grid-cols-[290px_minmax(0,1fr)] lg:py-6">
+        <aside className={`panel p-3 ${menuAbierto ? 'block' : 'hidden'} lg:sticky lg:top-[92px] lg:block lg:h-fit`}>
+          <p className="mb-3 px-1 text-xs text-slate-500 lg:hidden">Operadora: {sesion?.usuario}</p>
+          <nav className="grid gap-1" aria-label="Navegación principal" onClick={() => setMenuAbierto(false)}>
             {itemsNavegacion.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
-                end={item.to === "/"}
+                end={item.to === '/'}
                 className={({ isActive }) =>
-                  `rounded-lg px-3 py-2 text-sm transition ${
-                    isActive ? "bg-slate-800 text-white" : "text-slate-700 hover:bg-slate-100"
+                  `rounded-lg border px-3 py-2.5 text-sm transition ${
+                    isActive
+                      ? 'border-slate-800 bg-slate-800 text-white'
+                      : 'border-transparent text-slate-700 hover:border-slate-200 hover:bg-slate-50'
                   }`
                 }
               >
-                {item.etiqueta}
+                <p className="font-semibold">{item.etiqueta}</p>
+                <p className="mt-0.5 text-xs opacity-80">{item.descripcion}</p>
               </NavLink>
             ))}
           </nav>
+
+          <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <p className="text-xs font-semibold text-slate-800">Atajos operativos</p>
+            <div className="mt-2 grid gap-1">
+              {accesosRapidos.map((acceso) => (
+                <Link key={acceso.etiqueta} to={acceso.to} className="rounded-md px-2 py-1.5 text-xs text-slate-700 hover:bg-white">
+                  {acceso.etiqueta}
+                </Link>
+              ))}
+            </div>
+          </div>
         </aside>
 
-        <main className="min-h-[70vh] rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-          <Outlet />
+        <main className="space-y-3">
+          {moduloActual && (
+            <section className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs text-slate-600 shadow-sm">
+              Módulo activo: <span className="font-semibold text-slate-900">{moduloActual.etiqueta}</span> · {moduloActual.descripcion}
+            </section>
+          )}
+          <section className="min-h-[70vh] rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+            <Outlet />
+          </section>
         </main>
       </div>
     </div>
