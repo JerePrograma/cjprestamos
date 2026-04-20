@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { formatearMonedaSinCentavos } from "../../../utils/moneda";
 import type { Persona } from "../../personas/types/persona";
 import { useCalcularPrestamo, useCrearPrestamo } from "../hooks/usePrestamos";
 import {
@@ -23,17 +24,6 @@ function esFormularioMinimoValido(formulario: PrestamoFormulario) {
   );
 }
 
-function formatearMoneda(valor?: number) {
-  if (valor === undefined) {
-    return "$ -";
-  }
-
-  return new Intl.NumberFormat("es-AR", {
-    style: "currency",
-    currency: "ARS",
-    maximumFractionDigits: 2,
-  }).format(valor);
-}
 
 export function PrestamoAltaPanel({
   personas,
@@ -155,7 +145,7 @@ export function PrestamoAltaPanel({
       <div className="space-y-1">
         <h2 className="text-base font-semibold text-slate-900">Alta de préstamo</h2>
         <p className="text-xs text-slate-500">
-          Cargá condiciones base. Si usás fechas manuales, la fecha inicial es opcional y solo sirve para precompletar la primera cuota.
+          Cargá condiciones base sin centavos. Si ingresás decimales, el sistema redondea hacia arriba.
         </p>
       </div>
 
@@ -184,7 +174,7 @@ export function PrestamoAltaPanel({
           <input
             type="number"
             min="0"
-            step="0.01"
+            step="1"
             className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
             value={formulario.montoInicial}
             onChange={(event) =>
@@ -209,7 +199,7 @@ export function PrestamoAltaPanel({
           <input
             type="number"
             min="0"
-            step="0.01"
+            step="1"
             className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
             value={formulario.porcentajeFijoSugerido}
             onChange={(event) =>
@@ -222,7 +212,7 @@ export function PrestamoAltaPanel({
           <input
             type="number"
             min="0"
-            step="0.01"
+            step="1"
             className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
             value={formulario.interesManualOpcional}
             onChange={(event) =>
@@ -381,23 +371,23 @@ export function PrestamoAltaPanel({
           <dl className="space-y-1 text-sm">
             <div className="flex justify-between">
               <dt>Total</dt>
-              <dd>{formatearMoneda(resultadoAlta?.totalADevolver)}</dd>
+              <dd>{formatearMonedaSinCentavos(resultadoAlta?.totalADevolver)}</dd>
             </div>
             <div className="flex justify-between">
               <dt>Cuota sugerida</dt>
-              <dd>{formatearMoneda(resultadoAlta?.cuotaSugerida)}</dd>
+              <dd>{formatearMonedaSinCentavos(resultadoAlta?.cuotaSugerida)}</dd>
             </div>
             <div className="flex justify-between">
               <dt>Invertido</dt>
-              <dd>{formatearMoneda(resultadoAlta?.montoInvertido)}</dd>
+              <dd>{formatearMonedaSinCentavos(resultadoAlta?.montoInvertido)}</dd>
             </div>
             <div className="flex justify-between">
               <dt>Ganado estimado</dt>
-              <dd>{formatearMoneda(resultadoAlta?.montoGanadoEstimado)}</dd>
+              <dd>{formatearMonedaSinCentavos(resultadoAlta?.montoGanadoEstimado)}</dd>
             </div>
             <div className="flex justify-between">
               <dt>Por ganar</dt>
-              <dd>{formatearMoneda(resultadoAlta?.montoPorGanar)}</dd>
+              <dd>{formatearMonedaSinCentavos(resultadoAlta?.montoPorGanar)}</dd>
             </div>
           </dl>
         )}

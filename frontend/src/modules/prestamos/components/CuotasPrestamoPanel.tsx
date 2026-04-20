@@ -169,8 +169,8 @@ export function CuotasPrestamoPanel({
                       Monto programado
                       <input
                         type="number"
-                        min="0.01"
-                        step="0.01"
+                        min="1"
+                        step="1"
                         value={fila.montoProgramado}
                         onChange={(event) =>
                           onCambiarFilaManual(index, "montoProgramado", event.target.value)
@@ -273,8 +273,8 @@ export function CuotasPrestamoPanel({
                     Monto programado
                     <input
                       type="number"
-                      min="0.01"
-                      step="0.01"
+                      min="1"
+                      step="1"
                       value={cuota.montoProgramado}
                       onChange={(event) =>
                         onCambiarCuotaAjuste(cuota.cuotaId, "montoProgramado", event.target.value)

@@ -1,48 +1,38 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { EmptyState } from '../../components/ui/EmptyState';
+import { PageHeader } from '../../components/ui/PageHeader';
+import { SectionCard } from '../../components/ui/SectionCard';
+import { StatusPill } from '../../components/ui/StatusPill';
 import { useListadoPersonas } from '../personas/hooks/usePersonas';
 import { useListadoPrestamosActivos } from '../prestamos/hooks/usePrestamos';
 import type { PrestamoResponse } from '../prestamos/types/prestamo';
+import { formatearFecha } from '../prestamos/utils/prestamoUi';
+import { formatearMonedaSinCentavos } from '../../utils/moneda';
 import { useResumenDashboard } from './hooks/useDashboard';
-
-function formatearMoneda(valor: number) {
-  return new Intl.NumberFormat('es-AR', {
-    style: 'currency',
-    currency: 'ARS',
-    maximumFractionDigits: 2,
-  }).format(valor);
-}
-
-function formatearMontoCard(valor: number, esMoneda: boolean) {
-  if (!Number.isFinite(valor)) {
-    return 'Sin datos';
-  }
-
-  return esMoneda ? formatearMoneda(valor) : String(valor);
-}
 
 function etiquetaEstado(estado: PrestamoResponse['estado']) {
   if (estado === 'ACTIVO') {
-    return 'bg-emerald-100 text-emerald-800';
+    return <StatusPill texto={estado} tone="success" />;
   }
 
   if (estado === 'FINALIZADO') {
-    return 'bg-slate-200 text-slate-700';
+    return <StatusPill texto={estado} tone="neutral" />;
   }
 
   if (estado === 'RENEGOCIADO') {
-    return 'bg-amber-100 text-amber-800';
+    return <StatusPill texto={estado} tone="warning" />;
   }
 
-  return 'bg-red-100 text-red-700';
+  return <StatusPill texto={estado} tone="danger" />;
 }
 
 const tarjetas = [
-  { clave: 'montoInvertido', titulo: 'Monto inicial', esMoneda: true },
-  { clave: 'montoGanado', titulo: 'Monto ganado', esMoneda: true },
-  { clave: 'montoPorGanar', titulo: 'Monto por ganar', esMoneda: true },
-  { clave: 'deudaTotal', titulo: 'Deuda total', esMoneda: true },
-  { clave: 'prestamosActivos', titulo: 'Préstamos activos', esMoneda: false },
+  { clave: 'montoInvertido', titulo: 'Monto inicial', descripcion: 'Capital actualmente colocado', esMoneda: true },
+  { clave: 'montoGanado', titulo: 'Monto ganado', descripcion: 'Ganancia confirmada por pagos', esMoneda: true },
+  { clave: 'montoPorGanar', titulo: 'Monto por ganar', descripcion: 'Ganancia estimada pendiente', esMoneda: true },
+  { clave: 'deudaTotal', titulo: 'Deuda total', descripcion: 'Saldo total pendiente del sistema', esMoneda: true },
+  { clave: 'prestamosActivos', titulo: 'Préstamos activos', descripcion: 'Préstamos operativos abiertos', esMoneda: false },
 ] as const;
 
 export function DashboardPage() {
@@ -59,32 +49,24 @@ export function DashboardPage() {
   }, [personas.data]);
 
   const activosRecientes = useMemo(() => (prestamosActivos.data ?? []).slice(0, 5), [prestamosActivos.data]);
-
-  const estadoVacioResumen =
-    !resumen.isLoading &&
-    !resumen.isError &&
-    resumen.data !== undefined &&
-    resumen.data.prestamosActivos === 0 &&
-    resumen.data.montoInvertido === 0 &&
-    resumen.data.montoGanado === 0 &&
-    resumen.data.montoPorGanar === 0 &&
-    resumen.data.deudaTotal === 0;
+  const personasRecientes = useMemo(() => (personas.data ?? []).slice(0, 5), [personas.data]);
 
   return (
-    <section className="space-y-5">
-      <header className="space-y-1">
-        <h1 className="titulo-seccion">Dashboard</h1>
-        <p className="subtitulo-seccion">Resumen operativo para controlar el estado económico actual.</p>
-      </header>
+    <section className="space-y-4">
+      <PageHeader
+        titulo="Dashboard"
+        descripcion="Punto de control diario para revisar números clave, abrir acciones rápidas y continuar flujos sin perder contexto."
+        breadcrumbs={[{ etiqueta: 'Inicio' }, { etiqueta: 'Dashboard' }]}
+        acciones={[
+          { etiqueta: 'Nueva persona', to: '/personas', variante: 'secundario' },
+          { etiqueta: 'Nuevo préstamo', to: '/prestamos?alta=1&vista=workspace', variante: 'principal' },
+        ]}
+      />
 
       {resumen.isError && (
         <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
           No se pudo cargar el resumen del dashboard.
-          <button
-            type="button"
-            onClick={() => resumen.refetch()}
-            className="ml-2 font-medium underline decoration-red-400 underline-offset-2"
-          >
+          <button type="button" onClick={() => resumen.refetch()} className="ml-2 font-medium underline decoration-red-400 underline-offset-2">
             Reintentar
           </button>
         </div>
@@ -95,65 +77,98 @@ export function DashboardPage() {
           const valor = resumen.data?.[tarjeta.clave];
 
           return (
-            <article key={tarjeta.clave} className="panel-soft p-3 sm:p-4">
-              <h2 className="text-sm text-slate-600">{tarjeta.titulo}</h2>
-              <p className="mt-1 text-xl font-semibold text-slate-900">
+            <article key={tarjeta.clave} className="panel-soft p-4">
+              <h2 className="text-sm font-medium text-slate-700">{tarjeta.titulo}</h2>
+              <p className="mt-1 text-2xl font-semibold text-slate-900">
                 {resumen.isLoading || resumen.isFetching
                   ? 'Cargando...'
                   : valor === undefined
                     ? 'Sin datos'
-                    : formatearMontoCard(valor, tarjeta.esMoneda)}
+                    : tarjeta.esMoneda
+                      ? formatearMonedaSinCentavos(valor)
+                      : String(valor)}
               </p>
+              <p className="mt-1 text-xs text-slate-500">{tarjeta.descripcion}</p>
             </article>
           );
         })}
       </div>
 
-      {estadoVacioResumen && (
-        <p className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
-          Todavía no hay préstamos activos para mostrar en el dashboard.
-        </p>
-      )}
+      <div className="grid gap-4 xl:grid-cols-3">
+        <SectionCard
+          titulo="Acciones rápidas"
+          descripcion="Atajos para continuar el flujo operativo sin buscar pantalla por pantalla."
+        >
+          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
+            <Link to="/personas" className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm hover:bg-slate-50">
+              Abrir libreta de personas
+            </Link>
+            <Link to="/prestamos?alta=1&vista=workspace" className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm hover:bg-slate-50">
+              Cargar préstamo nuevo
+            </Link>
+            <Link to="/prestamos?vista=listado" className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm hover:bg-slate-50">
+              Revisar préstamos activos
+            </Link>
+            <Link to="/legajos" className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm hover:bg-slate-50">
+              Consultar legajos y adjuntos
+            </Link>
+          </div>
+        </SectionCard>
 
-      <section className="panel p-3 sm:p-4">
-        <header className="mb-2 flex items-center justify-between gap-2">
-          <h2 className="text-sm font-semibold text-slate-900">Préstamos activos recientes</h2>
-          <span className="text-xs text-slate-500">Máximo 5</span>
-        </header>
-
-        {prestamosActivos.isLoading ? (
-          <p className="text-sm text-slate-500">Cargando préstamos activos...</p>
-        ) : prestamosActivos.isError ? (
-          <p className="text-sm text-red-700">No se pudo cargar el listado de activos.</p>
-        ) : activosRecientes.length === 0 ? (
-          <p className="text-sm text-slate-500">No hay préstamos activos para listar.</p>
-        ) : (
-          <ul className="space-y-2">
-            {activosRecientes.map((prestamo) => (
-              <li key={prestamo.id} className="rounded-md border border-slate-200 px-3 py-2 text-sm">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="font-semibold text-slate-900">
-                    {prestamo.referenciaCodigo ? prestamo.referenciaCodigo : `Préstamo #${prestamo.id}`}
+        <SectionCard
+          titulo="Préstamos activos recientes"
+          descripcion="Últimos préstamos activos para seguir cuotas, pagos y referencia rápidamente."
+          acciones={<span className="text-xs text-slate-500">Máximo 5</span>}
+        >
+          {prestamosActivos.isLoading ? (
+            <p className="text-sm text-slate-500">Cargando préstamos activos...</p>
+          ) : prestamosActivos.isError ? (
+            <p className="text-sm text-red-700">No se pudo cargar el listado de activos.</p>
+          ) : activosRecientes.length === 0 ? (
+            <EmptyState titulo="Sin préstamos activos" descripcion="Cuando cargues un préstamo activo aparecerá aquí para seguimiento rápido." />
+          ) : (
+            <ul className="space-y-2">
+              {activosRecientes.map((prestamo) => (
+                <li key={prestamo.id} className="rounded-lg border border-slate-200 px-3 py-2 text-sm">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-semibold text-slate-900">{prestamo.referenciaCodigo ? prestamo.referenciaCodigo : `Préstamo #${prestamo.id}`}</p>
+                    {etiquetaEstado(prestamo.estado)}
+                  </div>
+                  <p className="text-slate-700">{personasPorId.get(prestamo.personaId) ?? `Persona ${prestamo.personaId}`}</p>
+                  <p className="text-xs text-slate-500">
+                    {formatearMonedaSinCentavos(prestamo.montoInicial)} · {prestamo.cantidadCuotas} cuotas · base {formatearFecha(prestamo.fechaBase)}
                   </p>
-                  <span className={`rounded px-2 py-0.5 text-xs font-medium ${etiquetaEstado(prestamo.estado)}`}>
-                    {prestamo.estado}
-                  </span>
-                </div>
-                <p className="text-slate-700">{personasPorId.get(prestamo.personaId) ?? `Persona ${prestamo.personaId}`}</p>
-                <p className="text-xs text-slate-500">
-                  {formatearMoneda(prestamo.montoInicial)} · {prestamo.cantidadCuotas} cuotas
-                </p>
-                <Link
-                  to={`/prestamos?prestamoId=${prestamo.id}&vista=detalle`}
-                  className="mt-2 inline-flex text-xs font-medium text-slate-700 underline decoration-slate-300 underline-offset-2 hover:text-slate-900"
-                >
-                  Abrir detalle operativo
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+                  <Link to={`/prestamos?prestamoId=${prestamo.id}&vista=workspace`} className="mt-2 inline-flex text-xs font-medium text-slate-700 underline decoration-slate-300 underline-offset-2 hover:text-slate-900">
+                    Abrir workspace
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </SectionCard>
+
+        <SectionCard titulo="Personas recientes" descripcion="Acceso directo a personas para editar datos o revisar legajo.">
+          {personas.isLoading ? (
+            <p className="text-sm text-slate-500">Cargando personas...</p>
+          ) : personas.isError ? (
+            <p className="text-sm text-red-700">No se pudo cargar el listado de personas.</p>
+          ) : personasRecientes.length === 0 ? (
+            <EmptyState titulo="Sin personas cargadas" descripcion="Comenzá registrando una persona para poder crear préstamos." />
+          ) : (
+            <ul className="space-y-2">
+              {personasRecientes.map((persona) => (
+                <li key={persona.id} className="rounded-lg border border-slate-200 px-3 py-2 text-sm">
+                  <p className="font-semibold text-slate-900">{persona.nombre}</p>
+                  <p className="text-xs text-slate-500">{persona.alias || persona.telefono || 'Sin alias/teléfono'}</p>
+                  <Link to={`/personas?personaId=${persona.id}`} className="mt-1 inline-flex text-xs font-medium text-slate-700 underline decoration-slate-300 underline-offset-2 hover:text-slate-900">
+                    Abrir ficha de persona
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </SectionCard>
+      </div>
     </section>
   );
 }

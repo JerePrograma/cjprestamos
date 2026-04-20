@@ -1,4 +1,8 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { EmptyState } from '../../components/ui/EmptyState';
+import { PageHeader } from '../../components/ui/PageHeader';
+import { SectionCard } from '../../components/ui/SectionCard';
 import { PersonaLegajoPanel } from '../personas/components/PersonaLegajoPanel';
 import { useListadoPersonas } from '../personas/hooks/usePersonas';
 
@@ -8,14 +12,18 @@ export function LegajosPage() {
 
   return (
     <section className="space-y-4">
-      <header className="space-y-1">
-        <h1 className="titulo-seccion">Legajos</h1>
-        <p className="subtitulo-seccion">
-          Información contextual separada de personas y préstamos operativos.
-        </p>
-      </header>
+      <PageHeader
+        titulo="Legajos"
+        descripcion="Información contextual separada de la operación económica diaria. Elegí persona y gestioná notas + adjuntos."
+        breadcrumbs={[{ etiqueta: 'Inicio', to: '/' }, { etiqueta: 'Legajos' }]}
+        acciones={[{ etiqueta: 'Ir a personas', to: '/personas', variante: 'secundario' }]}
+        estados={[
+          { etiqueta: 'personas disponibles', valor: String(personas.data?.length ?? 0) },
+          { etiqueta: 'persona seleccionada', valor: personaSeleccionadaId ? `#${personaSeleccionadaId}` : 'ninguna' },
+        ]}
+      />
 
-      <section className="rounded border border-slate-200 p-3">
+      <SectionCard titulo="Selector de persona" descripcion="Elegí a quién corresponde el legajo a editar o consultar.">
         <label className="text-sm text-slate-700">
           Persona
           <select
@@ -31,14 +39,30 @@ export function LegajosPage() {
             ))}
           </select>
         </label>
-      </section>
+        <p className="mt-2 text-xs text-slate-500">
+          Si necesitás corregir datos básicos (nombre, alias, contacto), hacelo desde{' '}
+          <Link to="/personas" className="font-medium text-slate-800 underline decoration-slate-300 underline-offset-2">
+            Personas
+          </Link>
+          .
+        </p>
+      </SectionCard>
 
       {personas.isLoading ? (
-        <p className="text-sm text-slate-500">Cargando personas...</p>
+        <SectionCard titulo="Legajo" descripcion="Cargando información base.">
+          <p className="text-sm text-slate-500">Cargando personas...</p>
+        </SectionCard>
       ) : personas.isError ? (
-        <p className="text-sm text-red-700">No se pudo cargar el listado de personas.</p>
+        <SectionCard titulo="Legajo" descripcion="Error al cargar datos base.">
+          <p className="text-sm text-red-700">No se pudo cargar el listado de personas.</p>
+        </SectionCard>
       ) : personaSeleccionadaId === null ? (
-        <p className="text-sm text-slate-500">Seleccioná una persona para operar su legajo y adjuntos.</p>
+        <SectionCard titulo="Legajo" descripcion="Seleccioná persona para continuar.">
+          <EmptyState
+            titulo="Esperando selección"
+            descripcion="Elegí una persona para operar su legajo y gestionar adjuntos desde esta misma pantalla."
+          />
+        </SectionCard>
       ) : (
         <PersonaLegajoPanel personaId={personaSeleccionadaId} />
       )}

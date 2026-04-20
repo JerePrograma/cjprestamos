@@ -73,7 +73,7 @@ class CalculadoraPrestamoServiceTest {
 
         assertEquals(new BigDecimal("0.00"), resultado.interesAplicado());
         assertEquals(new BigDecimal("1000.00"), resultado.totalADevolver());
-        assertEquals(new BigDecimal("333.33"), resultado.cuotaSugerida());
+        assertEquals(new BigDecimal("334.00"), resultado.cuotaSugerida());
     }
 
     @Test
@@ -123,7 +123,7 @@ class CalculadoraPrestamoServiceTest {
     }
 
     @Test
-    void calcular_deberiaAplicarRedondeoHalfUpADosDecimales() {
+    void calcular_deberiaRedondearHaciaArribaSinCentavos() {
         CalculoPrestamoResultado resultado = calculadoraPrestamoService.calcular(new CalculoPrestamoEntrada(
             new BigDecimal("1000.00"),
             new BigDecimal("10"),
@@ -131,6 +131,6 @@ class CalculadoraPrestamoServiceTest {
             3
         ));
 
-        assertEquals(new BigDecimal("366.67"), resultado.cuotaSugerida());
+        assertEquals(new BigDecimal("367.00"), resultado.cuotaSugerida());
     }
 }

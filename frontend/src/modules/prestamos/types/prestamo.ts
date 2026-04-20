@@ -1,3 +1,5 @@
+import { parsearMontoSinCentavos, redondearMontoHaciaArriba } from '../../../utils/moneda';
+
 export type FrecuenciaTipo = 'MENSUAL' | 'CADA_X_DIAS' | 'FECHAS_MANUALES';
 export type EstadoPrestamo = 'ACTIVO' | 'FINALIZADO' | 'RENEGOCIADO' | 'CANCELADO';
 export type EstadoCuota = 'PENDIENTE' | 'PARCIAL' | 'PAGADA' | 'VENCIDA';
@@ -111,13 +113,23 @@ function numeroOpcional(valor: string): number | null {
   if (!limpio) return null;
 
   const numero = Number(limpio);
-  return Number.isNaN(numero) ? null : numero;
+  if (Number.isNaN(numero)) return null;
+
+  return redondearMontoHaciaArriba(numero);
+}
+
+function numeroObligatorioSinCentavos(valor: string, campo: string): number {
+  const numero = parsearMontoSinCentavos(valor);
+  if (numero === null) {
+    throw new Error(`El campo ${campo} no es válido.`);
+  }
+  return numero;
 }
 
 export function crearPayloadPrestamo(formulario: PrestamoFormulario): PrestamoPayload {
   return {
     personaId: Number(formulario.personaId),
-    montoInicial: Number(formulario.montoInicial),
+    montoInicial: numeroObligatorioSinCentavos(formulario.montoInicial, 'montoInicial'),
     porcentajeFijoSugerido: numeroOpcional(formulario.porcentajeFijoSugerido),
     interesManualOpcional: numeroOpcional(formulario.interesManualOpcional),
     cantidadCuotas: Number(formulario.cantidadCuotas),
@@ -134,7 +146,7 @@ export function crearPayloadPrestamo(formulario: PrestamoFormulario): PrestamoPa
 
 export function crearPayloadCalculo(formulario: PrestamoFormulario): CalculoPrestamoPayload {
   return {
-    montoInicial: Number(formulario.montoInicial),
+    montoInicial: numeroObligatorioSinCentavos(formulario.montoInicial, 'montoInicial'),
     porcentajeFijoSugerido: numeroOpcional(formulario.porcentajeFijoSugerido),
     interesManualOpcional: numeroOpcional(formulario.interesManualOpcional),
     cantidadCuotas: Number(formulario.cantidadCuotas),

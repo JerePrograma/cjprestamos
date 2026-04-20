@@ -1,3 +1,5 @@
+import { parsearMontoSinCentavos } from '../../../utils/moneda';
+
 export type EstadoPago = "REGISTRADO" | "ANULADO";
 
 export type Pago = {
@@ -37,22 +39,6 @@ function obtenerFechaHoy() {
   return `${year}-${month}-${day}`;
 }
 
-function parsearMonto(valor: string): number | null {
-  const normalizado = valor.replace(",", ".").trim();
-
-  if (!normalizado) {
-    return null;
-  }
-
-  const numero = Number(normalizado);
-
-  if (!Number.isFinite(numero) || numero <= 0) {
-    return null;
-  }
-
-  return numero;
-}
-
 export const formularioInicialPago: PagoFormulario = {
   fechaPago: obtenerFechaHoy(),
   monto: "",
@@ -65,7 +51,7 @@ export function crearPayloadPago(
   prestamoId: number,
   formulario: PagoFormulario,
 ): RegistroPagoPayload {
-  const monto = parsearMonto(formulario.monto);
+  const monto = parsearMontoSinCentavos(formulario.monto);
 
   if (monto === null) {
     throw new Error("El monto ingresado no es válido.");

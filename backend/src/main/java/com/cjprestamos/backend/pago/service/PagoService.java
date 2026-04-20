@@ -1,5 +1,6 @@
 package com.cjprestamos.backend.pago.service;
 
+import com.cjprestamos.backend.common.model.MonedaUtils;
 import com.cjprestamos.backend.cuota.model.Cuota;
 import com.cjprestamos.backend.cuota.model.enums.EstadoCuota;
 import com.cjprestamos.backend.cuota.repository.CuotaRepository;
@@ -17,7 +18,6 @@ import com.cjprestamos.backend.prestamo.model.Prestamo;
 import com.cjprestamos.backend.prestamo.model.enums.EstadoPrestamo;
 import com.cjprestamos.backend.prestamo.repository.PrestamoRepository;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -30,10 +30,6 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 @Transactional
 public class PagoService {
-
-    private static final int ESCALA_MONEDA = 2;
-    private static final RoundingMode REDONDEO = RoundingMode.HALF_UP;
-    private static final BigDecimal CERO = BigDecimal.ZERO.setScale(ESCALA_MONEDA, REDONDEO);
 
     private final PagoRepository pagoRepository;
     private final PrestamoRepository prestamoRepository;
@@ -155,9 +151,9 @@ public class PagoService {
     private void validarMontoNoExcedido(BigDecimal montoPago, List<Cuota> cuotasOrdenadas) {
         BigDecimal totalPendiente = cuotasOrdenadas.stream()
                 .map(this::calcularSaldoPendiente)
-                .reduce(CERO, BigDecimal::add);
+                .reduce(MonedaUtils.cero(), BigDecimal::add);
 
-        if (totalPendiente.compareTo(CERO) <= 0) {
+        if (totalPendiente.compareTo(MonedaUtils.cero()) <= 0) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Las cuotas seleccionadas no tienen saldo pendiente para imputar"
@@ -177,17 +173,17 @@ public class PagoService {
         List<ImputacionPago> imputaciones = new ArrayList<>();
 
         for (Cuota cuota : cuotasOrdenadas) {
-            if (montoRestante.compareTo(CERO) <= 0) {
+            if (montoRestante.compareTo(MonedaUtils.cero()) <= 0) {
                 break;
             }
 
             BigDecimal saldoPendiente = calcularSaldoPendiente(cuota);
-            if (saldoPendiente.compareTo(CERO) <= 0) {
+            if (saldoPendiente.compareTo(MonedaUtils.cero()) <= 0) {
                 continue;
             }
 
             BigDecimal montoImputado = montoRestante.min(saldoPendiente);
-            if (montoImputado.compareTo(CERO) <= 0) {
+            if (montoImputado.compareTo(MonedaUtils.cero()) <= 0) {
                 continue;
             }
 
@@ -218,7 +214,7 @@ public class PagoService {
         BigDecimal montoPagado = obtenerMontoPagado(cuota);
         BigDecimal montoProgramado = obtenerMontoProgramado(cuota);
 
-        if (montoPagado.compareTo(CERO) == 0) {
+        if (montoPagado.compareTo(MonedaUtils.cero()) == 0) {
             return EstadoCuota.PENDIENTE;
         }
 
@@ -235,7 +231,7 @@ public class PagoService {
         }
 
         boolean deudaSaldada = cuotasOrdenadas.stream()
-                .allMatch(cuota -> calcularSaldoPendiente(cuota).compareTo(CERO) == 0);
+                .allMatch(cuota -> calcularSaldoPendiente(cuota).compareTo(MonedaUtils.cero()) == 0);
 
         if (deudaSaldada) {
             prestamo.setEstado(EstadoPrestamo.FINALIZADO);
@@ -269,7 +265,7 @@ public class PagoService {
 
     private BigDecimal obtenerMontoPagado(Cuota cuota) {
         if (cuota.getMontoPagado() == null) {
-            return CERO;
+            return MonedaUtils.cero();
         }
         return normalizarMoneda(cuota.getMontoPagado());
     }
@@ -286,8 +282,8 @@ public class PagoService {
 
     private BigDecimal normalizarMoneda(BigDecimal valor) {
         if (valor == null) {
-            return CERO;
+            return MonedaUtils.cero();
         }
-        return valor.setScale(ESCALA_MONEDA, REDONDEO);
+        return MonedaUtils.normalizar(valor);
     }
 }

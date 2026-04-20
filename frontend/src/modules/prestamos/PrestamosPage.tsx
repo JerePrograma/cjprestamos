@@ -1,29 +1,32 @@
-import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
-import { useListadoPersonas } from "../personas/hooks/usePersonas";
-import { PrestamoAltaPanel } from "./components/PrestamoAltaPanel";
-import { PrestamosListadoPanel } from "./components/PrestamosListadoPanel";
-import { PrestamoWorkspace } from "./components/PrestamoWorkspace";
-import { useListadoPrestamos } from "./hooks/usePrestamos";
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { EmptyState } from '../../components/ui/EmptyState';
+import { PageHeader } from '../../components/ui/PageHeader';
+import { SectionCard } from '../../components/ui/SectionCard';
+import { useListadoPersonas } from '../personas/hooks/usePersonas';
+import { PrestamoAltaPanel } from './components/PrestamoAltaPanel';
+import { PrestamosListadoPanel } from './components/PrestamosListadoPanel';
+import { PrestamoWorkspace } from './components/PrestamoWorkspace';
+import { useListadoPrestamos } from './hooks/usePrestamos';
 
-type VistaMovilPrestamos = "listado" | "workspace";
+type VistaMovilPrestamos = 'listado' | 'workspace';
 
-const vistasMoviles: Array<{ id: VistaMovilPrestamos; etiqueta: string }> = [
-  { id: "listado", etiqueta: "Explorar" },
-  { id: "workspace", etiqueta: "Operar" },
+const vistasMoviles: Array<{ id: VistaMovilPrestamos; etiqueta: string; descripcion: string }> = [
+  { id: 'listado', etiqueta: 'Explorar', descripcion: 'Buscar y elegir préstamo' },
+  { id: 'workspace', etiqueta: 'Operar', descripcion: 'Cuotas, pagos y resumen' },
 ];
 
 export function PrestamosPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [seleccionId, setSeleccionId] = useState<number | null>(() => {
-    const prestamoId = searchParams.get("prestamoId");
+    const prestamoId = searchParams.get('prestamoId');
     return prestamoId ? Number(prestamoId) : null;
   });
   const [vistaMovil, setVistaMovil] = useState<VistaMovilPrestamos>(() => {
-    const vista = searchParams.get("vista");
-    return vista === "workspace" || vista === "listado" ? vista : "listado";
+    const vista = searchParams.get('vista');
+    return vista === 'workspace' || vista === 'listado' ? vista : 'listado';
   });
-  const [mostrarAlta, setMostrarAlta] = useState(() => searchParams.get("alta") === "1");
+  const [mostrarAlta, setMostrarAlta] = useState(() => searchParams.get('alta') === '1');
 
   const personas = useListadoPersonas();
   const prestamos = useListadoPrestamos();
@@ -40,15 +43,15 @@ export function PrestamosPage() {
     setSearchParams((actual) => {
       const siguiente = new URLSearchParams(actual);
       if (seleccionId) {
-        siguiente.set("prestamoId", String(seleccionId));
+        siguiente.set('prestamoId', String(seleccionId));
       } else {
-        siguiente.delete("prestamoId");
+        siguiente.delete('prestamoId');
       }
-      siguiente.set("vista", vistaMovil);
+      siguiente.set('vista', vistaMovil);
       if (mostrarAlta) {
-        siguiente.set("alta", "1");
+        siguiente.set('alta', '1');
       } else {
-        siguiente.delete("alta");
+        siguiente.delete('alta');
       }
       return siguiente;
     });
@@ -65,33 +68,45 @@ export function PrestamosPage() {
   const onCreado = (prestamoId: number) => {
     setSeleccionId(prestamoId);
     setMostrarAlta(false);
-    setVistaMovil("workspace");
+    setVistaMovil('workspace');
   };
 
   const prestamosTotal = prestamos.data?.length ?? 0;
 
   return (
-    <section className="space-y-5">
-      <header className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50/80 p-4">
-        <div className="space-y-1">
-          <h1 className="titulo-seccion">Préstamos</h1>
-          <p className="subtitulo-seccion max-w-2xl">
-            Explorá préstamos y operá cuotas/pagos en un workspace dedicado. El alta se abre en panel separado para evitar saturación.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 border border-slate-200">
-            {prestamosTotal} préstamo{prestamosTotal === 1 ? "" : "s"}
-          </span>
-          <button
-            type="button"
-            onClick={() => setMostrarAlta((actual) => !actual)}
-            className={mostrarAlta ? "boton-secundario" : "boton-principal"}
-          >
-            {mostrarAlta ? "Cerrar alta" : "Nuevo préstamo"}
-          </button>
-        </div>
-      </header>
+    <section className="space-y-4">
+      <PageHeader
+        titulo="Préstamos"
+        descripcion="Flujo operativo completo: explorá préstamos, abrí workspace y resolvé cuotas/pagos desde una misma pantalla."
+        breadcrumbs={[{ etiqueta: 'Inicio', to: '/' }, { etiqueta: 'Préstamos' }]}
+        acciones={[
+          {
+            etiqueta: mostrarAlta ? 'Cerrar alta' : 'Nuevo préstamo',
+            onClick: () => setMostrarAlta((actual) => !actual),
+            variante: 'principal',
+          },
+          { etiqueta: 'Ir a personas', to: '/personas', variante: 'secundario' },
+        ]}
+        estados={[
+          { etiqueta: 'préstamo(s) total(es)', valor: String(prestamosTotal) },
+          { etiqueta: 'selección activa', valor: seleccionId ? `#${seleccionId}` : 'ninguna' },
+          { etiqueta: 'vista móvil', valor: vistaMovil },
+        ]}
+      />
+
+      <SectionCard
+        titulo="Circuito sugerido"
+        descripcion="1) Elegir préstamo, 2) revisar resumen/cuotas/pagos, 3) volver al listado."
+        suave
+      >
+        <p className="text-sm text-slate-600">
+          Si todavía no existe el préstamo, usá <strong>Nuevo préstamo</strong>. Para editar datos base de persona, entrá a{' '}
+          <Link to="/personas" className="font-medium text-slate-800 underline decoration-slate-300 underline-offset-2">
+            Personas
+          </Link>
+          .
+        </p>
+      </SectionCard>
 
       <div className="panel p-1.5 sm:hidden">
         <nav className="grid grid-cols-2 gap-1" aria-label="Navegación de préstamos en móvil">
@@ -100,13 +115,12 @@ export function PrestamosPage() {
               key={vista.id}
               type="button"
               onClick={() => setVistaMovil(vista.id)}
-              className={`rounded-lg px-2 py-2 text-xs font-medium transition ${
-                vistaMovil === vista.id
-                  ? "bg-slate-800 text-white"
-                  : "text-slate-700 hover:bg-slate-100"
+              className={`rounded-lg px-2 py-2 text-left text-xs font-medium transition ${
+                vistaMovil === vista.id ? 'bg-slate-800 text-white' : 'text-slate-700 hover:bg-slate-100'
               }`}
             >
-              {vista.etiqueta}
+              <span className="block">{vista.etiqueta}</span>
+              <span className="text-[11px] opacity-80">{vista.descripcion}</span>
             </button>
           ))}
         </nav>
@@ -114,14 +128,10 @@ export function PrestamosPage() {
 
       <div className="space-y-4 xl:hidden">
         {mostrarAlta && (
-          <PrestamoAltaPanel
-            personas={personas.data ?? []}
-            personasLoading={personas.isLoading}
-            onCreado={onCreado}
-          />
+          <PrestamoAltaPanel personas={personas.data ?? []} personasLoading={personas.isLoading} onCreado={onCreado} />
         )}
 
-        {vistaMovil === "listado" && (
+        {vistaMovil === 'listado' && (
           <PrestamosListadoPanel
             isLoading={prestamos.isLoading}
             isError={prestamos.isError}
@@ -130,14 +140,12 @@ export function PrestamosPage() {
             seleccionId={seleccionId}
             onSeleccionar={(prestamoId) => {
               setSeleccionId(prestamoId);
-              setVistaMovil("workspace");
+              setVistaMovil('workspace');
             }}
           />
         )}
 
-        {vistaMovil === "workspace" && (
-          <PrestamoWorkspace prestamoId={seleccionId} personasPorId={personasPorId} />
-        )}
+        {vistaMovil === 'workspace' && <PrestamoWorkspace prestamoId={seleccionId} personasPorId={personasPorId} />}
       </div>
 
       <div className="hidden gap-4 xl:grid xl:grid-cols-[320px_minmax(0,1fr)]">
@@ -152,13 +160,20 @@ export function PrestamosPage() {
 
         <div className="space-y-4">
           {mostrarAlta && (
-            <PrestamoAltaPanel
-              personas={personas.data ?? []}
-              personasLoading={personas.isLoading}
-              onCreado={onCreado}
-            />
+            <PrestamoAltaPanel personas={personas.data ?? []} personasLoading={personas.isLoading} onCreado={onCreado} />
           )}
-          <PrestamoWorkspace prestamoId={seleccionId} personasPorId={personasPorId} />
+
+          {prestamosTotal === 0 && !mostrarAlta ? (
+            <SectionCard titulo="Workspace" descripcion="No hay préstamos activos para operar todavía.">
+              <EmptyState
+                titulo="Empezá cargando un préstamo"
+                descripcion="El workspace se habilita automáticamente cuando exista un préstamo en el listado."
+                accion={{ etiqueta: 'Abrir alta', onClick: () => setMostrarAlta(true) }}
+              />
+            </SectionCard>
+          ) : (
+            <PrestamoWorkspace prestamoId={seleccionId} personasPorId={personasPorId} />
+          )}
         </div>
       </div>
     </section>

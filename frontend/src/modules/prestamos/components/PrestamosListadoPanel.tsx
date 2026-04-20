@@ -25,14 +25,17 @@ export function PrestamosListadoPanel({
 }: PrestamosListadoPanelProps) {
   return (
     <aside className="panel p-3 sm:p-4">
-      <h2 className="mb-2 text-sm font-semibold text-slate-900">Listado</h2>
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <h2 className="text-sm font-semibold text-slate-900">Listado de préstamos</h2>
+        <span className="text-xs text-slate-500">Seleccioná uno para operar</span>
+      </div>
 
       {isLoading ? (
         <p className="text-sm text-slate-500">Cargando préstamos...</p>
       ) : isError ? (
         <p className="text-sm text-red-700">No se pudo cargar el listado de préstamos.</p>
       ) : prestamos.length === 0 ? (
-        <p className="text-sm text-slate-500">Todavía no hay préstamos cargados.</p>
+        <p className="text-sm text-slate-500">Todavía no hay préstamos cargados. Usá “Nuevo préstamo” para comenzar.</p>
       ) : (
         <ul className="max-h-[62vh] space-y-2 overflow-auto pr-1">
           {prestamos.map((prestamo) => (

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { redondearMontoHaciaArriba } from "../../../utils/moneda";
 import { usePagosPrestamo, useRegistrarPago } from "../../pagos/hooks/usePagos";
 import {
   crearPayloadPago,
@@ -313,7 +314,7 @@ export function PrestamoWorkspace({
     for (let index = 0; index < filas.length; index += 1) {
       const fila = filas[index];
       const numero = Number(fila.numeroCuota);
-      const monto = Number(fila.montoProgramado);
+      const monto = redondearMontoHaciaArriba(Number(fila.montoProgramado));
 
       if (!Number.isInteger(numero)) {
         return { valido: false, mensaje: `La cuota ${index + 1} debe tener número obligatorio.` };
@@ -423,7 +424,7 @@ export function PrestamoWorkspace({
         setErrorAjusteCuotas(`La cuota #${cuota.numeroCuota} requiere fecha de vencimiento.`);
         return;
       }
-      const monto = Number(cuota.montoProgramado);
+      const monto = redondearMontoHaciaArriba(Number(cuota.montoProgramado));
       if (!(monto > 0)) {
         setErrorAjusteCuotas(`La cuota #${cuota.numeroCuota} requiere monto mayor a 0.`);
         return;
@@ -464,7 +465,7 @@ export function PrestamoWorkspace({
         <div>
           <h2 className="text-sm font-semibold text-slate-900">Workspace del préstamo</h2>
           <p className="text-xs text-slate-500">
-            Resumen, cuotas y pagos del préstamo seleccionado.
+            Resumen económico, cuotas y pagos del préstamo seleccionado.
           </p>
         </div>
         {detallePrestamo.data && (
