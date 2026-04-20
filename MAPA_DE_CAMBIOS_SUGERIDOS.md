@@ -1,5 +1,10 @@
 # MAPA_DE_CAMBIOS_SUGERIDOS.md
 
+> ⚠️ **Documento histórico (no vigente).**
+> Este mapa describe un estado transitorio de implementación.
+> Puede contradecir rutas o pantallas actuales.
+> Estado vigente: `README.md`, `ESTADO_REAL_MVP.md` y `BACKLOG_CODEX.md`.
+
 ## 1. Documentación / gobernanza
 
 ### `README.md`

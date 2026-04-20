@@ -48,6 +48,13 @@ El criterio humano sigue mandando.
 - Bootstrap idempotente de usuario inicial `admin`.
 - Renegociación manual de cuotas futuras con registro de evento histórico.
 
+### Ajustes de operación y UX/UI (abril 2026) — CERRADOS
+- Workspace de préstamos reorganizado por secciones (`Resumen`, `Cuotas`, `Pagos`) para reducir saturación visual.
+- Persistencia de contexto operativo en URL para préstamos/personas (selección y filtros principales).
+- Dashboard más accionable con acceso directo al detalle operativo del préstamo.
+- Manejo explícito de rutas no encontradas y error de navegación en frontend.
+- Formularios y focos visuales con mejor accesibilidad base.
+
 ### Estado real recomendado
 Para seguimiento de producto y priorización:
 - ver `ESTADO_REAL_MVP.md`
@@ -92,6 +99,11 @@ CHECKLIST_CIERRE_MVP.md
 DECISIONES_MVP.md
 CHECKLIST_ENTREGA_CODEX.md
 ```
+
+Documentos auxiliares/históricos:
+- `AUDITORIA_CJPRESTAMOS.md` (histórico)
+- `MAPA_DE_CAMBIOS_SUGERIDOS.md` (histórico)
+- `INDICE_DEL_PAQUETE.md` (histórico)
 
 ---
 

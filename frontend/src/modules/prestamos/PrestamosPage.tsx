@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useListadoPersonas } from "../personas/hooks/usePersonas";
 import { PrestamoAltaPanel } from "./components/PrestamoAltaPanel";
 import { PrestamosListadoPanel } from "./components/PrestamosListadoPanel";
@@ -14,8 +15,15 @@ const vistasMoviles: Array<{ id: VistaMovilPrestamos; etiqueta: string }> = [
 ];
 
 export function PrestamosPage() {
-  const [seleccionId, setSeleccionId] = useState<number | null>(null);
-  const [vistaMovil, setVistaMovil] = useState<VistaMovilPrestamos>("listado");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [seleccionId, setSeleccionId] = useState<number | null>(() => {
+    const prestamoId = searchParams.get("prestamoId");
+    return prestamoId ? Number(prestamoId) : null;
+  });
+  const [vistaMovil, setVistaMovil] = useState<VistaMovilPrestamos>(() => {
+    const vista = searchParams.get("vista");
+    return vista === "detalle" || vista === "alta" || vista === "listado" ? vista : "listado";
+  });
 
   const personas = useListadoPersonas();
   const prestamos = useListadoPrestamos();
@@ -27,6 +35,19 @@ export function PrestamosPage() {
       setSeleccionId(primerPrestamo.id);
     }
   }, [prestamos.data, seleccionId]);
+
+  useEffect(() => {
+    setSearchParams((actual) => {
+      const siguiente = new URLSearchParams(actual);
+      if (seleccionId) {
+        siguiente.set("prestamoId", String(seleccionId));
+      } else {
+        siguiente.delete("prestamoId");
+      }
+      siguiente.set("vista", vistaMovil);
+      return siguiente;
+    });
+  }, [seleccionId, vistaMovil, setSearchParams]);
 
   const personasPorId = useMemo(() => {
     const mapa = new Map<number, string>();
