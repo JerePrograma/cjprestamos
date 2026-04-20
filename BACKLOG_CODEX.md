@@ -44,6 +44,9 @@ Backlog técnico priorizado para reflejar el **estado real** del repo.
 - BT-7003 — dashboard accionable con acceso directo al detalle de préstamo
 - BT-7004 — workspace de préstamo reorganizado por secciones operativas
 - BT-7005 — manejo de rutas no encontradas y error de navegación frontend
+- BT-7006 — préstamos en layout 2 columnas + alta bajo demanda para menor saturación visual
+- BT-7007 — segmentación de cuotas por subtareas operativas (generación/listado/renegociación)
+- BT-3009 — regla unificada FECHAS_MANUALES con `fechaBase` auxiliar opcional (frontend/backend)
 
 ### PARCIAL
 - (sin parciales activos en el núcleo)

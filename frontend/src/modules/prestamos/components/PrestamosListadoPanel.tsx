@@ -67,7 +67,10 @@ export function PrestamosListadoPanel({
                   <p className="text-xs text-slate-500">Ref: {prestamo.referenciaCodigo}</p>
                 )}
                 {prestamo.fechaBase && (
-                  <p className="text-xs text-slate-500">Base: {formatearFecha(prestamo.fechaBase)}</p>
+                  <p className="text-xs text-slate-500">
+                    {prestamo.frecuenciaTipo === "FECHAS_MANUALES" ? "Inicio aux." : "Base"}:{" "}
+                    {formatearFecha(prestamo.fechaBase)}
+                  </p>
                 )}
               </button>
             </li>

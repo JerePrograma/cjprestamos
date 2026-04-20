@@ -1,3 +1,4 @@
+import { useMemo, useState } from "react";
 import type { CuotaPrestamo, PrestamoResponse } from "../types/prestamo";
 import { formatearFecha, formatearMoneda } from "../utils/prestamoUi";
 
@@ -46,6 +47,8 @@ type CuotasPrestamoPanelProps = {
   mensajeAjusteCuotas: string | null;
 };
 
+type SeccionCuotas = "generacion" | "listado" | "renegociacion";
+
 export function CuotasPrestamoPanel({
   detalle,
   cuotas,
@@ -67,48 +70,74 @@ export function CuotasPrestamoPanel({
   errorAjusteCuotas,
   mensajeAjusteCuotas,
 }: CuotasPrestamoPanelProps) {
+  const [seccionActiva, setSeccionActiva] = useState<SeccionCuotas>("generacion");
   const tieneCuotasGeneradas = cuotas.length > 0;
 
-  return (
-    <>
-      <div className="rounded-xl border border-slate-200 p-3">
-        <h3 className="mb-2 text-sm font-semibold">Cuotas asociadas</h3>
-        <div className="mb-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
-          <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-            Cierre operativo
-          </h4>
-          <dl className="mt-2 grid gap-2 text-sm md:grid-cols-2">
-            <div className="md:col-span-2">
-              <dt className="text-xs text-slate-500">Estado de cuotas</dt>
-              <dd className="font-medium text-slate-800">
-                {tieneCuotasGeneradas
-                  ? "Cuotas generadas"
-                  : "Pendiente de generación de cuotas"}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs text-slate-500">Total programado</dt>
-              <dd>{formatearMoneda(totalProgramado)}</dd>
-            </div>
-            <div>
-              <dt className="text-xs text-slate-500">Total pagado</dt>
-              <dd>{formatearMoneda(totalPagado)}</dd>
-            </div>
-            <div>
-              <dt className="text-xs text-slate-500">Saldo pendiente</dt>
-              <dd>{formatearMoneda(saldoPendiente)}</dd>
-            </div>
-          </dl>
-        </div>
+  const pendientesRenegociacion = useMemo(
+    () => cuotasAjuste.length,
+    [cuotasAjuste.length],
+  );
 
-        <div className="mb-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+  return (
+    <div className="space-y-3">
+      <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+        <h3 className="text-sm font-semibold text-slate-900">Cierre operativo de cuotas</h3>
+        <dl className="mt-2 grid gap-2 text-sm md:grid-cols-4">
+          <div>
+            <dt className="text-xs text-slate-500">Estado</dt>
+            <dd className="font-medium text-slate-800">
+              {tieneCuotasGeneradas
+                ? "Cuotas generadas"
+                : "Pendiente de generación de cuotas"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs text-slate-500">Total programado</dt>
+            <dd>{formatearMoneda(totalProgramado)}</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-slate-500">Total pagado</dt>
+            <dd>{formatearMoneda(totalPagado)}</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-slate-500">Saldo pendiente</dt>
+            <dd>{formatearMoneda(saldoPendiente)}</dd>
+          </div>
+        </dl>
+      </div>
+
+      <nav className="grid grid-cols-3 gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1">
+        {[
+          { id: "generacion", etiqueta: "Generación/Carga" },
+          { id: "listado", etiqueta: `Listado (${cuotas.length})` },
+          { id: "renegociacion", etiqueta: `Renegociación (${pendientesRenegociacion})` },
+        ].map((seccion) => (
+          <button
+            key={seccion.id}
+            type="button"
+            onClick={() => setSeccionActiva(seccion.id as SeccionCuotas)}
+            className={`rounded-md px-2 py-1.5 text-xs font-medium sm:text-sm ${
+              seccionActiva === seccion.id
+                ? "bg-slate-800 text-white"
+                : "text-slate-700 hover:bg-white"
+            }`}
+          >
+            {seccion.etiqueta}
+          </button>
+        ))}
+      </nav>
+
+      {seccionActiva === "generacion" && (
+        <div className="rounded-xl border border-slate-200 p-3">
           {tieneCuotasGeneradas ? (
             <p className="subtitulo-seccion">
               Este préstamo ya tiene cuotas generadas. No se permite regeneración desde esta vista.
             </p>
           ) : detalle.frecuenciaTipo === "FECHAS_MANUALES" ? (
             <div className="space-y-3">
-              <p className="subtitulo-seccion">Cargá las cuotas manuales para este préstamo.</p>
+              <p className="subtitulo-seccion">
+                Cargá cuotas manuales. Si informaste fecha inicial auxiliar en el alta, ya aparece en la primera fila.
+              </p>
               <div className="space-y-2">
                 {filasCuotasManuales.map((fila, index) => (
                   <div key={`cuota-manual-${index}`} className="grid gap-2 lg:grid-cols-3">
@@ -179,94 +208,101 @@ export function CuotasPrestamoPanel({
           {errorCuotas && <p className="mt-2 text-sm text-red-700">{errorCuotas}</p>}
           {mensajeCuotas && <p className="mt-2 text-sm text-emerald-700">{mensajeCuotas}</p>}
         </div>
+      )}
 
-        {cuotasLoading ? (
-          <p className="text-sm text-slate-500">Cargando cuotas...</p>
-        ) : cuotasError ? (
-          <p className="text-sm text-red-700">No se pudo cargar las cuotas del préstamo.</p>
-        ) : cuotas.length === 0 ? (
-          <p className="text-sm text-slate-500">Este préstamo todavía no tiene cuotas generadas.</p>
-        ) : (
-          <ul className="space-y-2">
-            {cuotas.map((cuota) => (
-              <li key={cuota.id} className="rounded border border-slate-200 px-3 py-2 text-sm">
-                <div className="flex items-center justify-between">
-                  <span className="font-medium">Cuota #{cuota.numeroCuota}</span>
-                  <span className="text-xs text-slate-500">{cuota.estado}</span>
+      {seccionActiva === "listado" && (
+        <div className="rounded-xl border border-slate-200 p-3">
+          <h3 className="mb-2 text-sm font-semibold">Listado de cuotas</h3>
+          {cuotasLoading ? (
+            <p className="text-sm text-slate-500">Cargando cuotas...</p>
+          ) : cuotasError ? (
+            <p className="text-sm text-red-700">No se pudo cargar las cuotas del préstamo.</p>
+          ) : cuotas.length === 0 ? (
+            <p className="text-sm text-slate-500">Este préstamo todavía no tiene cuotas generadas.</p>
+          ) : (
+            <ul className="space-y-2">
+              {cuotas.map((cuota) => (
+                <li key={cuota.id} className="rounded border border-slate-200 px-3 py-2 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">Cuota #{cuota.numeroCuota}</span>
+                    <span className="text-xs text-slate-500">{cuota.estado}</span>
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    Vence: {formatearFecha(cuota.fechaVencimiento)}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    Programado: {formatearMoneda(cuota.montoProgramado)} · Pagado: {formatearMoneda(cuota.montoPagado)}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      {seccionActiva === "renegociacion" && (
+        <div className="rounded-xl border border-slate-200 p-3">
+          <h3 className="mb-2 text-sm font-semibold">Renegociación manual de cuotas futuras</h3>
+          <p className="mb-3 text-xs text-slate-500">
+            Permite ajustar cuotas no saldadas sin tocar pagos ya registrados.
+          </p>
+          {cuotasAjuste.length === 0 ? (
+            <p className="text-sm text-slate-500">No hay cuotas futuras pendientes para ajustar.</p>
+          ) : (
+            <div className="space-y-2">
+              {cuotasAjuste.map((cuota) => (
+                <div
+                  key={`ajuste-cuota-${cuota.cuotaId}`}
+                  className="grid gap-2 rounded border border-slate-200 p-2 lg:grid-cols-3"
+                >
+                  <p className="text-xs text-slate-600 lg:col-span-3">
+                    Cuota #{cuota.numeroCuota} · Estado {cuota.estado}
+                  </p>
+                  <label className="text-xs text-slate-600">
+                    Fecha
+                    <input
+                      type="date"
+                      value={cuota.fechaVencimiento}
+                      onChange={(event) =>
+                        onCambiarCuotaAjuste(cuota.cuotaId, "fechaVencimiento", event.target.value)
+                      }
+                      className="mt-1 w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
+                    />
+                  </label>
+                  <label className="text-xs text-slate-600">
+                    Monto programado
+                    <input
+                      type="number"
+                      min="0.01"
+                      step="0.01"
+                      value={cuota.montoProgramado}
+                      onChange={(event) =>
+                        onCambiarCuotaAjuste(cuota.cuotaId, "montoProgramado", event.target.value)
+                      }
+                      className="mt-1 w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
+                    />
+                  </label>
+                  <p className="text-xs text-slate-500">
+                    Pagado actual: {formatearMoneda(cuota.montoPagado)}
+                  </p>
                 </div>
-                <p className="text-xs text-slate-500">
-                  Vence: {formatearFecha(cuota.fechaVencimiento)}
-                </p>
-                <p className="text-xs text-slate-500">
-                  Programado: {formatearMoneda(cuota.montoProgramado)} · Pagado: {formatearMoneda(cuota.montoPagado)}
-                </p>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      <div className="rounded-xl border border-slate-200 p-3">
-        <h3 className="mb-2 text-sm font-semibold">Renegociación manual de cuotas futuras</h3>
-        <p className="mb-3 text-xs text-slate-500">
-          Permite ajustar cuotas no saldadas sin tocar pagos ya registrados.
-        </p>
-        {cuotasAjuste.length === 0 ? (
-          <p className="text-sm text-slate-500">No hay cuotas futuras pendientes para ajustar.</p>
-        ) : (
-          <div className="space-y-2">
-            {cuotasAjuste.map((cuota) => (
-              <div
-                key={`ajuste-cuota-${cuota.cuotaId}`}
-                className="grid gap-2 rounded border border-slate-200 p-2 lg:grid-cols-3"
+              ))}
+              <button
+                type="button"
+                onClick={onGuardarAjuste}
+                disabled={guardandoAjuste}
+                className="boton-principal"
               >
-                <p className="text-xs text-slate-600 lg:col-span-3">
-                  Cuota #{cuota.numeroCuota} · Estado {cuota.estado}
-                </p>
-                <label className="text-xs text-slate-600">
-                  Fecha
-                  <input
-                    type="date"
-                    value={cuota.fechaVencimiento}
-                    onChange={(event) =>
-                      onCambiarCuotaAjuste(cuota.cuotaId, "fechaVencimiento", event.target.value)
-                    }
-                    className="mt-1 w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
-                  />
-                </label>
-                <label className="text-xs text-slate-600">
-                  Monto programado
-                  <input
-                    type="number"
-                    min="0.01"
-                    step="0.01"
-                    value={cuota.montoProgramado}
-                    onChange={(event) =>
-                      onCambiarCuotaAjuste(cuota.cuotaId, "montoProgramado", event.target.value)
-                    }
-                    className="mt-1 w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
-                  />
-                </label>
-                <p className="text-xs text-slate-500">
-                  Pagado actual: {formatearMoneda(cuota.montoPagado)}
-                </p>
-              </div>
-            ))}
-            <button
-              type="button"
-              onClick={onGuardarAjuste}
-              disabled={guardandoAjuste}
-              className="boton-principal"
-            >
-              {guardandoAjuste ? "Guardando ajuste..." : "Guardar ajuste de cuotas"}
-            </button>
-          </div>
-        )}
-        {errorAjusteCuotas && <p className="mt-2 text-sm text-red-700">{errorAjusteCuotas}</p>}
-        {mensajeAjusteCuotas && (
-          <p className="mt-2 text-sm text-emerald-700">{mensajeAjusteCuotas}</p>
-        )}
-      </div>
-    </>
+                {guardandoAjuste ? "Guardando ajuste..." : "Guardar ajuste de cuotas"}
+              </button>
+            </div>
+          )}
+          {errorAjusteCuotas && <p className="mt-2 text-sm text-red-700">{errorAjusteCuotas}</p>}
+          {mensajeAjusteCuotas && (
+            <p className="mt-2 text-sm text-emerald-700">{mensajeAjusteCuotas}</p>
+          )}
+        </div>
+      )}
+    </div>
   );
 }

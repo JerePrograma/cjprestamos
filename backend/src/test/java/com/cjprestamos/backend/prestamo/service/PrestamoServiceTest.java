@@ -270,7 +270,7 @@ class PrestamoServiceTest {
     }
 
     @Test
-    void crear_conFechasManualesYFechaBaseInformada_deberiaLanzarBadRequest() {
+    void crear_conFechasManualesYFechaBaseInformada_deberiaGuardarPrestamo() {
         PrestamoRequest request = new PrestamoRequest(
             1L,
             new BigDecimal("5000.00"),
@@ -279,7 +279,7 @@ class PrestamoServiceTest {
             4,
             FrecuenciaTipo.FECHAS_MANUALES,
             null,
-            LocalDate.now(),
+            LocalDate.of(2026, 4, 20),
             true,
             null,
             null,
@@ -288,11 +288,11 @@ class PrestamoServiceTest {
 
         Persona persona = new Persona();
         when(personaRepository.findById(1L)).thenReturn(Optional.of(persona));
+        when(prestamoRepository.save(org.mockito.ArgumentMatchers.any(Prestamo.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> prestamoService.crear(request));
-
-        assertEquals(400, exception.getStatusCode().value());
-        assertEquals("fechaBase no debe informarse cuando frecuenciaTipo es FECHAS_MANUALES", exception.getReason());
+        PrestamoResponse response = prestamoService.crear(request);
+        assertEquals(FrecuenciaTipo.FECHAS_MANUALES, response.frecuenciaTipo());
+        assertEquals(LocalDate.of(2026, 4, 20), response.fechaBase());
     }
 
     @Test
@@ -335,7 +335,7 @@ class PrestamoServiceTest {
             6,
             FrecuenciaTipo.FECHAS_MANUALES,
             null,
-            null,
+            LocalDate.of(2026, 5, 1),
             true,
             "REF-1",
             "Observación",
@@ -351,7 +351,7 @@ class PrestamoServiceTest {
 
         assertEquals(FrecuenciaTipo.FECHAS_MANUALES, response.frecuenciaTipo());
         assertEquals(true, response.usarFechasManuales());
-        assertEquals(null, response.fechaBase());
+        assertEquals(LocalDate.of(2026, 5, 1), response.fechaBase());
     }
 
     @Test

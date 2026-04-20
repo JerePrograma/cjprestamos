@@ -128,12 +128,6 @@ public class PrestamoService {
             );
         }
 
-        if (request.frecuenciaTipo() == FrecuenciaTipo.FECHAS_MANUALES && request.fechaBase() != null) {
-            throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "fechaBase no debe informarse cuando frecuenciaTipo es FECHAS_MANUALES"
-            );
-        }
     }
 
     private void aplicarCambios(Prestamo prestamo, PrestamoRequest request) {

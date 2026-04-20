@@ -32,7 +32,13 @@ La pantalla de préstamos hoy:
 - registra pagos,
 - muestra historial de pagos,
 - permite editar referencia y observaciones,
-- muestra cierre operativo del préstamo (estado cuotas, total programado, total pagado, saldo pendiente).
+- muestra cierre operativo del préstamo (estado cuotas, total programado, total pagado, saldo pendiente),
+- separa operación en workspace con tabs principales y tabs internas de cuotas.
+
+Regla de coherencia vigente:
+- para `FECHAS_MANUALES`, `fechaBase` es **opcional**,
+- si se informa, se usa solo como fecha inicial auxiliar para precompletar la primera fila de cuotas manuales,
+- backend ya no la rechaza en esa frecuencia.
 
 ---
 
@@ -87,6 +93,7 @@ Mostrar:
 - fecha,
 - monto,
 - botón `Guardar cuotas manuales`
+- fecha inicial auxiliar precompletada en fila 1 cuando `fechaBase` está informada.
 
 #### Caso C — préstamo con cuotas
 No mostrar el formulario de generación.

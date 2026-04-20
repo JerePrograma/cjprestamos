@@ -77,7 +77,9 @@ export function PrestamoDetallePanel({
           <dd>{detalle.frecuenciaCadaDias ?? "-"}</dd>
         </div>
         <div>
-          <dt className="text-xs text-slate-500">Fecha base</dt>
+          <dt className="text-xs text-slate-500">
+            {detalle.frecuenciaTipo === "FECHAS_MANUALES" ? "Fecha inicial auxiliar" : "Fecha base"}
+          </dt>
           <dd>{formatearFecha(detalle.fechaBase)}</dd>
         </div>
         <div>

@@ -124,16 +124,6 @@ export function PrestamoAltaPanel({
     }
 
     if (
-      formulario.frecuenciaTipo === "FECHAS_MANUALES" &&
-      !formulario.fechaBase
-    ) {
-      setErrorFormulario(
-        "Para FECHAS_MANUALES, indicá la fecha de la primera cuota.",
-      );
-      return;
-    }
-
-    if (
       formulario.frecuenciaTipo !== "FECHAS_MANUALES" &&
       !formulario.fechaBase
     ) {
@@ -161,8 +151,13 @@ export function PrestamoAltaPanel({
     calcularPrestamo.data;
 
   return (
-    <aside className="panel space-y-3 p-4">
-      <h2 className="text-sm font-semibold text-slate-900">Alta de préstamo</h2>
+    <aside className="panel space-y-4 p-4 sm:p-5">
+      <div className="space-y-1">
+        <h2 className="text-base font-semibold text-slate-900">Alta de préstamo</h2>
+        <p className="text-xs text-slate-500">
+          Cargá condiciones base. Si usás fechas manuales, la fecha inicial es opcional y solo sirve para precompletar la primera cuota.
+        </p>
+      </div>
 
       <label className="block text-sm text-slate-700">
         Persona
@@ -179,6 +174,9 @@ export function PrestamoAltaPanel({
           ))}
         </select>
       </label>
+      {personasLoading && (
+        <p className="text-xs text-slate-500">Cargando personas disponibles...</p>
+      )}
 
       <div className="grid gap-3 md:grid-cols-2">
         <label className="text-sm text-slate-700">
@@ -263,7 +261,7 @@ export function PrestamoAltaPanel({
 
         <label className="text-sm text-slate-700">
           {formulario.frecuenciaTipo === "FECHAS_MANUALES"
-            ? "Fecha primera cuota"
+            ? "Fecha inicial sugerida (opcional)"
             : "Fecha base"}
           <input
             type="date"
