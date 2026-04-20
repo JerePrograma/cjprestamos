@@ -1,9 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Persona } from "../../personas/types/persona";
-import {
-  useCalcularPrestamo,
-  useCrearPrestamo,
-} from "../hooks/usePrestamos";
+import { useCalcularPrestamo, useCrearPrestamo } from "../hooks/usePrestamos";
 import {
   crearPayloadCalculo,
   crearPayloadPrestamo,
@@ -192,7 +189,9 @@ export function PrestamoAltaPanel({
             step="0.01"
             className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
             value={formulario.montoInicial}
-            onChange={(event) => actualizarCampo("montoInicial", event.target.value)}
+            onChange={(event) =>
+              actualizarCampo("montoInicial", event.target.value)
+            }
           />
         </label>
         <label className="text-sm text-slate-700">
@@ -235,7 +234,7 @@ export function PrestamoAltaPanel({
         </label>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-2">
+      <div className="grid gap-3 md:grid-cols-3">
         <label className="text-sm text-slate-700">
           Frecuencia
           <select
@@ -244,10 +243,13 @@ export function PrestamoAltaPanel({
             onChange={(event) => {
               const frecuencia = event.target
                 .value as PrestamoFormulario["frecuenciaTipo"];
+
               actualizarCampo("frecuenciaTipo", frecuencia);
-              if (frecuencia === "FECHAS_MANUALES") {
-                actualizarCampo("usarFechasManuales", true);
-              }
+              actualizarCampo(
+                "usarFechasManuales",
+                frecuencia === "FECHAS_MANUALES",
+              );
+
               if (frecuencia !== "CADA_X_DIAS") {
                 actualizarCampo("frecuenciaCadaDias", "");
               }
@@ -259,17 +261,21 @@ export function PrestamoAltaPanel({
           </select>
         </label>
 
-        {formulario.frecuenciaTipo === "FECHAS_MANUALES" ? (
-          <label className="text-sm text-slate-700">
-            Fecha primera cuota
-            <input
-              type="date"
-              className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
-              value={formulario.fechaBase}
-              onChange={(event) => actualizarCampo("fechaBase", event.target.value)}
-            />
-          </label>
-        ) : formulario.frecuenciaTipo === "CADA_X_DIAS" ? (
+        <label className="text-sm text-slate-700">
+          {formulario.frecuenciaTipo === "FECHAS_MANUALES"
+            ? "Fecha primera cuota"
+            : "Fecha base"}
+          <input
+            type="date"
+            className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+            value={formulario.fechaBase}
+            onChange={(event) =>
+              actualizarCampo("fechaBase", event.target.value)
+            }
+          />
+        </label>
+
+        {formulario.frecuenciaTipo === "CADA_X_DIAS" && (
           <label className="text-sm text-slate-700">
             Frecuencia cada X días
             <input
@@ -282,30 +288,22 @@ export function PrestamoAltaPanel({
               }
             />
           </label>
-        ) : (
-          <label className="text-sm text-slate-700">
-            Fecha base
-            <input
-              type="date"
-              className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
-              value={formulario.fechaBase}
-              onChange={(event) => actualizarCampo("fechaBase", event.target.value)}
-            />
-          </label>
         )}
       </div>
 
-      <label className="flex items-center gap-2 text-sm text-slate-700">
-        <input
-          type="checkbox"
-          checked={formulario.usarFechasManuales}
-          onChange={(event) =>
-            actualizarCampo("usarFechasManuales", event.target.checked)
-          }
-          disabled={formulario.frecuenciaTipo === "FECHAS_MANUALES"}
-        />
-        Usar fechas manuales
-      </label>
+      {formulario.frecuenciaTipo === "FECHAS_MANUALES" && (
+        <label className="flex items-center gap-2 text-sm text-slate-700">
+          <input
+            type="checkbox"
+            checked={formulario.usarFechasManuales}
+            onChange={(event) =>
+              actualizarCampo("usarFechasManuales", event.target.checked)
+            }
+            disabled
+          />
+          Usar fechas manuales
+        </label>
+      )}
 
       <div className="grid gap-3 md:grid-cols-2">
         <label className="text-sm text-slate-700">
@@ -351,8 +349,12 @@ export function PrestamoAltaPanel({
         />
       </label>
 
-      {errorFormulario && <p className="text-sm text-red-700">{errorFormulario}</p>}
-      {mensajeExito && <p className="text-sm text-emerald-700">{mensajeExito}</p>}
+      {errorFormulario && (
+        <p className="text-sm text-red-700">{errorFormulario}</p>
+      )}
+      {mensajeExito && (
+        <p className="text-sm text-emerald-700">{mensajeExito}</p>
+      )}
 
       <button
         type="button"
@@ -364,7 +366,9 @@ export function PrestamoAltaPanel({
       </button>
 
       <div className="panel-soft p-3">
-        <h3 className="mb-2 text-sm font-semibold">Cálculo sugerido del alta</h3>
+        <h3 className="mb-2 text-sm font-semibold">
+          Cálculo sugerido del alta
+        </h3>
         {!puedeCalcularAlta ? (
           <p className="text-sm text-slate-500">
             Completá persona, monto inicial y cantidad de cuotas.
@@ -372,7 +376,9 @@ export function PrestamoAltaPanel({
         ) : calcularPrestamo.isPending ? (
           <p className="text-sm text-slate-500">Calculando...</p>
         ) : calcularPrestamo.isError ? (
-          <p className="text-sm text-red-700">No se pudo obtener cálculo sugerido.</p>
+          <p className="text-sm text-red-700">
+            No se pudo obtener cálculo sugerido.
+          </p>
         ) : (
           <dl className="space-y-1 text-sm">
             <div className="flex justify-between">

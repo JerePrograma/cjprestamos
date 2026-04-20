@@ -151,7 +151,7 @@ export function PrestamoDetallePanel({
               <dd>{formatearMoneda(resumen.cuotaSugerida)}</dd>
             </div>
             <div>
-              <dt className="text-xs text-slate-500">Monto invertido</dt>
+              <dt className="text-xs text-slate-500">Monto inicial</dt>
               <dd>{formatearMoneda(resumen.montoInvertido)}</dd>
             </div>
             <div>

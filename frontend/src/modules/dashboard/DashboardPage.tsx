@@ -37,7 +37,7 @@ function etiquetaEstado(estado: PrestamoResponse['estado']) {
 }
 
 const tarjetas = [
-  { clave: 'montoInvertido', titulo: 'Monto invertido', esMoneda: true },
+  { clave: 'montoInvertido', titulo: 'Monto inicial', esMoneda: true },
   { clave: 'montoGanado', titulo: 'Monto ganado', esMoneda: true },
   { clave: 'montoPorGanar', titulo: 'Monto por ganar', esMoneda: true },
   { clave: 'deudaTotal', titulo: 'Deuda total', esMoneda: true },

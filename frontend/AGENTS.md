@@ -22,7 +22,7 @@ Priorizar siempre este orden:
 
 ## Reglas funcionales de UI
 - La pantalla principal debe destacar:
-  - monto invertido,
+  - monto inicial,
   - monto ganado,
   - monto por ganar,
   - deuda total,
