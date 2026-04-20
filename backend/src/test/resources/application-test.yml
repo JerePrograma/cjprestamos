@@ -9,7 +9,20 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+  servlet:
+    multipart:
+      max-file-size: 6MB
+      max-request-size: 6MB
 
 logging:
   level:
     org.flywaydb: info
+
+app:
+  legajo:
+    adjuntos:
+      directorio: ./target/storage-test/legajos
+      tamano-maximo-bytes: 5242880
+  auth:
+    bootstrap-admin:
+      enabled: true

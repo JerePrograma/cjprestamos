@@ -4,3 +4,12 @@ spring:
       - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
       - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
       - org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration
+
+app:
+  legajo:
+    adjuntos:
+      directorio: ./target/storage-test/legajos
+      tamano-maximo-bytes: 5242880
+  auth:
+    bootstrap-admin:
+      enabled: true

@@ -2,21 +2,17 @@
 
 ## Objetivo del archivo
 
-Este archivo existe para responder una sola pregunta:
+Responder de forma honesta:
 
 **¿Qué tan cerca está el repo de un MVP operativo usable de verdad?**
-
-No reemplaza al backlog.  
-No lista deseos.  
-Lista estado real.
 
 ---
 
 ## Criterio de lectura
 
-- **HECHO**: usable de forma razonable.
-- **PARCIAL**: existe pero no cierra flujo real.
-- **PENDIENTE**: todavía falta implementar.
+- **HECHO**: usable de punta a punta.
+- **PARCIAL**: existe, pero no cierra flujo real.
+- **PENDIENTE**: falta implementar.
 
 ---
 
@@ -25,6 +21,7 @@ Lista estado real.
 ### Personas
 - CRUD backend: **HECHO**
 - UI de personas: **HECHO**
+- acceso operativo al legajo desde Personas: **HECHO**
 
 ### Préstamos
 - backend base: **HECHO**
@@ -39,7 +36,7 @@ Lista estado real.
 - backend de generación automática/manual: **HECHO**
 - UI de generación automática: **HECHO**
 - UI de carga manual: **HECHO**
-- cierre operativo visible en detalle (programado/pagado/saldo/estado): **HECHO**
+- cierre operativo visible en detalle: **HECHO**
 
 ### Pagos
 - backend de registro: **HECHO**
@@ -51,38 +48,35 @@ Lista estado real.
 - backend: **HECHO**
 - UI: **HECHO**
 
-### Experiencia visual
-- UI responsive sobria en layout y módulos principales: **HECHO**
-
-### Colores y señales rápidas
-- color de referencia en persona: **HECHO**
-
 ### Legajos
-- backend: **HECHO** (backend mínimo usable de legajo por persona)
-- UI real: **PENDIENTE**
-- pantalla placeholder: **FUERA DE NAVEGACIÓN PRINCIPAL**
+- backend legajo por persona: **HECHO**
+- UI crear/editar legajo por persona: **HECHO**
+- backend adjuntos (metadata + filesystem local): **HECHO**
+- UI adjuntos (subida/listado/descarga/eliminación): **HECHO**
+- pantalla placeholder separada en menú principal: **FUERA DE NAVEGACIÓN (intencional)**
 
 ### Seguridad
 - Basic Auth simple: **HECHO**
 - login frontend mínimo (sin persistir contraseña, logout + manejo 401): **HECHO**
-- módulo de usuarios de sistema (persistidos en DB) + endpoint de sesión `/api/auth/me`: **HECHO**
-- seguridad mínima backend/frontend coherente (sin sesión backend dedicada): **HECHO EN MVP**
+- módulo de usuarios de sistema + endpoint `/api/auth/me`: **HECHO**
+- bootstrap idempotente de usuario inicial `admin/admin`: **HECHO**
+- sesión backend dedicada (token/cookie): **PENDIENTE**
 
 ### Calidad técnica
-- tests unitarios del núcleo: **BIEN ENCAMINADOS**
-- test de arranque real (contexto + endpoint health): **HECHO (alcance básico)**
-- integración con datasource/Flyway en test automatizado (PostgreSQL con Testcontainers): **HECHO**
-- CI backend ejecutando `mvn test` con Docker para forzar integración Testcontainers: **HECHO**
-- ejecución local sin Docker: **PARCIAL ESPERADO** (tests de integración se pueden skippear por diseño)
-- documentación alineada al repo: **HECHO EN ESTA ETAPA**
+- tests unitarios del núcleo: **HECHO EN NIVEL MVP**
+- test de arranque real (contexto + endpoint health): **HECHO (alcance básico y explícito)**
+- integración datasource/Flyway con PostgreSQL Testcontainers: **HECHO**
+- CI backend con `mvn test` y Docker: **HECHO**
+- ejecución local sin Docker: **PARCIAL ESPERADO** (integración puede skippear)
+- documentación alineada al repo: **HECHO**
 
 ---
 
 ## Conclusión
 
-El repo está en estado:
+Estado actual del repo:
 
-**MVP operativo principal cerrado, con evolución pendiente en UI de legajos, adjuntos y robustez técnica avanzada.**
+**MVP operativo principal cerrado + evolución post-MVP inmediata cerrada (legajo usable, adjuntos locales y bootstrap admin).**
 
-Pendientes reales para la siguiente etapa:
-1. UI de legajo separado y adjuntos.
+Pendiente real más relevante:
+1. robustez de seguridad más avanzada (fuera de alcance MVP/manual-first actual).

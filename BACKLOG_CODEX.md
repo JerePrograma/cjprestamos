@@ -1,33 +1,19 @@
 # BACKLOG_CODEX.md
 
-Backlog técnico priorizado para cerrar el MVP operativo del sistema interno de préstamos.
+Backlog técnico priorizado para reflejar el **estado real** del repo.
 
-## Cómo usar este archivo
-
-Este backlog debe representar el **estado real** del repo, no solo la intención histórica.
-
-Reglas:
-1. cada tarea debe tener estado visible,
-2. una tarea puede quedar **HECHA**, **PARCIAL** o **PENDIENTE**,
-3. si una tarea está hecha en backend pero no cerrada en UI, se considera **PARCIAL**,
-4. si una tarea impacta el flujo principal, no se mueve a “hecha” hasta poder usarla de punta a punta.
+## Reglas de estado
+1. cada tarea tiene estado visible,
+2. los estados válidos son **HECHA**, **PARCIAL** o **PENDIENTE**,
+3. si una tarea está cerrada solo en backend o solo en frontend, queda **PARCIAL**.
 
 ---
 
 # 0. Estado real del producto
 
-## Enfoque funcional confirmado
-- sistema interno,
-- una sola operadora principal,
-- uso manual-first,
-- cálculo asistido por porcentaje fijo,
-- posibilidad de ajustar montos y fechas manualmente,
-- foco del dashboard en invertido, ganado, por ganar y deuda total.
-
-## Núcleo del MVP: situación actual
+## Núcleo del MVP (operación principal)
 
 ### HECHO
-- BT-7001 — refactor visual responsive del frontend (layout + módulos principales)
 - BT-0002 — backend base
 - BT-0003 — frontend base
 - BT-1001 — dominio mínimo
@@ -42,7 +28,7 @@ Reglas:
 - BT-3005 — listado y detalle de préstamos
 - BT-3006 — UI de generación automática de cuotas
 - BT-3007 — UI de carga manual de cuotas
-- BT-3008 — visibilidad clara del estado de cierre operativo del préstamo
+- BT-3008 — cierre operativo del préstamo en UI
 - BT-4001 — registro de pago
 - BT-4002 — imputación de pagos
 - BT-4003 — UI de pagos dentro del detalle de préstamo
@@ -51,269 +37,39 @@ Reglas:
 - BT-6001 — referencias del préstamo
 - BT-6002 — colores de referencia para persona
 - BT-0004 — honestidad de navegación / ocultar placeholders
-- BT-0005 — reforzar test de arranque e integración real (alcance básico)
-- BT-0006 — pruebas de integración con datasource/Flyway en entorno de test dedicado (respaldadas por CI con Docker)
+- BT-0005 — test de arranque real (alcance básico)
+- BT-0006 — integración datasource/Flyway con Testcontainers + CI Docker
+- BT-7001 — refactor visual responsive del frontend
 
 ### PARCIAL
-- (sin tareas parciales activas en seguridad mínima)
+- (sin parciales activos en el núcleo)
 
 ### PENDIENTE CRÍTICO
-- (sin pendientes críticos activos en testing de integración)
-
-### PENDIENTE NO CRÍTICO
-- BT-8001 a BT-8004 — legajo y adjuntos
+- (sin pendientes críticos activos)
 
 ---
 
-# 1. Estado de cierre del núcleo operativo
-
-## Núcleo principal del MVP (cerrado)
-Las siguientes tareas quedan como referencia de cierre ya alcanzado:
-
-### BT-3006 — UI de generación automática de cuotas
-**Estado:** HECHA  
-**Objetivo:** permitir generar cuotas desde la interfaz para préstamos mensuales o cada X días.
-
-**Archivos probables**
-- `frontend/src/services/prestamos/prestamosApi.ts`
-- `frontend/src/modules/prestamos/hooks/usePrestamos.ts`
-- `frontend/src/modules/prestamos/PrestamosPage.tsx`
-- `frontend/src/modules/prestamos/types/prestamo.ts`
-
-**Criterio de aceptación**
-- desde el detalle del préstamo se pueden generar cuotas,
-- la UI refresca cuotas y resumen,
-- el flujo no exige llamadas manuales a la API.
-
----
-
-### BT-3007 — UI de carga manual de cuotas
-**Estado:** HECHA  
-**Objetivo:** permitir ingresar fechas y montos manuales cuando `frecuenciaTipo = FECHAS_MANUALES`.
-
-**Criterio de aceptación**
-- formulario/manual editor claro,
-- validación de cantidad de cuotas,
-- validación de suma exacta,
-- feedback útil de errores.
-
----
-
-### BT-3008 — Cierre operativo del préstamo en UI
-**Estado:** HECHA  
-**Objetivo:** que el detalle del préstamo muestre con claridad:
-- total programado,
-- total pagado,
-- saldo pendiente,
-- si las cuotas ya fueron generadas o no.
-
-**Criterio de aceptación**
-- sin entrar al backend, la operadora entiende el estado real del préstamo.
-
----
-
-### BT-0004 — Honestidad de navegación
-**Estado:** HECHA  
-**Objetivo:** no mostrar en el menú principal páginas placeholder sin valor operativo.
-
-**Archivos probables**
-- `frontend/src/components/layout/LayoutPrincipal.tsx`
-- `frontend/src/modules/pagos/PagosPage.tsx`
-- `frontend/src/modules/legajos/LegajosPage.tsx`
-
-**Opciones válidas**
-- ocultar las rutas,
-- marcarlas como “próximamente”,
-- o implementar lo mínimo útil real.
-
----
-
-### BT-0005 — Reforzar test de arranque e integración real
-**Estado:** HECHA (alcance básico)  
-**Objetivo:** reemplazar tests triviales de arranque por una validación real de contexto web + endpoint de health.
-
-**Archivos probables**
-- `backend/src/test/java/com/cjprestamos/backend/CjprestamosBackendApplicationTests.java`
-- tests de controller/integración relevantes
-- configuración de test con perfil adecuado
-
-**Criterio de aceptación**
-- el proyecto no parezca más validado de lo que realmente está.
-
-**Nota de alcance**
-- hoy valida contexto Spring + seguridad mínima + `/api/health` con perfil `test`,
-- la validación de datasource/Flyway se cubre en BT-0006.
-
----
-
-### BT-0006 — Integración real datasource/Flyway en entorno de test dedicado
-**Estado:** HECHA  
-**Objetivo:** ejecutar integración real contra PostgreSQL de test (Testcontainers) para validar wiring de datasource + migraciones Flyway.
-
-**Cierre real**
-- base reusable de integración con perfil `test`,
-- tests de integración con `@Testcontainers(disabledWithoutDocker = true)` para DX local,
-- workflow oficial de backend en GitHub Actions ejecutando `mvn test` en runner con Docker (`backend-tests.yml`), lo que fuerza esa integración en CI.
-
----
-
-# 2. Estado complementario del MVP
-
-### BT-3004 — UI alta de préstamo
-**Estado:** HECHA  
-**Qué ya existe**
-- formulario de alta,
-- cálculo sugerido,
-- validaciones importantes,
-- integración de creación.
-
-**Estado de cierre**
-- la misma vista permite crear préstamo y continuar con generación de cuotas.
-
----
-
-### BT-3005 — listado y detalle de préstamos
-**Estado:** HECHA  
-**Qué ya existe**
-- listado,
-- detalle,
-- resumen económico,
-- referencia y observaciones,
-- cuotas y pagos visibles si existen,
-- estado operativo de cuotas (generadas o pendientes),
-- total programado, total pagado y saldo pendiente.
-
----
-
-### BT-4003 — UI de pagos
-**Estado:** HECHA para el MVP  
-**Qué ya existe**
-- registro de pagos desde el detalle,
-- historial visible,
-- refresco de queries relevantes.
-
-**Qué queda fuera**
-- no hay pantalla separada `/pagos` porque el flujo operativo vive en detalle de préstamo.
-
----
-
-### BT-9001 — seguridad mínima backend/frontend coherente
-**Estado:** PARCIAL  
-**Qué quedó cerrado**
-- Basic Auth simple en backend mantenido,
-- `/api/health` sigue libre,
-- frontend sin credenciales hardcodeadas automáticas,
-- contraseña no se persiste en `sessionStorage` (solo usuario recordado).
-
-**Concesión vigente**
-- la autenticación sigue basada en Basic Auth manual,
-- la sesión del frontend es en memoria y se pierde al recargar,
-- no existe todavía sesión backend dedicada (cookie/token).
-
----
-
-# 3. Backlog diferido post-MVP operativo
+# 1. Evolución post-MVP inmediata
 
 ## ÉPICA 8 — Legajo y adjuntos
-### BT-8001 — LegajoPersona
-**Estado:** HECHA
+- BT-8001 — backend de legajo por persona: **HECHA**
+- BT-8002 — UI de legajo integrada en flujo de Personas: **HECHA**
+- BT-8003 — backend de adjuntos de legajo (metadata + filesystem local): **HECHA**
+- BT-8004 — UI de adjuntos de legajo (upload/listado/descarga/eliminación): **HECHA**
 
-**Cierre implementado**
-- backend mínimo usable de `LegajoPersona` con relación 1 a 1 con `Persona`,
-- migración Flyway para persistencia (`legajo_persona`),
-- endpoints backend para obtener, crear y actualizar por `personaId`,
-- validaciones mínimas de payload,
-- tests unitarios, de controller e integración para el flujo principal.
-
-### BT-8002 — UI de Legajo
-**Estado:** PENDIENTE
-
-### BT-8003 — Adjuntar archivos al legajo
-**Estado:** PENDIENTE
-
-### BT-8004 — UI de adjuntos del legajo
-**Estado:** PENDIENTE
-
-## ÉPICA 9 — Seguridad adicional
-### BT-9002 — Login frontend mínimo
-**Estado:** HECHA
-
-**Cierre implementado**
-- pantalla de acceso antes de entrar a la app,
-- validación de credenciales contra `/dashboard/resumen`,
-- sesión activa en memoria (sin persistir contraseña en storage),
-- recordatorio de usuario para reingreso manual,
-- botón de cierre de sesión,
-- limpieza de sesión y retorno a login cuando la API responde `401`.
+## ÉPICA 9 — Seguridad mínima operativa
+- BT-9001 — seguridad mínima backend/frontend coherente: **HECHA EN MVP**
+- BT-9002 — login frontend mínimo: **HECHA**
+- BT-9003 — bootstrap idempotente de usuario `admin` por defecto: **HECHA**
 
 ---
 
-# 4. Orden sugerido de ejecución desde hoy
+# 2. Calidad y documentación
 
-## Lote A — Consolidación
-- BT-8001
-- BT-8002
+### HECHO
+- Documentación principal alineada con estado real del repo (`README.md`, `ESTADO_REAL_MVP.md`, este backlog).
+- Wording del test de arranque real ajustado a su alcance (contexto web + endpoint health, sin sobredimensionar validación).
 
-## Lote C — Evolución post-MVP
-- BT-8003
-- BT-8004
-
----
-
-# 5. Fuera del MVP
-
-Estas tareas siguen fuera de la primera versión útil:
-- recordatorios automáticos,
-- mensajes automáticos para WhatsApp,
-- portal cliente,
-- pagaré digital,
-- recibos PDF,
-- scoring avanzado,
-- punitorio automático,
-- multiusuario con permisos finos,
-- automatizaciones complejas.
-
----
-
-# 6. Plantilla estándar para nuevas tareas
-
-```text
-Contexto funcional:
-[por qué esta tarea acerca el producto al uso real]
-
-Estado actual:
-[qué ya existe y qué sigue faltando]
-
-Objetivo:
-[qué debe quedar realmente resuelto]
-
-Alcance:
-[qué sí entra]
-
-Fuera de alcance:
-[qué no debe tocar]
-
-Restricciones:
-- usar nombres en español para el dominio
-- mantener código simple
-- no sobreingenierizar
-- agregar tests
-- no romper el flujo manual-first
-- no declarar “hecha” una tarea cerrada solo en backend
-
-Entregable esperado:
-- archivos modificados
-- tests
-- validaciones ejecutadas
-- estado final: hecha / parcial / pendiente
-```
-
-
-### BT-7001 — refactor visual responsive del frontend
-**Estado:** HECHA  
-**Objetivo:** mejorar legibilidad y uso en distintas resoluciones con estética sobria y operativa.
-
-**Cierre implementado**
-- layout principal adaptativo con navegación usable en mobile y desktop,
-- actualización visual consistente de login, dashboard, personas y préstamos,
-- clases base reutilizables para paneles, botones y títulos sin sobreingeniería.
+### PENDIENTE NO CRÍTICO
+- Robustez técnica avanzada de seguridad (sesión backend dedicada, rotación de credenciales, políticas de acceso más finas).
+- Evoluciones fuera de alcance MVP inmediato (portal cliente, recordatorios automáticos, scoring, PDF, etc.).
