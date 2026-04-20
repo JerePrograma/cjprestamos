@@ -124,10 +124,7 @@ export function crearPayloadPrestamo(formulario: PrestamoFormulario): PrestamoPa
     frecuenciaTipo: formulario.frecuenciaTipo,
     frecuenciaCadaDias:
       formulario.frecuenciaTipo === 'CADA_X_DIAS' ? numeroOpcional(formulario.frecuenciaCadaDias) : null,
-    fechaBase:
-      formulario.frecuenciaTipo === 'FECHAS_MANUALES' && formulario.usarFechasManuales
-        ? null
-        : formulario.fechaBase || null,
+    fechaBase: formulario.fechaBase || null,
     usarFechasManuales: formulario.usarFechasManuales,
     referenciaCodigo: formulario.referenciaCodigo.trim() || null,
     observaciones: formulario.observaciones.trim() || null,
