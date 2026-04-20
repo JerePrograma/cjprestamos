@@ -45,17 +45,17 @@ function BotonAccion({ accion }: { accion: Action }) {
 
 export function PageHeader({ titulo, descripcion, breadcrumbs = [], acciones = [], estados = [] }: PageHeaderProps) {
   return (
-    <header className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+    <header className="panel space-y-4 p-5 sm:p-6">
       {breadcrumbs.length > 0 && (
-        <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-1 text-xs text-slate-500">
+        <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
           {breadcrumbs.map((item, index) => (
             <span key={`${item.etiqueta}-${index}`} className="inline-flex items-center gap-1">
               {item.to ? (
-                <Link to={item.to} className="hover:text-slate-700">
+                <Link to={item.to} className="transition hover:text-slate-700 dark:hover:text-slate-200">
                   {item.etiqueta}
                 </Link>
               ) : (
-                <span className="text-slate-700">{item.etiqueta}</span>
+                <span className="text-slate-700 dark:text-slate-200">{item.etiqueta}</span>
               )}
               {index < breadcrumbs.length - 1 && <span>/</span>}
             </span>
@@ -63,8 +63,8 @@ export function PageHeader({ titulo, descripcion, breadcrumbs = [], acciones = [
         </nav>
       )}
 
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="space-y-1">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="space-y-1.5">
           <h1 className="titulo-seccion">{titulo}</h1>
           <p className="subtitulo-seccion max-w-3xl">{descripcion}</p>
         </div>
@@ -82,9 +82,9 @@ export function PageHeader({ titulo, descripcion, breadcrumbs = [], acciones = [
           {estados.map((estado) => (
             <span
               key={estado.etiqueta}
-              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-700"
+              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
             >
-              <strong className="font-semibold text-slate-900">{estado.valor}</strong>
+              <strong className="font-semibold text-slate-900 dark:text-slate-100">{estado.valor}</strong>
               <span>{estado.etiqueta}</span>
             </span>
           ))}
