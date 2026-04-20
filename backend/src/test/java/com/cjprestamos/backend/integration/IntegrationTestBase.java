@@ -2,6 +2,10 @@ package com.cjprestamos.backend.integration;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Comparator;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -47,7 +51,8 @@ public abstract class IntegrationTestBase {
 
     @BeforeEach
     void limpiarBase() {
-        jdbcTemplate.execute("TRUNCATE TABLE legajo_persona, imputacion_pago, evento_prestamo, pago, cuota, prestamo, persona RESTART IDENTITY CASCADE");
+        jdbcTemplate.execute("TRUNCATE TABLE legajo_adjunto, legajo_persona, imputacion_pago, evento_prestamo, pago, cuota, prestamo, persona RESTART IDENTITY CASCADE");
+        limpiarStorageAdjuntos();
     }
 
     protected RequestPostProcessor authBasica() {
@@ -68,5 +73,31 @@ public abstract class IntegrationTestBase {
             Integer.class
         );
         return total == null ? 0 : total;
+    }
+
+    protected int contarMigracionV4Aplicada() {
+        Integer total = jdbcTemplate.queryForObject(
+            "SELECT count(*) FROM flyway_schema_history WHERE version = '4' AND success = true",
+            Integer.class
+        );
+        return total == null ? 0 : total;
+    }
+
+    private void limpiarStorageAdjuntos() {
+        Path storage = Path.of("./target/storage-test/legajos");
+        if (!Files.exists(storage)) {
+            return;
+        }
+
+        try (var paths = Files.walk(storage)) {
+            paths.sorted(Comparator.reverseOrder())
+                .forEach(path -> {
+                    try {
+                        Files.deleteIfExists(path);
+                    } catch (IOException ignored) {
+                    }
+                });
+        } catch (IOException ignored) {
+        }
     }
 }

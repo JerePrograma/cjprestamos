@@ -32,7 +32,7 @@ El criterio humano sigue mandando.
 ## Estado actual del MVP
 
 ### Núcleo operativo principal (MVP) — CERRADO
-- Personas: CRUD backend y UI básica.
+- Personas: CRUD backend y UI operativa.
 - Préstamos: alta, listado, detalle y cálculo sugerido.
 - Cuotas: generación automática/manual disponible desde UI y backend.
 - Pagos: registro, imputación y actualización de estados.
@@ -41,9 +41,11 @@ El criterio humano sigue mandando.
 - Detalle operativo del préstamo: estado de cuotas, total programado, total pagado y saldo pendiente.
 - Pagos en MVP: decisión cerrada, se operan dentro del detalle de préstamo (sin pantalla separada en navegación principal).
 
-### Pendiente post-MVP operativo (evolución)
-- legajos y adjuntos (fuera del flujo principal actual),
-- robustez técnica adicional de seguridad interna (sin sistema de identidad avanzado).
+### Evolución post-MVP inmediata — CERRADA
+- Legajo por persona operativo dentro de la vista de Personas (crear/editar).
+- Adjuntos del legajo (subida/listado/descarga/eliminación) con storage local en filesystem configurable.
+- Seguridad mínima con login frontend + backend Basic Auth.
+- Bootstrap idempotente de usuario inicial `admin`.
 
 ### Estado real recomendado
 Para seguimiento de producto y priorización:
@@ -102,14 +104,6 @@ Requisitos:
 - base de datos `cjprestamos`
 - usuario/clave por defecto: `postgres/postgres`
 
-Credenciales Basic Auth de desarrollo (backend):
-- usuario: `operadora`
-- contraseña: `operadora123`
-
-Se pueden sobreescribir con variables de entorno:
-- `APP_BASIC_USER`
-- `APP_BASIC_PASSWORD`
-
 Arranque:
 
 ```bash
@@ -118,6 +112,17 @@ mvn spring-boot:run
 ```
 
 La API queda en `http://localhost:8080/api`.
+
+Credenciales iniciales para desarrollo:
+- usuario: `admin`
+- contraseña: `admin`
+- rol: `OPERADORA`
+
+Notas de seguridad mínima:
+- el usuario `admin` se crea automáticamente al iniciar si no existe,
+- la creación es idempotente,
+- la contraseña se guarda codificada con `PasswordEncoder`,
+- se puede desactivar el bootstrap con `app.auth.bootstrap-admin.enabled=false`.
 
 ### 2) Frontend
 
@@ -148,6 +153,7 @@ Autenticación frontend (mínima):
 
 - backend: `GET http://localhost:8080/api/health`
 - frontend: abrir `http://localhost:5173`
+- flujo personas/legajo: seleccionar persona, crear o editar legajo y operar adjuntos sin Postman.
 
 ---
 
@@ -161,11 +167,6 @@ No considerar “cerrada” una funcionalidad si:
 Una entrega queda realmente cerrada cuando el flujo principal se puede usar de punta a punta sin depender de pasos manuales técnicos.
 
 ---
-
-## Prioridad inmediata recomendada
-
-1. Consolidar seguridad mínima según operación interna real.
-2. Recién después: legajos y adjuntos.
 
 > Nota técnica (BT-0006): los tests de integración usan PostgreSQL real con Testcontainers (perfil `test`).  
 > En desarrollo local sin Docker pueden quedar skipeados por `@Testcontainers(disabledWithoutDocker = true)`.  

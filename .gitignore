@@ -6,3 +6,5 @@ backend/target/
 
 # Node
 frontend/node_modules/
+# Storage local de adjuntos
+backend/storage/

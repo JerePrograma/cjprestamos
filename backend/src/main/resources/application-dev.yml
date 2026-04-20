@@ -1,5 +1,4 @@
 spring:
-
   datasource:
     url: jdbc:postgresql://localhost:5432/cjprestamos
     username: postgres
@@ -15,7 +14,20 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+  servlet:
+    multipart:
+      max-file-size: 6MB
+      max-request-size: 6MB
 
 logging:
   level:
     org.hibernate.SQL: info
+
+app:
+  legajo:
+    adjuntos:
+      directorio: ./storage/legajos
+      tamano-maximo-bytes: 5242880
+  auth:
+    bootstrap-admin:
+      enabled: true
