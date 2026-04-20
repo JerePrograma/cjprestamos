@@ -1,20 +1,29 @@
 package com.cjprestamos.backend.cuota.service;
 
+import com.cjprestamos.backend.cuota.dto.AjustarCuotasFuturasRequest;
+import com.cjprestamos.backend.cuota.dto.AjusteCuotaFuturaRequest;
 import com.cjprestamos.backend.cuota.dto.CuotaManualRequest;
 import com.cjprestamos.backend.cuota.dto.CuotaResponse;
 import com.cjprestamos.backend.cuota.dto.GenerarCuotasRequest;
 import com.cjprestamos.backend.cuota.model.Cuota;
 import com.cjprestamos.backend.cuota.model.enums.EstadoCuota;
 import com.cjprestamos.backend.cuota.repository.CuotaRepository;
+import com.cjprestamos.backend.evento.model.EventoPrestamo;
+import com.cjprestamos.backend.evento.model.enums.TipoEventoPrestamo;
+import com.cjprestamos.backend.evento.repository.EventoPrestamoRepository;
 import com.cjprestamos.backend.prestamo.dto.CalculoPrestamoEntrada;
 import com.cjprestamos.backend.prestamo.dto.CalculoPrestamoResultado;
 import com.cjprestamos.backend.prestamo.model.Prestamo;
+import com.cjprestamos.backend.prestamo.model.enums.EstadoPrestamo;
 import com.cjprestamos.backend.prestamo.repository.PrestamoRepository;
 import com.cjprestamos.backend.prestamo.service.CalculadoraPrestamoService;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.IntStream;
@@ -30,15 +39,18 @@ public class CuotaService {
     private final CuotaRepository cuotaRepository;
     private final PrestamoRepository prestamoRepository;
     private final CalculadoraPrestamoService calculadoraPrestamoService;
+    private final EventoPrestamoRepository eventoPrestamoRepository;
 
     public CuotaService(
         CuotaRepository cuotaRepository,
         PrestamoRepository prestamoRepository,
-        CalculadoraPrestamoService calculadoraPrestamoService
+        CalculadoraPrestamoService calculadoraPrestamoService,
+        EventoPrestamoRepository eventoPrestamoRepository
     ) {
         this.cuotaRepository = cuotaRepository;
         this.prestamoRepository = prestamoRepository;
         this.calculadoraPrestamoService = calculadoraPrestamoService;
+        this.eventoPrestamoRepository = eventoPrestamoRepository;
     }
 
     public List<CuotaResponse> generar(Long prestamoId, GenerarCuotasRequest request) {
@@ -72,6 +84,69 @@ public class CuotaService {
             .toList();
     }
 
+    public List<CuotaResponse> ajustarFuturas(Long prestamoId, AjustarCuotasFuturasRequest request) {
+        Prestamo prestamo = buscarPrestamo(prestamoId);
+        validarEstadoPrestamoParaAjuste(prestamo);
+
+        Set<Long> idsSolicitados = request.cuotas().stream()
+            .map(AjusteCuotaFuturaRequest::cuotaId)
+            .collect(java.util.stream.Collectors.toSet());
+        if (idsSolicitados.size() != request.cuotas().size()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No puede haber cuotas repetidas en el ajuste");
+        }
+
+        List<Cuota> cuotas = cuotaRepository.findByPrestamoIdAndIdIn(prestamoId, idsSolicitados);
+        if (cuotas.size() != idsSolicitados.size()) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "La renegociación incluye cuotas inexistentes o que no pertenecen al préstamo"
+            );
+        }
+
+        Map<Long, Cuota> cuotasPorId = cuotas.stream().collect(java.util.stream.Collectors.toMap(Cuota::getId, Function.identity()));
+        BigDecimal totalProgramadoAnterior = BigDecimal.ZERO.setScale(2);
+        BigDecimal totalProgramadoNuevo = BigDecimal.ZERO.setScale(2);
+
+        for (AjusteCuotaFuturaRequest ajuste : request.cuotas()) {
+            Cuota cuota = cuotasPorId.get(ajuste.cuotaId());
+            BigDecimal montoPagado = cuota.getMontoPagado().setScale(2);
+            BigDecimal montoAnterior = cuota.getMontoProgramado().setScale(2);
+            BigDecimal montoNuevo = ajuste.montoProgramado().setScale(2);
+
+            if (montoPagado.compareTo(BigDecimal.ZERO.setScale(2)) > 0) {
+                throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Solo se permite renegociar cuotas futuras sin pagos imputados"
+                );
+            }
+
+            if (montoNuevo.compareTo(montoPagado) < 0) {
+                throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "El monto renegociado no puede ser menor que lo ya pagado de la cuota"
+                );
+            }
+
+            cuota.setFechaVencimiento(ajuste.fechaVencimiento());
+            cuota.setMontoProgramado(montoNuevo);
+            cuota.setEstado(calcularEstadoCuota(cuota));
+
+            totalProgramadoAnterior = totalProgramadoAnterior.add(montoAnterior);
+            totalProgramadoNuevo = totalProgramadoNuevo.add(montoNuevo);
+        }
+
+        List<Cuota> cuotasOrdenadas = cuotas.stream()
+            .sorted(Comparator.comparing(Cuota::getNumeroCuota))
+            .toList();
+        cuotaRepository.saveAll(cuotasOrdenadas);
+        registrarEventoRenegociacion(prestamo, request, totalProgramadoAnterior, totalProgramadoNuevo);
+        prestamo.setEstado(EstadoPrestamo.RENEGOCIADO);
+
+        return cuotaRepository.findByPrestamoIdOrderByNumeroCuotaAsc(prestamoId).stream()
+            .map(this::mapearRespuesta)
+            .toList();
+    }
+
     private Prestamo buscarPrestamo(Long prestamoId) {
         return prestamoRepository.findById(prestamoId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Préstamo no encontrado"));
@@ -82,6 +157,15 @@ public class CuotaService {
             throw new ResponseStatusException(
                 HttpStatus.BAD_REQUEST,
                 "El préstamo ya tiene cuotas generadas. No se permite regeneración en esta etapa"
+            );
+        }
+    }
+
+    private void validarEstadoPrestamoParaAjuste(Prestamo prestamo) {
+        if (prestamo.getEstado() == EstadoPrestamo.CANCELADO || prestamo.getEstado() == EstadoPrestamo.FINALIZADO) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "Solo se pueden renegociar cuotas en préstamos activos o ya renegociados"
             );
         }
     }
@@ -212,5 +296,36 @@ public class CuotaService {
             cuota.getMontoPagado().setScale(2),
             cuota.getEstado()
         );
+    }
+
+    private EstadoCuota calcularEstadoCuota(Cuota cuota) {
+        BigDecimal montoPagado = cuota.getMontoPagado().setScale(2);
+        BigDecimal montoProgramado = cuota.getMontoProgramado().setScale(2);
+        if (montoPagado.compareTo(BigDecimal.ZERO.setScale(2)) == 0) {
+            return EstadoCuota.PENDIENTE;
+        }
+        if (montoPagado.compareTo(montoProgramado) >= 0) {
+            return EstadoCuota.PAGADA;
+        }
+        return EstadoCuota.PARCIAL;
+    }
+
+    private void registrarEventoRenegociacion(
+        Prestamo prestamo,
+        AjustarCuotasFuturasRequest request,
+        BigDecimal totalProgramadoAnterior,
+        BigDecimal totalProgramadoNuevo
+    ) {
+        LocalDate fechaRenegociacion = request.fechaRenegociacion() != null ? request.fechaRenegociacion() : LocalDate.now();
+        String observacionGeneral = request.observacionGeneral() == null ? "" : ". Nota: " + request.observacionGeneral();
+        EventoPrestamo eventoPrestamo = new EventoPrestamo();
+        eventoPrestamo.setPrestamo(prestamo);
+        eventoPrestamo.setTipoEvento(TipoEventoPrestamo.REPROGRAMACION_CUOTAS);
+        eventoPrestamo.setDescripcion(
+            "Renegociación manual de " + request.cuotas().size() + " cuota(s). Total previo "
+                + totalProgramadoAnterior.setScale(2) + ", total nuevo " + totalProgramadoNuevo.setScale(2) + observacionGeneral
+        );
+        eventoPrestamo.setFechaEvento(LocalDateTime.of(fechaRenegociacion, java.time.LocalTime.MIDNIGHT));
+        eventoPrestamoRepository.save(eventoPrestamo);
     }
 }

@@ -47,6 +47,19 @@ export type GenerarCuotasPayload = {
   cuotasManuales?: CuotaManualPayload[];
 };
 
+export type AjusteCuotaFuturaPayload = {
+  cuotaId: number;
+  fechaVencimiento: string;
+  montoProgramado: number;
+  observacion?: string | null;
+};
+
+export type AjustarCuotasFuturasPayload = {
+  fechaRenegociacion?: string | null;
+  observacionGeneral?: string | null;
+  cuotas: AjusteCuotaFuturaPayload[];
+};
+
 export type CalculoPrestamoPayload = {
   montoInicial: number;
   porcentajeFijoSugerido: number | null;

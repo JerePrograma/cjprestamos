@@ -19,7 +19,9 @@ import com.cjprestamos.backend.prestamo.repository.PrestamoRepository;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -59,7 +61,7 @@ public class PagoService {
         validarEstadoPrestamo(prestamo);
         validarMonto(request.monto());
 
-        List<Cuota> cuotasOrdenadas = cuotaRepository.findByPrestamoIdOrderByNumeroCuotaAsc(request.prestamoId());
+        List<Cuota> cuotasOrdenadas = obtenerCuotasParaImputacion(request);
 
         validarCuotasDisponibles(cuotasOrdenadas);
 
@@ -102,11 +104,35 @@ public class PagoService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Préstamo no encontrado"));
     }
 
-    private void validarEstadoPrestamo(Prestamo prestamo) {
-        if (prestamo.getEstado() != EstadoPrestamo.ACTIVO) {
+    private List<Cuota> obtenerCuotasParaImputacion(RegistroPagoRequest request) {
+        List<Long> cuotasSeleccionadas = request.cuotasSeleccionadas();
+        if (cuotasSeleccionadas == null || cuotasSeleccionadas.isEmpty()) {
+            return cuotaRepository.findByPrestamoIdOrderByNumeroCuotaAsc(request.prestamoId());
+        }
+
+        Set<Long> idsSinDuplicados = new LinkedHashSet<>(cuotasSeleccionadas);
+        if (idsSinDuplicados.size() != cuotasSeleccionadas.size()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se permite seleccionar cuotas repetidas");
+        }
+
+        List<Cuota> cuotasSeleccionadasDelPrestamo = cuotaRepository.findByPrestamoIdAndIdIn(request.prestamoId(), idsSinDuplicados);
+        if (cuotasSeleccionadasDelPrestamo.size() != idsSinDuplicados.size()) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Solo se pueden registrar pagos sobre préstamos activos"
+                    "Hay cuotas seleccionadas que no existen o no pertenecen al préstamo"
+            );
+        }
+
+        return cuotasSeleccionadasDelPrestamo.stream()
+                .sorted(java.util.Comparator.comparing(Cuota::getNumeroCuota))
+                .toList();
+    }
+
+    private void validarEstadoPrestamo(Prestamo prestamo) {
+        if (prestamo.getEstado() != EstadoPrestamo.ACTIVO && prestamo.getEstado() != EstadoPrestamo.RENEGOCIADO) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Solo se pueden registrar pagos sobre préstamos activos o renegociados"
             );
         }
     }
@@ -131,10 +157,17 @@ public class PagoService {
                 .map(this::calcularSaldoPendiente)
                 .reduce(CERO, BigDecimal::add);
 
+        if (totalPendiente.compareTo(CERO) <= 0) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Las cuotas seleccionadas no tienen saldo pendiente para imputar"
+            );
+        }
+
         if (montoPago.compareTo(totalPendiente) > 0) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "El monto del pago supera el total pendiente imputable del préstamo"
+                    "El monto del pago supera el total pendiente imputable de las cuotas objetivo"
             );
         }
     }

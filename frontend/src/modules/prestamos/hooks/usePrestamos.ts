@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  ajustarCuotasFuturasPrestamo,
   actualizarReferenciaPrestamo,
   calcularPrestamo,
   crearPrestamo,
@@ -10,6 +11,7 @@ import {
   obtenerPrestamosActivos,
 } from '../../../services/prestamos/prestamosApi';
 import type {
+  AjustarCuotasFuturasPayload,
   CalculoPrestamoPayload,
   GenerarCuotasPayload,
   PrestamoPayload,
@@ -101,6 +103,21 @@ export function useGenerarCuotasPrestamo() {
   return useMutation({
     mutationFn: ({ id, payload }: { id: number; payload?: GenerarCuotasPayload }) =>
       generarCuotasPrestamo(id, payload),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: [...QUERY_KEY_PRESTAMOS, variables.id] });
+      queryClient.invalidateQueries({ queryKey: [...QUERY_KEY_PRESTAMOS, variables.id, 'cuotas'] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY_PRESTAMOS });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    },
+  });
+}
+
+export function useAjustarCuotasFuturasPrestamo() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: number; payload: AjustarCuotasFuturasPayload }) =>
+      ajustarCuotasFuturasPrestamo(id, payload),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: [...QUERY_KEY_PRESTAMOS, variables.id] });
       queryClient.invalidateQueries({ queryKey: [...QUERY_KEY_PRESTAMOS, variables.id, 'cuotas'] });

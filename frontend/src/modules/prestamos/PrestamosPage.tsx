@@ -8,6 +8,7 @@ import {
 import { useListadoPersonas } from "../personas/hooks/usePersonas";
 import {
   useActualizarReferenciaPrestamo,
+  useAjustarCuotasFuturasPrestamo,
   useCalcularPrestamo,
   useCrearPrestamo,
   useCuotasPrestamo,
@@ -17,6 +18,7 @@ import {
   useResumenPrestamo,
 } from "./hooks/usePrestamos";
 import {
+  type AjustarCuotasFuturasPayload,
   crearPayloadCalculo,
   crearPayloadPrestamo,
   formularioInicialPrestamo,
@@ -33,6 +35,15 @@ type CuotaManualFila = {
   numeroCuota: string;
   fechaVencimiento: string;
   montoProgramado: string;
+};
+
+type CuotaAjusteFila = {
+  cuotaId: number;
+  numeroCuota: number;
+  fechaVencimiento: string;
+  montoProgramado: string;
+  montoPagado: number;
+  estado: string;
 };
 
 function esFormularioMinimoValido(formulario: PrestamoFormulario) {
@@ -127,6 +138,13 @@ export function PrestamosPage() {
   >([]);
   const [errorCuotas, setErrorCuotas] = useState<string | null>(null);
   const [mensajeCuotas, setMensajeCuotas] = useState<string | null>(null);
+  const [cuotasAjuste, setCuotasAjuste] = useState<CuotaAjusteFila[]>([]);
+  const [errorAjusteCuotas, setErrorAjusteCuotas] = useState<string | null>(
+    null,
+  );
+  const [mensajeAjusteCuotas, setMensajeAjusteCuotas] = useState<string | null>(
+    null,
+  );
 
   const personas = useListadoPersonas();
   const prestamos = useListadoPrestamos();
@@ -138,9 +156,12 @@ export function PrestamosPage() {
   const crearPrestamo = useCrearPrestamo();
   const calcularPrestamo = useCalcularPrestamo();
   const generarCuotasPrestamo = useGenerarCuotasPrestamo();
+  const ajustarCuotasFuturas = useAjustarCuotasFuturasPrestamo();
   const registrarPago = useRegistrarPago();
   const actualizarReferenciaPrestamo = useActualizarReferenciaPrestamo();
-  const puedeRegistrarPago = detallePrestamo.data?.estado === "ACTIVO";
+  const puedeRegistrarPago =
+    detallePrestamo.data?.estado === "ACTIVO" ||
+    detallePrestamo.data?.estado === "RENEGOCIADO";
   const puedeCalcularAlta = useMemo(
     () => esFormularioMinimoValido(formulario),
     [formulario],
@@ -167,8 +188,11 @@ export function PrestamosPage() {
   useEffect(() => {
     setErrorPago(null);
     setMensajePago(null);
+    setFormularioPago((actual) => ({ ...actual, cuotasSeleccionadas: [] }));
     setErrorCuotas(null);
     setMensajeCuotas(null);
+    setErrorAjusteCuotas(null);
+    setMensajeAjusteCuotas(null);
   }, [seleccionId]);
 
   useEffect(() => {
@@ -374,6 +398,7 @@ export function PrestamosPage() {
         monto: "",
         referencia: "",
         observacion: "",
+        cuotasSeleccionadas: [],
       }));
     } catch (error) {
       console.error("Error al registrar pago", {
@@ -393,6 +418,10 @@ export function PrestamosPage() {
 
   const detalleActual = detallePrestamo.data;
   const cuotasActuales = cuotasPrestamo.data ?? [];
+  const cuotasConSaldo = useMemo(
+    () => cuotasActuales.filter((cuota) => cuota.montoProgramado > cuota.montoPagado),
+    [cuotasActuales],
+  );
   const tieneCuotasGeneradas = cuotasActuales.length > 0;
   const totalProgramado = useMemo(() => {
     if (resumenPrestamo.data) {
@@ -423,6 +452,49 @@ export function PrestamosPage() {
     );
     setErrorCuotas(null);
     setMensajeCuotas(null);
+  };
+
+  useEffect(() => {
+    setCuotasAjuste(
+      cuotasActuales
+        .filter((cuota) => cuota.montoPagado <= 0)
+        .map((cuota) => ({
+          cuotaId: cuota.id,
+          numeroCuota: cuota.numeroCuota,
+          fechaVencimiento: cuota.fechaVencimiento ?? "",
+          montoProgramado: String(cuota.montoProgramado),
+          montoPagado: cuota.montoPagado,
+          estado: cuota.estado,
+        })),
+    );
+  }, [cuotasActuales]);
+
+  const alternarCuotaPago = (cuotaId: number, seleccionada: boolean) => {
+    setFormularioPago((actual) => {
+      const ids = new Set(actual.cuotasSeleccionadas);
+      if (seleccionada) {
+        ids.add(cuotaId);
+      } else {
+        ids.delete(cuotaId);
+      }
+      return { ...actual, cuotasSeleccionadas: Array.from(ids) };
+    });
+    setErrorPago(null);
+    setMensajePago(null);
+  };
+
+  const actualizarCuotaAjuste = (
+    cuotaId: number,
+    campo: "fechaVencimiento" | "montoProgramado",
+    valor: string,
+  ) => {
+    setCuotasAjuste((actual) =>
+      actual.map((cuota) =>
+        cuota.cuotaId === cuotaId ? { ...cuota, [campo]: valor } : cuota,
+      ),
+    );
+    setErrorAjusteCuotas(null);
+    setMensajeAjusteCuotas(null);
   };
 
   const validarCuotasManuales = (
@@ -554,6 +626,57 @@ export function PrestamosPage() {
           error,
           "No se pudo generar las cuotas del préstamo. Revisá los datos e intentá nuevamente.",
         ),
+      );
+    }
+  };
+
+  const guardarAjusteCuotas = async () => {
+    if (!detalleActual) {
+      return;
+    }
+
+    if (cuotasAjuste.length === 0) {
+      setErrorAjusteCuotas("No hay cuotas futuras disponibles para ajustar.");
+      return;
+    }
+
+    const cuotas = [];
+    for (const cuota of cuotasAjuste) {
+      if (!cuota.fechaVencimiento) {
+        setErrorAjusteCuotas(`La cuota #${cuota.numeroCuota} requiere fecha de vencimiento.`);
+        return;
+      }
+      const monto = Number(cuota.montoProgramado);
+      if (!(monto > 0)) {
+        setErrorAjusteCuotas(`La cuota #${cuota.numeroCuota} requiere monto mayor a 0.`);
+        return;
+      }
+      cuotas.push({
+        cuotaId: cuota.cuotaId,
+        fechaVencimiento: cuota.fechaVencimiento,
+        montoProgramado: monto,
+      });
+    }
+
+    if (
+      !window.confirm(
+        "¿Confirmás la renegociación manual de cuotas futuras? Esta acción no modifica pagos ya registrados.",
+      )
+    ) {
+      return;
+    }
+
+    const payload: AjustarCuotasFuturasPayload = {
+      fechaRenegociacion: new Date().toISOString().slice(0, 10),
+      cuotas,
+    };
+
+    try {
+      await ajustarCuotasFuturas.mutateAsync({ id: detalleActual.id, payload });
+      setMensajeAjusteCuotas("Renegociación de cuotas guardada correctamente.");
+    } catch (error) {
+      setErrorAjusteCuotas(
+        obtenerMensajeError(error, "No se pudo guardar la renegociación de cuotas."),
       );
     }
   };
@@ -1019,8 +1142,9 @@ export function PrestamosPage() {
               <div className="rounded border border-slate-200 p-3">
                 <h3 className="mb-2 text-sm font-semibold">Registrar pago</h3>
                 <p className="mb-3 text-xs text-slate-500">
-                  El pago se imputa automáticamente en backend y actualiza
-                  cuotas según saldo pendiente.
+                  Si no seleccionás cuotas, el backend mantiene la imputación
+                  automática actual por orden. Si seleccionás cuotas, imputa
+                  solo sobre esas cuotas.
                 </p>
 
                 <div className="grid gap-3 md:grid-cols-2">
@@ -1072,6 +1196,41 @@ export function PrestamosPage() {
                   </label>
                 </div>
 
+                {cuotasConSaldo.length > 0 && (
+                  <div className="mt-3 rounded border border-slate-200 bg-slate-50 p-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+                      Cuotas destino (opcional)
+                    </p>
+                    <p className="mb-2 text-xs text-slate-500">
+                      Dejá todas desmarcadas para usar imputación automática.
+                    </p>
+                    <div className="space-y-1">
+                      {cuotasConSaldo.map((cuota) => (
+                        <label
+                          key={`pago-cuota-${cuota.id}`}
+                          className="flex items-center justify-between gap-2 text-xs text-slate-700"
+                        >
+                          <span>
+                            Cuota #{cuota.numeroCuota} · Pendiente{" "}
+                            {formatearMoneda(
+                              cuota.montoProgramado - cuota.montoPagado,
+                            )}
+                          </span>
+                          <input
+                            type="checkbox"
+                            checked={formularioPago.cuotasSeleccionadas.includes(
+                              cuota.id,
+                            )}
+                            onChange={(event) =>
+                              alternarCuotaPago(cuota.id, event.target.checked)
+                            }
+                          />
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {errorPago && (
                   <p className="mt-3 text-sm text-red-700">{errorPago}</p>
                 )}
@@ -1089,6 +1248,89 @@ export function PrestamosPage() {
                     ? "Registrando pago..."
                     : "Registrar pago"}
                 </button>
+              </div>
+
+              <div className="rounded border border-slate-200 p-3">
+                <h3 className="mb-2 text-sm font-semibold">
+                  Renegociación manual de cuotas futuras
+                </h3>
+                <p className="mb-3 text-xs text-slate-500">
+                  Permite ajustar cuotas no saldadas sin tocar pagos ya
+                  registrados.
+                </p>
+                {cuotasAjuste.length === 0 ? (
+                  <p className="text-sm text-slate-500">
+                    No hay cuotas futuras pendientes para ajustar.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {cuotasAjuste.map((cuota) => (
+                      <div
+                        key={`ajuste-cuota-${cuota.cuotaId}`}
+                        className="grid gap-2 rounded border border-slate-200 p-2 md:grid-cols-3"
+                      >
+                        <p className="text-xs text-slate-600 md:col-span-3">
+                          Cuota #{cuota.numeroCuota} · Estado {cuota.estado}
+                        </p>
+                        <label className="text-xs text-slate-600">
+                          Fecha
+                          <input
+                            type="date"
+                            value={cuota.fechaVencimiento}
+                            onChange={(event) =>
+                              actualizarCuotaAjuste(
+                                cuota.cuotaId,
+                                "fechaVencimiento",
+                                event.target.value,
+                              )
+                            }
+                            className="mt-1 w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
+                          />
+                        </label>
+                        <label className="text-xs text-slate-600">
+                          Monto programado
+                          <input
+                            type="number"
+                            min="0.01"
+                            step="0.01"
+                            value={cuota.montoProgramado}
+                            onChange={(event) =>
+                              actualizarCuotaAjuste(
+                                cuota.cuotaId,
+                                "montoProgramado",
+                                event.target.value,
+                              )
+                            }
+                            className="mt-1 w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
+                          />
+                        </label>
+                        <p className="text-xs text-slate-500">
+                          Pagado actual: {formatearMoneda(cuota.montoPagado)}
+                        </p>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={guardarAjusteCuotas}
+                      disabled={ajustarCuotasFuturas.isPending}
+                      className="boton-principal"
+                    >
+                      {ajustarCuotasFuturas.isPending
+                        ? "Guardando ajuste..."
+                        : "Guardar ajuste de cuotas"}
+                    </button>
+                  </div>
+                )}
+                {errorAjusteCuotas && (
+                  <p className="mt-2 text-sm text-red-700">
+                    {errorAjusteCuotas}
+                  </p>
+                )}
+                {mensajeAjusteCuotas && (
+                  <p className="mt-2 text-sm text-emerald-700">
+                    {mensajeAjusteCuotas}
+                  </p>
+                )}
               </div>
 
               <div className="rounded border border-slate-200 p-3">

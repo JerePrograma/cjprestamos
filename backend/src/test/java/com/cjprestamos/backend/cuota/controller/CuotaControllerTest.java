@@ -4,6 +4,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -59,5 +60,33 @@ class CuotaControllerTest {
             .andExpect(jsonPath("$[0].estado").value("PENDIENTE"));
 
         verify(cuotaService).listarPorPrestamo(2L);
+    }
+
+    @Test
+    @WithMockUser
+    void ajustarFuturas_deberiaRetornar200() throws Exception {
+        when(cuotaService.ajustarFuturas(org.mockito.ArgumentMatchers.eq(2L), org.mockito.ArgumentMatchers.any())).thenReturn(List.of(
+            new CuotaResponse(2L, 1, LocalDate.of(2026, 5, 10), new BigDecimal("450.00"), BigDecimal.ZERO.setScale(2), EstadoCuota.PENDIENTE)
+        ));
+
+        String body = """
+            {
+              "fechaRenegociacion": "2026-04-20",
+              "observacionGeneral": "Ajuste acordado",
+              "cuotas": [
+                {
+                  "cuotaId": 2,
+                  "fechaVencimiento": "2026-05-10",
+                  "montoProgramado": 450.00
+                }
+              ]
+            }
+            """;
+
+        mockMvc.perform(put("/api/prestamos/2/cuotas/ajustes-futuros")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].montoProgramado").value(450.00));
     }
 }

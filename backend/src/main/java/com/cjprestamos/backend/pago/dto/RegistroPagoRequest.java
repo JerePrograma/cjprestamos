@@ -5,11 +5,13 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 public record RegistroPagoRequest(
         @NotNull Long prestamoId,
         @NotNull LocalDate fechaPago,
         @NotNull @DecimalMin(value = "0.01") BigDecimal monto,
         @Size(max = 120) String referencia,
-        @Size(max = 600) String observacion
+        @Size(max = 600) String observacion,
+        List<Long> cuotasSeleccionadas
 ) {}

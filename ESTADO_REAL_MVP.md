@@ -37,10 +37,12 @@ Responder de forma honesta:
 - UI de generación automática: **HECHO**
 - UI de carga manual: **HECHO**
 - cierre operativo visible en detalle: **HECHO**
+- renegociación manual de cuotas futuras sin tocar pagos previos: **HECHO**
 
 ### Pagos
 - backend de registro: **HECHO**
-- imputación: **HECHO**
+- imputación automática por orden: **HECHO**
+- selección opcional de cuota(s) destino al registrar pago: **HECHO**
 - UI de pagos dentro del detalle: **HECHO**
 - pantalla separada `/pagos`: **REMOVIDA DE NAVEGACIÓN (intencional)**
 
@@ -53,7 +55,7 @@ Responder de forma honesta:
 - UI crear/editar legajo por persona: **HECHO**
 - backend adjuntos (metadata + filesystem local): **HECHO**
 - UI adjuntos (subida/listado/descarga/eliminación): **HECHO**
-- pantalla placeholder separada en menú principal: **FUERA DE NAVEGACIÓN (intencional)**
+- pantalla dedicada `/legajos` en navegación principal: **HECHA**
 
 ### Seguridad
 - Basic Auth simple: **HECHO**
