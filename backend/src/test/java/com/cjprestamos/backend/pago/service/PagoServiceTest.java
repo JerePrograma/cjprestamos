@@ -74,7 +74,7 @@ class PagoServiceTest {
         when(cuotaRepository.findByPrestamoIdOrderByNumeroCuotaAsc(10L)).thenReturn(List.of(cuota1));
         when(pagoRepository.save(org.mockito.ArgumentMatchers.any(Pago.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        RegistroPagoRequest request = new RegistroPagoRequest(10L, LocalDate.of(2026, 4, 16), new BigDecimal("100.00"), null, null);
+        RegistroPagoRequest request = new RegistroPagoRequest(10L, LocalDate.of(2026, 4, 16), new BigDecimal("100.00"), null, null, null);
 
         PagoResponse response = pagoService.registrar(request);
 
@@ -101,7 +101,7 @@ class PagoServiceTest {
         when(cuotaRepository.findByPrestamoIdOrderByNumeroCuotaAsc(11L)).thenReturn(List.of(cuota1));
         when(pagoRepository.save(org.mockito.ArgumentMatchers.any(Pago.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        RegistroPagoRequest request = new RegistroPagoRequest(11L, LocalDate.of(2026, 4, 16), new BigDecimal("50.00"), null, null);
+        RegistroPagoRequest request = new RegistroPagoRequest(11L, LocalDate.of(2026, 4, 16), new BigDecimal("50.00"), null, null, null);
 
         pagoService.registrar(request);
 
@@ -125,7 +125,7 @@ class PagoServiceTest {
         when(cuotaRepository.findByPrestamoIdOrderByNumeroCuotaAsc(12L)).thenReturn(List.of(cuota1, cuota2, cuota3));
         when(pagoRepository.save(org.mockito.ArgumentMatchers.any(Pago.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        RegistroPagoRequest request = new RegistroPagoRequest(12L, LocalDate.of(2026, 4, 16), new BigDecimal("180.00"), null, null);
+        RegistroPagoRequest request = new RegistroPagoRequest(12L, LocalDate.of(2026, 4, 16), new BigDecimal("180.00"), null, null, null);
 
         pagoService.registrar(request);
 
@@ -152,7 +152,7 @@ class PagoServiceTest {
         when(cuotaRepository.findByPrestamoIdOrderByNumeroCuotaAsc(13L)).thenReturn(List.of(cuota1, cuota2, cuota3));
         when(pagoRepository.save(org.mockito.ArgumentMatchers.any(Pago.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        RegistroPagoRequest request = new RegistroPagoRequest(13L, LocalDate.of(2026, 4, 16), new BigDecimal("140.00"), null, null);
+        RegistroPagoRequest request = new RegistroPagoRequest(13L, LocalDate.of(2026, 4, 16), new BigDecimal("140.00"), null, null, null);
 
         pagoService.registrar(request);
 
@@ -176,7 +176,7 @@ class PagoServiceTest {
         when(prestamoRepository.findById(14L)).thenReturn(Optional.of(prestamo));
         when(cuotaRepository.findByPrestamoIdOrderByNumeroCuotaAsc(14L)).thenReturn(List.of());
 
-        RegistroPagoRequest request = new RegistroPagoRequest(14L, LocalDate.of(2026, 4, 16), new BigDecimal("30.00"), null, null);
+        RegistroPagoRequest request = new RegistroPagoRequest(14L, LocalDate.of(2026, 4, 16), new BigDecimal("30.00"), null, null, null);
 
         ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> pagoService.registrar(request));
 
@@ -192,7 +192,7 @@ class PagoServiceTest {
         when(prestamoRepository.findById(15L)).thenReturn(Optional.of(prestamo));
         when(cuotaRepository.findByPrestamoIdOrderByNumeroCuotaAsc(15L)).thenReturn(List.of(cuota1, cuota2));
 
-        RegistroPagoRequest request = new RegistroPagoRequest(15L, LocalDate.of(2026, 4, 16), new BigDecimal("150.00"), null, null);
+        RegistroPagoRequest request = new RegistroPagoRequest(15L, LocalDate.of(2026, 4, 16), new BigDecimal("150.00"), null, null, null);
 
         ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> pagoService.registrar(request));
 
@@ -203,7 +203,7 @@ class PagoServiceTest {
     void registrar_cuandoPrestamoNoExiste_deberiaRetornar404() {
         when(prestamoRepository.findById(99L)).thenReturn(Optional.empty());
 
-        RegistroPagoRequest request = new RegistroPagoRequest(99L, LocalDate.of(2026, 4, 16), new BigDecimal("200.00"), null, null);
+        RegistroPagoRequest request = new RegistroPagoRequest(99L, LocalDate.of(2026, 4, 16), new BigDecimal("200.00"), null, null, null);
 
         ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> pagoService.registrar(request));
 
@@ -215,7 +215,7 @@ class PagoServiceTest {
         Prestamo prestamo = crearPrestamo(16L);
         when(prestamoRepository.findById(16L)).thenReturn(Optional.of(prestamo));
 
-        RegistroPagoRequest request = new RegistroPagoRequest(16L, LocalDate.of(2026, 4, 16), BigDecimal.ZERO, null, null);
+        RegistroPagoRequest request = new RegistroPagoRequest(16L, LocalDate.of(2026, 4, 16), BigDecimal.ZERO, null, null, null);
 
         ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> pagoService.registrar(request));
 
@@ -242,23 +242,70 @@ class PagoServiceTest {
     }
 
     @Test
-    void registrar_prestamoNoActivo_deberiaRetornar400SinPersistirNiImputar() {
+    void registrar_prestamoCancelado_deberiaRetornar400SinPersistirNiImputar() {
         Prestamo prestamo = crearPrestamo(18L);
-        prestamo.setEstado(EstadoPrestamo.RENEGOCIADO);
+        prestamo.setEstado(EstadoPrestamo.CANCELADO);
 
         when(prestamoRepository.findById(18L)).thenReturn(Optional.of(prestamo));
 
-        RegistroPagoRequest request = new RegistroPagoRequest(18L, LocalDate.of(2026, 4, 16), new BigDecimal("100.00"), null, null);
+        RegistroPagoRequest request = new RegistroPagoRequest(18L, LocalDate.of(2026, 4, 16), new BigDecimal("100.00"), null, null, null);
 
         ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> pagoService.registrar(request));
 
         assertEquals(400, exception.getStatusCode().value());
-        assertEquals(EstadoPrestamo.RENEGOCIADO, prestamo.getEstado());
+        assertEquals(EstadoPrestamo.CANCELADO, prestamo.getEstado());
         verify(pagoRepository, never()).save(org.mockito.ArgumentMatchers.any(Pago.class));
         verify(cuotaRepository, never()).findByPrestamoIdOrderByNumeroCuotaAsc(18L);
         verify(cuotaRepository, never()).saveAll(org.mockito.ArgumentMatchers.anyList());
         verify(imputacionPagoRepository, never()).saveAll(org.mockito.ArgumentMatchers.anyList());
         verify(eventoPrestamoRepository, never()).save(org.mockito.ArgumentMatchers.any(EventoPrestamo.class));
+    }
+
+    @Test
+    void registrar_conCuotasSeleccionadas_deberiaImputarSoloEnLasIndicadas() {
+        Prestamo prestamo = crearPrestamo(19L);
+        Cuota cuota1 = crearCuota(prestamo, 1, "100.00", "0.00", EstadoCuota.PENDIENTE);
+        Cuota cuota2 = crearCuota(prestamo, 2, "100.00", "0.00", EstadoCuota.PENDIENTE);
+
+        when(prestamoRepository.findById(19L)).thenReturn(Optional.of(prestamo));
+        when(cuotaRepository.findByPrestamoIdAndIdIn(org.mockito.ArgumentMatchers.eq(19L), org.mockito.ArgumentMatchers.anyCollection()))
+            .thenReturn(List.of(cuota2));
+        when(pagoRepository.save(org.mockito.ArgumentMatchers.any(Pago.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        RegistroPagoRequest request = new RegistroPagoRequest(
+            19L,
+            LocalDate.of(2026, 4, 16),
+            new BigDecimal("60.00"),
+            null,
+            null,
+            List.of(102L)
+        );
+
+        pagoService.registrar(request);
+
+        assertEquals(new BigDecimal("0.00"), cuota1.getMontoPagado());
+        assertEquals(new BigDecimal("60.00"), cuota2.getMontoPagado());
+        verify(cuotaRepository, never()).findByPrestamoIdOrderByNumeroCuotaAsc(19L);
+    }
+
+    @Test
+    void registrar_conCuotasSeleccionadasDeOtroPrestamo_deberiaRetornar400() {
+        Prestamo prestamo = crearPrestamo(20L);
+        when(prestamoRepository.findById(20L)).thenReturn(Optional.of(prestamo));
+        when(cuotaRepository.findByPrestamoIdAndIdIn(org.mockito.ArgumentMatchers.eq(20L), org.mockito.ArgumentMatchers.anyCollection()))
+            .thenReturn(List.of());
+
+        RegistroPagoRequest request = new RegistroPagoRequest(
+            20L,
+            LocalDate.of(2026, 4, 16),
+            new BigDecimal("50.00"),
+            null,
+            null,
+            List.of(999L)
+        );
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> pagoService.registrar(request));
+        assertEquals(400, exception.getStatusCode().value());
     }
 
     private Prestamo crearPrestamo(Long id) {

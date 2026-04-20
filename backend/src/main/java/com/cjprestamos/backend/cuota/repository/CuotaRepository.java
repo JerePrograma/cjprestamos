@@ -12,4 +12,6 @@ public interface CuotaRepository extends JpaRepository<Cuota, Long> {
     List<Cuota> findByPrestamoIdOrderByNumeroCuotaAsc(Long prestamoId);
 
     List<Cuota> findByPrestamoIdIn(Collection<Long> prestamosIds);
+
+    List<Cuota> findByPrestamoIdAndIdIn(Long prestamoId, Collection<Long> cuotaIds);
 }

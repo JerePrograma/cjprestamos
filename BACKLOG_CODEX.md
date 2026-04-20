@@ -54,6 +54,7 @@ Backlog técnico priorizado para reflejar el **estado real** del repo.
 ## ÉPICA 8 — Legajo y adjuntos
 - BT-8001 — backend de legajo por persona: **HECHA**
 - BT-8002 — UI de legajo integrada en flujo de Personas: **HECHA**
+- BT-8005 — ruta dedicada de legajos en frontend con selector de persona: **HECHA**
 - BT-8003 — backend de adjuntos de legajo (metadata + filesystem local): **HECHA**
 - BT-8004 — UI de adjuntos de legajo (upload/listado/descarga/eliminación): **HECHA**
 
@@ -61,6 +62,10 @@ Backlog técnico priorizado para reflejar el **estado real** del repo.
 - BT-9001 — seguridad mínima backend/frontend coherente: **HECHA EN MVP**
 - BT-9002 — login frontend mínimo: **HECHA**
 - BT-9003 — bootstrap idempotente de usuario `admin` por defecto: **HECHA**
+
+## ÉPICA 10 — Ajustes manuales post-MVP
+- BT-10001 — renegociación manual de cuotas futuras (backend + UI): **HECHA**
+- BT-10002 — pagos con selección opcional de cuotas (manteniendo imputación automática default): **HECHA**
 
 ---
 

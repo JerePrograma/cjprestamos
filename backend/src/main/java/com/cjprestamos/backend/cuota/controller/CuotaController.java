@@ -1,13 +1,16 @@
 package com.cjprestamos.backend.cuota.controller;
 
+import com.cjprestamos.backend.cuota.dto.AjustarCuotasFuturasRequest;
 import com.cjprestamos.backend.cuota.dto.CuotaResponse;
 import com.cjprestamos.backend.cuota.dto.GenerarCuotasRequest;
+import jakarta.validation.Valid;
 import com.cjprestamos.backend.cuota.service.CuotaService;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -32,5 +35,13 @@ public class CuotaController {
     @GetMapping
     public List<CuotaResponse> listar(@PathVariable Long prestamoId) {
         return cuotaService.listarPorPrestamo(prestamoId);
+    }
+
+    @PutMapping("/ajustes-futuros")
+    public List<CuotaResponse> ajustarFuturas(
+            @PathVariable Long prestamoId,
+            @Valid @RequestBody AjustarCuotasFuturasRequest request
+    ) {
+        return cuotaService.ajustarFuturas(prestamoId, request);
     }
 }

@@ -18,6 +18,7 @@ export type RegistroPagoPayload = {
   monto: number;
   referencia: string | null;
   observacion: string | null;
+  cuotasSeleccionadas?: number[];
 };
 
 export type PagoFormulario = {
@@ -25,6 +26,7 @@ export type PagoFormulario = {
   monto: string;
   referencia: string;
   observacion: string;
+  cuotasSeleccionadas: number[];
 };
 
 function obtenerFechaHoy() {
@@ -56,6 +58,7 @@ export const formularioInicialPago: PagoFormulario = {
   monto: "",
   referencia: "",
   observacion: "",
+  cuotasSeleccionadas: [],
 };
 
 export function crearPayloadPago(
@@ -68,11 +71,17 @@ export function crearPayloadPago(
     throw new Error("El monto ingresado no es válido.");
   }
 
-  return {
+  const payload: RegistroPagoPayload = {
     prestamoId,
     fechaPago: formulario.fechaPago,
     monto,
     referencia: formulario.referencia.trim() || null,
     observacion: formulario.observacion.trim() || null,
   };
+
+  if (formulario.cuotasSeleccionadas.length > 0) {
+    payload.cuotasSeleccionadas = formulario.cuotasSeleccionadas;
+  }
+
+  return payload;
 }

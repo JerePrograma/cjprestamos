@@ -35,17 +35,18 @@ El criterio humano sigue mandando.
 - Personas: CRUD backend y UI operativa.
 - Préstamos: alta, listado, detalle y cálculo sugerido.
 - Cuotas: generación automática/manual disponible desde UI y backend.
-- Pagos: registro, imputación y actualización de estados.
+- Pagos: registro con imputación automática y selección opcional de cuotas destino.
 - Dashboard: métricas principales visibles.
 - Referencias y colores: soporte inicial implementado.
 - Detalle operativo del préstamo: estado de cuotas, total programado, total pagado y saldo pendiente.
 - Pagos en MVP: decisión cerrada, se operan dentro del detalle de préstamo (sin pantalla separada en navegación principal).
 
 ### Evolución post-MVP inmediata — CERRADA
-- Legajo por persona operativo dentro de la vista de Personas (crear/editar).
+- Legajo por persona operativo dentro de la vista de Personas y también en ruta dedicada `/legajos` (crear/editar).
 - Adjuntos del legajo (subida/listado/descarga/eliminación) con storage local en filesystem configurable.
 - Seguridad mínima con login frontend + backend Basic Auth.
 - Bootstrap idempotente de usuario inicial `admin`.
+- Renegociación manual de cuotas futuras con registro de evento histórico.
 
 ### Estado real recomendado
 Para seguimiento de producto y priorización:
@@ -154,6 +155,9 @@ Autenticación frontend (mínima):
 - backend: `GET http://localhost:8080/api/health`
 - frontend: abrir `http://localhost:5173`
 - flujo personas/legajo: seleccionar persona, crear o editar legajo y operar adjuntos sin Postman.
+- flujo legajos dedicados: abrir `/legajos`, elegir persona y operar legajo + adjuntos.
+- flujo renegociación: en detalle de préstamo, ajustar cuotas futuras, confirmar y guardar.
+- flujo pagos: en detalle de préstamo, registrar pago con imputación automática o seleccionando cuotas específicas.
 
 ---
 
