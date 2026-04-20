@@ -7,9 +7,3 @@ CREATE TABLE usuario_sistema (
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL
 );
-
-INSERT INTO usuario_sistema (username, password, rol, activo, created_at, updated_at)
-VALUES
-    ('operadora', '{noop}operadora123', 'OPERADORA', TRUE, NOW(), NOW()),
-    ('operadora-test', '{noop}operadora-test-123', 'OPERADORA', TRUE, NOW(), NOW())
-ON CONFLICT (username) DO NOTHING;
