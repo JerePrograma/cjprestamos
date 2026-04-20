@@ -48,7 +48,7 @@ export function PersonaFormulario({
   };
 
   return (
-    <form onSubmit={manejarSubmit} className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+    <form onSubmit={manejarSubmit} className="panel-soft space-y-3 p-3 sm:p-4">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-slate-900">{titulo}</h2>
         {onCancel && (
@@ -159,7 +159,7 @@ export function PersonaFormulario({
       <button
         type="submit"
         disabled={loading}
-        className="rounded bg-slate-800 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+        className="boton-principal"
       >
         {loading ? 'Guardando...' : textoBoton}
       </button>

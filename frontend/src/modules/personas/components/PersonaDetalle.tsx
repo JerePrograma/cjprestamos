@@ -42,7 +42,7 @@ export function PersonaDetalle({
   }
 
   return (
-    <section className="space-y-4 rounded-lg border border-slate-200 p-4">
+    <section className="panel space-y-4 p-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-slate-900">{persona.nombre}</h2>
         <span
@@ -86,13 +86,13 @@ export function PersonaDetalle({
       </div>
 
       <div className="flex flex-wrap gap-2">
-        <button onClick={onEditar} className="rounded bg-slate-800 px-3 py-2 text-sm text-white">
+        <button onClick={onEditar} className="boton-principal px-3 py-2">
           Editar
         </button>
         <button
           onClick={onDarDeBaja}
           disabled={!persona.activo || deshabilitarBaja}
-          className="rounded border border-slate-300 px-3 py-2 text-sm text-slate-700 disabled:opacity-60"
+          className="boton-secundario px-3 py-2"
         >
           {deshabilitarBaja ? 'Procesando...' : 'Dar de baja'}
         </button>

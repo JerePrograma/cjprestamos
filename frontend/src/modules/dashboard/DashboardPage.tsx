@@ -70,10 +70,10 @@ export function DashboardPage() {
     resumen.data.deudaTotal === 0;
 
   return (
-    <section className="space-y-4">
+    <section className="space-y-5">
       <header className="space-y-1">
-        <h1 className="text-xl font-semibold text-slate-900">Dashboard</h1>
-        <p className="text-sm text-slate-600">Resumen operativo para controlar el estado económico actual.</p>
+        <h1 className="titulo-seccion">Dashboard</h1>
+        <p className="subtitulo-seccion">Resumen operativo para controlar el estado económico actual.</p>
       </header>
 
       {resumen.isError && (
@@ -89,12 +89,12 @@ export function DashboardPage() {
         </div>
       )}
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         {tarjetas.map((tarjeta) => {
           const valor = resumen.data?.[tarjeta.clave];
 
           return (
-            <article key={tarjeta.clave} className="rounded-lg border border-slate-200 p-3">
+            <article key={tarjeta.clave} className="panel-soft p-3 sm:p-4">
               <h2 className="text-sm text-slate-600">{tarjeta.titulo}</h2>
               <p className="mt-1 text-xl font-semibold text-slate-900">
                 {resumen.isLoading || resumen.isFetching
@@ -114,7 +114,7 @@ export function DashboardPage() {
         </p>
       )}
 
-      <section className="rounded-lg border border-slate-200 p-3">
+      <section className="panel p-3 sm:p-4">
         <header className="mb-2 flex items-center justify-between gap-2">
           <h2 className="text-sm font-semibold text-slate-900">Préstamos activos recientes</h2>
           <span className="text-xs text-slate-500">Máximo 5</span>

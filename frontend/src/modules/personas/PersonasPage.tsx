@@ -116,13 +116,13 @@ export function PersonasPage() {
   };
 
   return (
-    <section className="space-y-4">
+    <section className="space-y-5">
       <header className="space-y-1">
-        <h1 className="text-xl font-semibold text-slate-900">Personas</h1>
-        <p className="text-sm text-slate-600">Libreta digital para registrar, consultar y ajustar personas conocidas.</p>
+        <h1 className="titulo-seccion">Personas</h1>
+        <p className="subtitulo-seccion">Libreta digital para registrar, consultar y ajustar personas conocidas.</p>
       </header>
 
-      <div className="grid gap-4 lg:grid-cols-[340px_1fr]">
+      <div className="grid gap-4 xl:grid-cols-[360px_1fr]">
         <aside className="space-y-3">
           <label className="block text-sm text-slate-700">
             Buscar por nombre, alias o teléfono
@@ -134,7 +134,7 @@ export function PersonasPage() {
             />
           </label>
 
-          <div className="rounded-lg border border-slate-200">
+          <div className="panel">
             <div className="border-b border-slate-200 px-3 py-2 text-sm font-medium text-slate-700">Listado</div>
             {listado.isLoading ? (
               <p className="px-3 py-4 text-sm text-slate-600">Cargando personas...</p>
@@ -143,7 +143,7 @@ export function PersonasPage() {
             ) : personasFiltradas.length === 0 ? (
               <p className="px-3 py-4 text-sm text-slate-500">No hay personas para mostrar.</p>
             ) : (
-              <ul className="max-h-[420px] overflow-auto">
+              <ul className="max-h-[55vh] overflow-auto">
                 {personasFiltradas.map((persona) => (
                   <li key={persona.id}>
                     <button
