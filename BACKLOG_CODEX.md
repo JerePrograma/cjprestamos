@@ -40,6 +40,10 @@ Backlog técnico priorizado para reflejar el **estado real** del repo.
 - BT-0005 — test de arranque real (alcance básico)
 - BT-0006 — integración datasource/Flyway con Testcontainers + CI Docker
 - BT-7001 — refactor visual responsive del frontend
+- BT-7002 — persistencia de contexto operativo en URL (personas/préstamos)
+- BT-7003 — dashboard accionable con acceso directo al detalle de préstamo
+- BT-7004 — workspace de préstamo reorganizado por secciones operativas
+- BT-7005 — manejo de rutas no encontradas y error de navegación frontend
 
 ### PARCIAL
 - (sin parciales activos en el núcleo)
@@ -74,6 +78,7 @@ Backlog técnico priorizado para reflejar el **estado real** del repo.
 ### HECHO
 - Documentación principal alineada con estado real del repo (`README.md`, `ESTADO_REAL_MVP.md`, este backlog).
 - Wording del test de arranque real ajustado a su alcance (contexto web + endpoint health, sin sobredimensionar validación).
+- Documentación auxiliar histórica marcada explícitamente para evitar contradicciones (`AUDITORIA_*`, `MAPA_*`, `INDICE_*`).
 
 ### PENDIENTE NO CRÍTICO
 - Robustez técnica avanzada de seguridad (sesión backend dedicada, rotación de credenciales, políticas de acceso más finas).

@@ -1,5 +1,9 @@
 # INDICE_DEL_PAQUETE.md
 
+> ⚠️ **Documento histórico (no vigente).**
+> Referencia un paquete de propuestas original (incluyendo archivos `PROPUESTA_*`) que ya no forma parte del flujo actual del repositorio.
+> Se conserva solo como contexto histórico.
+
 ## Contenido
 
 1. `AUDITORIA_CJPRESTAMOS.md`

@@ -43,11 +43,13 @@ type PrestamoWorkspaceProps = {
   prestamoId: number | null;
   personasPorId: Map<number, string>;
 };
+type SeccionWorkspace = "resumen" | "cuotas" | "pagos";
 
 export function PrestamoWorkspace({
   prestamoId,
   personasPorId,
 }: PrestamoWorkspaceProps) {
+  const [seccionActiva, setSeccionActiva] = useState<SeccionWorkspace>("resumen");
   const [formularioPago, setFormularioPago] = useState<PagoFormulario>(
     formularioInicialPago,
   );
@@ -90,6 +92,10 @@ export function PrestamoWorkspace({
     setMensajeCuotas(null);
     setErrorAjusteCuotas(null);
     setMensajeAjusteCuotas(null);
+  }, [prestamoId]);
+
+  useEffect(() => {
+    setSeccionActiva("resumen");
   }, [prestamoId]);
 
   useEffect(() => {
@@ -464,60 +470,87 @@ export function PrestamoWorkspace({
         <p className="text-sm text-red-700">No se pudo cargar el detalle del préstamo.</p>
       ) : (
         <div className="space-y-3">
-          <PrestamoDetallePanel
-            detalle={detallePrestamo.data}
-            personasPorId={personasPorId}
-            formularioReferencia={formularioReferencia}
-            onCambiarReferencia={(campo, valor) => {
-              setFormularioReferencia((actual) => ({ ...actual, [campo]: valor }));
-              setErrorReferencia(null);
-              setMensajeReferencia(null);
-            }}
-            onGuardarReferencia={guardarReferenciaPrestamo}
-            guardandoReferencia={actualizarReferenciaPrestamo.isPending}
-            errorReferencia={errorReferencia}
-            mensajeReferencia={mensajeReferencia}
-            resumen={resumenPrestamo.data ?? null}
-            resumenLoading={resumenPrestamo.isLoading}
-            resumenError={resumenPrestamo.isError}
-          />
+          <nav className="grid grid-cols-3 gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1">
+            {[
+              { id: "resumen", etiqueta: "Resumen" },
+              { id: "cuotas", etiqueta: "Cuotas" },
+              { id: "pagos", etiqueta: "Pagos" },
+            ].map((seccion) => (
+              <button
+                key={seccion.id}
+                type="button"
+                onClick={() => setSeccionActiva(seccion.id as SeccionWorkspace)}
+                className={`rounded-md px-2 py-1.5 text-xs font-medium sm:text-sm ${
+                  seccionActiva === seccion.id
+                    ? "bg-slate-800 text-white"
+                    : "text-slate-700 hover:bg-white"
+                }`}
+              >
+                {seccion.etiqueta}
+              </button>
+            ))}
+          </nav>
 
-          <CuotasPrestamoPanel
-            detalle={detallePrestamo.data}
-            cuotas={cuotasActuales}
-            cuotasLoading={cuotasPrestamo.isLoading}
-            cuotasError={cuotasPrestamo.isError}
-            totalProgramado={totalProgramado}
-            totalPagado={totalPagado}
-            saldoPendiente={saldoPendiente}
-            filasCuotasManuales={filasCuotasManuales}
-            onCambiarFilaManual={actualizarFilaCuotaManual}
-            onGenerarCuotas={generarCuotas}
-            generandoCuotas={generarCuotasPrestamo.isPending}
-            cuotasAjuste={cuotasAjuste}
-            onCambiarCuotaAjuste={actualizarCuotaAjuste}
-            onGuardarAjuste={guardarAjusteCuotas}
-            guardandoAjuste={ajustarCuotasFuturas.isPending}
-            errorCuotas={errorCuotas}
-            mensajeCuotas={mensajeCuotas}
-            errorAjusteCuotas={errorAjusteCuotas}
-            mensajeAjusteCuotas={mensajeAjusteCuotas}
-          />
+          {seccionActiva === "resumen" && (
+            <PrestamoDetallePanel
+              detalle={detallePrestamo.data}
+              personasPorId={personasPorId}
+              formularioReferencia={formularioReferencia}
+              onCambiarReferencia={(campo, valor) => {
+                setFormularioReferencia((actual) => ({ ...actual, [campo]: valor }));
+                setErrorReferencia(null);
+                setMensajeReferencia(null);
+              }}
+              onGuardarReferencia={guardarReferenciaPrestamo}
+              guardandoReferencia={actualizarReferenciaPrestamo.isPending}
+              errorReferencia={errorReferencia}
+              mensajeReferencia={mensajeReferencia}
+              resumen={resumenPrestamo.data ?? null}
+              resumenLoading={resumenPrestamo.isLoading}
+              resumenError={resumenPrestamo.isError}
+            />
+          )}
 
-          <PagosPrestamoPanel
-            formularioPago={formularioPago}
-            onCambiarCampoPago={actualizarCampoPago}
-            cuotasConSaldo={cuotasConSaldo}
-            onAlternarCuotaPago={alternarCuotaPago}
-            onGuardarPago={guardarPago}
-            guardandoPago={registrarPago.isPending}
-            puedeRegistrarPago={puedeRegistrarPago}
-            errorPago={errorPago}
-            mensajePago={mensajePago}
-            pagosLoading={pagosPrestamo.isLoading}
-            pagosError={pagosPrestamo.isError}
-            pagos={pagosPrestamo.data ?? []}
-          />
+          {seccionActiva === "cuotas" && (
+            <CuotasPrestamoPanel
+              detalle={detallePrestamo.data}
+              cuotas={cuotasActuales}
+              cuotasLoading={cuotasPrestamo.isLoading}
+              cuotasError={cuotasPrestamo.isError}
+              totalProgramado={totalProgramado}
+              totalPagado={totalPagado}
+              saldoPendiente={saldoPendiente}
+              filasCuotasManuales={filasCuotasManuales}
+              onCambiarFilaManual={actualizarFilaCuotaManual}
+              onGenerarCuotas={generarCuotas}
+              generandoCuotas={generarCuotasPrestamo.isPending}
+              cuotasAjuste={cuotasAjuste}
+              onCambiarCuotaAjuste={actualizarCuotaAjuste}
+              onGuardarAjuste={guardarAjusteCuotas}
+              guardandoAjuste={ajustarCuotasFuturas.isPending}
+              errorCuotas={errorCuotas}
+              mensajeCuotas={mensajeCuotas}
+              errorAjusteCuotas={errorAjusteCuotas}
+              mensajeAjusteCuotas={mensajeAjusteCuotas}
+            />
+          )}
+
+          {seccionActiva === "pagos" && (
+            <PagosPrestamoPanel
+              formularioPago={formularioPago}
+              onCambiarCampoPago={actualizarCampoPago}
+              cuotasConSaldo={cuotasConSaldo}
+              onAlternarCuotaPago={alternarCuotaPago}
+              onGuardarPago={guardarPago}
+              guardandoPago={registrarPago.isPending}
+              puedeRegistrarPago={puedeRegistrarPago}
+              errorPago={errorPago}
+              mensajePago={mensajePago}
+              pagosLoading={pagosPrestamo.isLoading}
+              pagosError={pagosPrestamo.isError}
+              pagos={pagosPrestamo.data ?? []}
+            />
+          )}
         </div>
       )}
     </div>

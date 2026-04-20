@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { useListadoPersonas } from '../personas/hooks/usePersonas';
 import { useListadoPrestamosActivos } from '../prestamos/hooks/usePrestamos';
 import type { PrestamoResponse } from '../prestamos/types/prestamo';
@@ -131,7 +132,9 @@ export function DashboardPage() {
             {activosRecientes.map((prestamo) => (
               <li key={prestamo.id} className="rounded-md border border-slate-200 px-3 py-2 text-sm">
                 <div className="flex items-center justify-between gap-2">
-                  <p className="font-semibold text-slate-900">{prestamo.referenciaCodigo ? prestamo.referenciaCodigo : `Préstamo #${prestamo.id}`}</p>
+                  <p className="font-semibold text-slate-900">
+                    {prestamo.referenciaCodigo ? prestamo.referenciaCodigo : `Préstamo #${prestamo.id}`}
+                  </p>
                   <span className={`rounded px-2 py-0.5 text-xs font-medium ${etiquetaEstado(prestamo.estado)}`}>
                     {prestamo.estado}
                   </span>
@@ -140,6 +143,12 @@ export function DashboardPage() {
                 <p className="text-xs text-slate-500">
                   {formatearMoneda(prestamo.montoInicial)} · {prestamo.cantidadCuotas} cuotas
                 </p>
+                <Link
+                  to={`/prestamos?prestamoId=${prestamo.id}&vista=detalle`}
+                  className="mt-2 inline-flex text-xs font-medium text-slate-700 underline decoration-slate-300 underline-offset-2 hover:text-slate-900"
+                >
+                  Abrir detalle operativo
+                </Link>
               </li>
             ))}
           </ul>

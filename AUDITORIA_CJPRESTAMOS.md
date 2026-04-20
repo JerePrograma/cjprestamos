@@ -1,5 +1,9 @@
 # AUDITORIA_CJPRESTAMOS.md
 
+> ⚠️ **Documento histórico (no vigente).**
+> Esta auditoría fue válida el **2026-04-18**. Algunas conclusiones ya fueron resueltas.
+> Estado vigente: `README.md`, `ESTADO_REAL_MVP.md` y `BACKLOG_CODEX.md`.
+
 Fecha: 2026-04-18
 
 ## 1. Veredicto ejecutivo

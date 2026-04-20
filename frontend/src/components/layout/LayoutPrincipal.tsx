@@ -51,7 +51,9 @@ export function LayoutPrincipal() {
       </header>
 
       <div className="mx-auto grid w-full max-w-7xl gap-4 px-4 py-4 lg:grid-cols-[250px_minmax(0,1fr)] lg:py-6">
-        <aside className={`panel p-2 lg:p-3 ${menuAbierto ? "block" : "hidden"} lg:block`}>
+        <aside
+          className={`panel p-2 lg:p-3 ${menuAbierto ? "block" : "hidden"} lg:sticky lg:top-[84px] lg:block lg:h-fit`}
+        >
           <p className="mb-2 px-2 text-xs text-slate-500 sm:hidden">Operadora: {sesion?.usuario}</p>
           <nav
             className="grid gap-1"
@@ -75,7 +77,7 @@ export function LayoutPrincipal() {
           </nav>
         </aside>
 
-        <main className="panel min-h-[70vh] p-4 sm:p-5">
+        <main className="min-h-[70vh] rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
           <Outlet />
         </main>
       </div>

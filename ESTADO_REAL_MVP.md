@@ -72,6 +72,12 @@ Responder de forma honesta:
 - ejecución local sin Docker: **PARCIAL ESPERADO** (integración puede skippear)
 - documentación alineada al repo: **HECHO**
 
+### UX/UI y operación
+- dashboard con acceso directo al detalle operativo de préstamos: **HECHO**
+- persistencia de contexto principal en URL (personas/préstamos): **HECHO**
+- reorganización del detalle de préstamo por secciones para reducir saturación: **HECHO**
+- manejo de ruta no encontrada/error de navegación en frontend: **HECHO**
+
 ---
 
 ## Conclusión

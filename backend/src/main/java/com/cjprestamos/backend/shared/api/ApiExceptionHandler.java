@@ -24,12 +24,8 @@ public class ApiExceptionHandler {
                 .map(this::mapFieldError)
                 .toList();
 
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now());
-        body.put("status", HttpStatus.BAD_REQUEST.value());
-        body.put("error", "Bad Request");
-        body.put("message", "Error de validación");
-        body.put("detail", errors.isEmpty() ? "Request inválido" : errors.get(0).get("message"));
+        Map<String, Object> body = crearBodyBase(HttpStatus.BAD_REQUEST, "Error de validación",
+                errors.isEmpty() ? "Request inválido" : errors.get(0).get("message"));
         body.put("errors", errors);
 
         return ResponseEntity.badRequest().body(body);
@@ -37,26 +33,36 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<Map<String, Object>> handleResponseStatus(ResponseStatusException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now());
-        body.put("status", ex.getStatusCode().value());
-        body.put("error", ex.getStatusCode().toString());
-        body.put("message", ex.getReason());
-        body.put("detail", ex.getReason());
+        Map<String, Object> body = crearBodyBase(HttpStatus.valueOf(ex.getStatusCode().value()),
+                ex.getReason(), ex.getReason());
 
         return ResponseEntity.status(ex.getStatusCode()).body(body);
     }
 
     @ExceptionHandler(ErrorResponseException.class)
     public ResponseEntity<Map<String, Object>> handleErrorResponse(ErrorResponseException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now());
-        body.put("status", ex.getStatusCode().value());
-        body.put("error", ex.getStatusCode().toString());
-        body.put("message", ex.getBody().getTitle());
-        body.put("detail", ex.getBody().getDetail());
+        Map<String, Object> body = crearBodyBase(HttpStatus.valueOf(ex.getStatusCode().value()),
+                ex.getBody().getTitle(), ex.getBody().getDetail());
 
         return ResponseEntity.status(ex.getStatusCode()).body(body);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, Object>> handleUnexpected(Exception ex) {
+        Map<String, Object> body = crearBodyBase(HttpStatus.INTERNAL_SERVER_ERROR,
+                "Error interno del servidor",
+                "Ocurrió un error inesperado. Intentá nuevamente.");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
+    }
+
+    private Map<String, Object> crearBodyBase(HttpStatus status, String message, String detail) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", status.value());
+        body.put("error", status.toString());
+        body.put("message", message);
+        body.put("detail", detail);
+        return body;
     }
 
     private Map<String, String> mapFieldError(FieldError error) {
