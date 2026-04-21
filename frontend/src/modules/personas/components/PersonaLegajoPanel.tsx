@@ -124,84 +124,84 @@ export function PersonaLegajoPanel({ personaId }: Props) {
   };
 
   return (
-    <section className="panel space-y-4 p-4">
+    <section className="panel space-y-4 p-4 sm:p-5">
       <header className="space-y-1">
-        <h3 className="text-base font-semibold text-slate-900">{textoEncabezado}</h3>
-        <p className="text-sm text-slate-500">Información contextual y privada separada de los datos básicos.</p>
+        <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">{textoEncabezado}</h3>
+        <p className="text-sm text-slate-500 dark:text-slate-300">Información contextual y privada separada de los datos básicos.</p>
       </header>
 
       {legajo.isLoading ? (
-        <p className="text-sm text-slate-600">Cargando legajo...</p>
+        <p className="text-sm text-slate-600 dark:text-slate-300">Cargando legajo...</p>
       ) : (
         <>
           <div className="grid gap-3 md:grid-cols-2">
-            <label className="text-sm text-slate-700">
+            <label className="text-sm">
               Dirección
               <input
                 value={formulario.direccion}
                 onChange={(event) => setFormulario((actual) => ({ ...actual, direccion: event.target.value }))}
-                className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+                className="mt-1 w-full"
               />
             </label>
-            <label className="text-sm text-slate-700">
+            <label className="text-sm">
               Ocupación
               <input
                 value={formulario.ocupacion}
                 onChange={(event) => setFormulario((actual) => ({ ...actual, ocupacion: event.target.value }))}
-                className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+                className="mt-1 w-full"
               />
             </label>
-            <label className="text-sm text-slate-700">
+            <label className="text-sm">
               Fuente de ingreso
               <input
                 value={formulario.fuenteIngreso}
                 onChange={(event) => setFormulario((actual) => ({ ...actual, fuenteIngreso: event.target.value }))}
-                className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+                className="mt-1 w-full"
               />
             </label>
-            <label className="text-sm text-slate-700">
+            <label className="text-sm">
               Contacto alternativo
               <input
                 value={formulario.contactoAlternativo}
                 onChange={(event) => setFormulario((actual) => ({ ...actual, contactoAlternativo: event.target.value }))}
-                className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+                className="mt-1 w-full"
               />
             </label>
           </div>
 
-          <label className="text-sm text-slate-700">
+          <label className="text-sm">
             Documentación pendiente
             <textarea
               value={formulario.documentacionPendiente}
               onChange={(event) => setFormulario((actual) => ({ ...actual, documentacionPendiente: event.target.value }))}
-              className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+              className="mt-1 w-full"
               rows={2}
             />
           </label>
 
-          <label className="text-sm text-slate-700">
+          <label className="text-sm">
             Notas internas
             <textarea
               value={formulario.notasInternas}
               onChange={(event) => setFormulario((actual) => ({ ...actual, notasInternas: event.target.value }))}
-              className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+              className="mt-1 w-full"
               rows={3}
             />
           </label>
 
-          <label className="text-sm text-slate-700">
+          <label className="text-sm">
             Observaciones generales
             <textarea
               value={formulario.observacionesGenerales}
               onChange={(event) => setFormulario((actual) => ({ ...actual, observacionesGenerales: event.target.value }))}
-              className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+              className="mt-1 w-full"
               rows={3}
             />
           </label>
 
-          {errorFormulario && <p className="text-sm text-red-700">{errorFormulario}</p>}
+          {errorFormulario && <p className="mensaje-error">{errorFormulario}</p>}
 
-          <div className="flex justify-end">
+          <div className="flex justify-end border-t border-slate-200 pt-3 dark:border-slate-800">
             <button onClick={guardarLegajo} className="boton-principal px-3 py-2" disabled={crearLegajo.isPending || actualizarLegajo.isPending}>
               {crearLegajo.isPending || actualizarLegajo.isPending
                 ? 'Guardando...'
@@ -211,11 +211,11 @@ export function PersonaLegajoPanel({ personaId }: Props) {
             </button>
           </div>
 
-          <div className="space-y-3 border-t border-slate-200 pt-3">
-            <h4 className="text-sm font-semibold text-slate-800">Adjuntos del legajo</h4>
+          <div className="space-y-3 border-t border-slate-200 pt-3 dark:border-slate-800">
+            <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-100">Adjuntos del legajo</h4>
 
             {!existeLegajo ? (
-              <p className="text-sm text-slate-500">Primero guardá el legajo para poder subir adjuntos.</p>
+              <p className="text-sm text-slate-500 dark:text-slate-300">Primero guardá el legajo para poder subir adjuntos.</p>
             ) : (
               <>
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -229,21 +229,21 @@ export function PersonaLegajoPanel({ personaId }: Props) {
                   </button>
                 </div>
 
-                {errorAdjuntos && <p className="text-sm text-red-700">{errorAdjuntos}</p>}
+                {errorAdjuntos && <p className="mensaje-error">{errorAdjuntos}</p>}
 
                 {adjuntos.isLoading ? (
-                  <p className="text-sm text-slate-600">Cargando adjuntos...</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-300">Cargando adjuntos...</p>
                 ) : adjuntos.isError ? (
-                  <p className="text-sm text-red-700">No se pudieron cargar los adjuntos.</p>
+                  <p className="mensaje-error">No se pudieron cargar los adjuntos.</p>
                 ) : (adjuntos.data ?? []).length === 0 ? (
-                  <p className="text-sm text-slate-500">Todavía no hay adjuntos cargados.</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-300">Todavía no hay adjuntos cargados.</p>
                 ) : (
                   <ul className="space-y-2">
                     {(adjuntos.data ?? []).map((adjunto) => (
-                      <li key={adjunto.id} className="flex flex-col gap-2 rounded border border-slate-200 p-2 sm:flex-row sm:items-center sm:justify-between">
+                      <li key={adjunto.id} className="card-interactiva flex flex-col gap-2 p-2 sm:flex-row sm:items-center sm:justify-between">
                         <div className="text-sm">
-                          <p className="font-medium text-slate-800">{adjunto.nombreOriginal}</p>
-                          <p className="text-xs text-slate-500">
+                          <p className="font-medium text-slate-800 dark:text-slate-100">{adjunto.nombreOriginal}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
                             {adjunto.tipoContenido} · {formatearTamano(adjunto.tamanoBytes)}
                           </p>
                         </div>
