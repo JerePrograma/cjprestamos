@@ -12,9 +12,11 @@ import com.lowagie.text.DocumentException;
 import com.lowagie.text.Font;
 import com.lowagie.text.FontFactory;
 import com.lowagie.text.Paragraph;
+import com.lowagie.text.Rectangle;
 import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
+import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -73,14 +75,18 @@ public class SimuladorPrestamoService {
             PdfWriter.getInstance(document, output);
             document.open();
 
-            Font titulo = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14);
-            Font subtitulo = FontFactory.getFont(FontFactory.HELVETICA, 11);
+            Font marca = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 19, new Color(31, 41, 55));
+            Font titulo = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14, new Color(30, 64, 175));
+            Font subtitulo = FontFactory.getFont(FontFactory.HELVETICA, 11, new Color(71, 85, 105));
+            Font valorResumen = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11, new Color(15, 23, 42));
+
+            document.add(new Paragraph("CJPrestamos", marca));
             document.add(new Paragraph("Simulación de préstamo", titulo));
             document.add(new Paragraph("Generado: " + LocalDate.now().format(FECHA_FORMATO), subtitulo));
             document.add(new Paragraph(" "));
-            document.add(new Paragraph("Monto inicial: $" + simulacion.montoInicial(), subtitulo));
-            document.add(new Paragraph("Interés aplicado: $" + simulacion.interesAplicado(), subtitulo));
-            document.add(new Paragraph("Total a devolver: $" + simulacion.totalADevolver(), subtitulo));
+            document.add(new Paragraph("Monto inicial: $" + simulacion.montoInicial(), valorResumen));
+            document.add(new Paragraph("Interés aplicado: $" + simulacion.interesAplicado(), valorResumen));
+            document.add(new Paragraph("Total a devolver: $" + simulacion.totalADevolver(), valorResumen));
             document.add(new Paragraph("Cantidad de cuotas: " + simulacion.cantidadCuotas(), subtitulo));
             document.add(new Paragraph(" "));
 
@@ -91,10 +97,11 @@ public class SimuladorPrestamoService {
             tabla.addCell(celdaHeader("Vencimiento"));
             tabla.addCell(celdaHeader("Monto"));
 
+            Font textoCelda = FontFactory.getFont(FontFactory.HELVETICA, 10, new Color(30, 41, 59));
             for (SimulacionCuotaResponse cuota : simulacion.cuotas()) {
-                tabla.addCell(cuota.numeroCuota().toString());
-                tabla.addCell(cuota.fechaVencimiento() == null ? "A definir" : cuota.fechaVencimiento().format(FECHA_FORMATO));
-                tabla.addCell("$" + cuota.montoProgramado());
+                tabla.addCell(celdaDato(cuota.numeroCuota().toString(), textoCelda));
+                tabla.addCell(celdaDato(cuota.fechaVencimiento() == null ? "A definir" : cuota.fechaVencimiento().format(FECHA_FORMATO), textoCelda));
+                tabla.addCell(celdaDato("$" + cuota.montoProgramado(), textoCelda));
             }
 
             document.add(tabla);
@@ -109,7 +116,20 @@ public class SimuladorPrestamoService {
 
     private PdfPCell celdaHeader(String texto) {
         PdfPCell cell = new PdfPCell();
-        cell.setPhrase(new com.lowagie.text.Phrase(texto, FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10)));
+        cell.setPhrase(new com.lowagie.text.Phrase(texto, FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, Color.WHITE)));
+        cell.setBackgroundColor(new Color(59, 130, 246));
+        cell.setBorderColor(new Color(191, 219, 254));
+        cell.setPadding(7f);
+        return cell;
+    }
+
+    private PdfPCell celdaDato(String texto, Font fuente) {
+        PdfPCell cell = new PdfPCell();
+        cell.setPhrase(new com.lowagie.text.Phrase(texto, fuente));
+        cell.setBorderColor(new Color(226, 232, 240));
+        cell.setPadding(6f);
+        cell.setUseBorderPadding(true);
+        cell.setBorder(Rectangle.BOX);
         return cell;
     }
 

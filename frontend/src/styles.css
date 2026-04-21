@@ -14,8 +14,9 @@
   body {
     @apply min-h-screen bg-slate-100 text-slate-800 antialiased transition-colors duration-300;
     background-image:
-      radial-gradient(circle at top left, rgba(15, 23, 42, 0.04), transparent 42%),
-      linear-gradient(to bottom, #f8fafc, #f1f5f9 55%, #eef2ff);
+      radial-gradient(circle at top left, rgba(190, 242, 255, 0.55), transparent 45%),
+      radial-gradient(circle at 88% 12%, rgba(254, 226, 226, 0.4), transparent 42%),
+      linear-gradient(to bottom, #fdfcff, #f8fafc 56%, #eef2ff);
   }
 
   :root.dark body {
@@ -75,7 +76,7 @@
 
 @layer components {
   .panel {
-    @apply rounded-2xl border border-slate-200/90 bg-white/95 shadow-sm transition-colors duration-300;
+    @apply rounded-2xl border border-sky-100/90 bg-white/95 shadow-sm shadow-indigo-100/40 transition-colors duration-300;
   }
 
   :root.dark .panel {
@@ -83,7 +84,7 @@
   }
 
   .panel-soft {
-    @apply rounded-2xl border border-slate-200 bg-slate-50/90 transition-colors duration-300;
+    @apply rounded-2xl border border-indigo-100 bg-indigo-50/70 transition-colors duration-300;
   }
 
   :root.dark .panel-soft {
@@ -92,6 +93,7 @@
 
   .titulo-seccion {
     @apply text-2xl font-semibold text-slate-900;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
   }
 
   :root.dark .titulo-seccion {
@@ -99,7 +101,7 @@
   }
 
   .subtitulo-seccion {
-    @apply text-sm text-slate-600;
+    @apply text-sm text-slate-700;
   }
 
   :root.dark .subtitulo-seccion {
@@ -107,7 +109,7 @@
   }
 
   .boton-principal {
-    @apply inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-indigo-300/60 transition hover:bg-indigo-500 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60;
   }
 
   :root.dark .boton-principal {
@@ -115,7 +117,7 @@
   }
 
   .boton-secundario {
-    @apply inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-50 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex items-center justify-center rounded-xl border border-sky-200 bg-sky-50/80 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-sky-300 hover:bg-sky-100/80 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60;
   }
 
   :root.dark .boton-secundario {
@@ -123,7 +125,7 @@
   }
 
   .label-ui {
-    @apply text-xs font-semibold uppercase tracking-wide text-slate-500;
+    @apply text-xs font-semibold uppercase tracking-wide text-slate-600;
   }
 
   :root.dark .label-ui {
@@ -131,7 +133,7 @@
   }
 
   .card-interactiva {
-    @apply rounded-xl border border-slate-200 bg-white p-3.5 transition hover:border-slate-300 hover:bg-slate-50;
+    @apply rounded-xl border border-indigo-100 bg-white/95 p-3.5 transition hover:border-indigo-200 hover:bg-indigo-50/50;
   }
 
   :root.dark .card-interactiva {
