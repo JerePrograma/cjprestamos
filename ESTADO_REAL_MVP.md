@@ -50,6 +50,13 @@ Responder de forma honesta:
 - backend: **HECHO**
 - UI: **HECHO**
 
+
+
+### Simulador
+- backend de simulación de préstamo con cronograma estimado: **HECHO**
+- exportación PDF de simulación: **HECHA**
+- UI dedicada `/simulador` para estimar cuotas y descargar PDF: **HECHA**
+
 ### Legajos
 - backend legajo por persona: **HECHO**
 - UI crear/editar legajo por persona: **HECHO**

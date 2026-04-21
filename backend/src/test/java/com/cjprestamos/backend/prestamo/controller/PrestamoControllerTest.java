@@ -13,6 +13,7 @@ import com.cjprestamos.backend.prestamo.dto.PrestamoResponse;
 import com.cjprestamos.backend.prestamo.model.enums.EstadoPrestamo;
 import com.cjprestamos.backend.prestamo.model.enums.FrecuenciaTipo;
 import com.cjprestamos.backend.prestamo.service.PrestamoService;
+import com.cjprestamos.backend.prestamo.service.SimuladorPrestamoService;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -34,6 +35,9 @@ class PrestamoControllerTest {
 
     @MockBean
     private PrestamoService prestamoService;
+
+    @MockBean
+    private SimuladorPrestamoService simuladorPrestamoService;
 
     @Test
     @WithMockUser

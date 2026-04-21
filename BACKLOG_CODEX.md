@@ -76,6 +76,7 @@ Backlog técnico priorizado para reflejar el **estado real** del repo.
 ## ÉPICA 10 — Ajustes manuales post-MVP
 - BT-10001 — renegociación manual de cuotas futuras (backend + UI): **HECHA**
 - BT-10002 — pagos con selección opcional de cuotas (manteniendo imputación automática default): **HECHA**
+- BT-10003 — simulador de préstamos con cronograma + exportación PDF (backend/frontend): **HECHA**
 
 ---
 

@@ -19,10 +19,10 @@
   }
 
   :root.dark body {
-    @apply bg-slate-950 text-slate-100;
+    @apply bg-slate-950 text-slate-50;
     background-image:
-      radial-gradient(circle at top left, rgba(56, 189, 248, 0.1), transparent 36%),
-      linear-gradient(to bottom, #020617, #0f172a 55%, #111827);
+      radial-gradient(circle at top left, rgba(14, 165, 233, 0.16), transparent 38%),
+      linear-gradient(to bottom, #020617, #0b1220 55%, #0f172a);
   }
 
   h1,
@@ -79,7 +79,7 @@
   }
 
   :root.dark .panel {
-    @apply border-slate-800 bg-slate-900/95 shadow-none;
+    @apply border-slate-700 bg-slate-900/95 shadow-none;
   }
 
   .panel-soft {
@@ -87,7 +87,7 @@
   }
 
   :root.dark .panel-soft {
-    @apply border-slate-800 bg-slate-900/70;
+    @apply border-slate-700 bg-slate-800/70;
   }
 
   .titulo-seccion {
@@ -111,7 +111,7 @@
   }
 
   :root.dark .boton-principal {
-    @apply bg-sky-500 text-slate-950 hover:bg-sky-400;
+    @apply bg-sky-400 text-slate-950 hover:bg-sky-300;
   }
 
   .boton-secundario {
@@ -119,7 +119,7 @@
   }
 
   :root.dark .boton-secundario {
-    @apply border-slate-700 bg-slate-900 text-slate-200 hover:border-slate-600 hover:bg-slate-800;
+    @apply border-slate-600 bg-slate-900 text-slate-100 hover:border-slate-500 hover:bg-slate-800;
   }
 
   .label-ui {

@@ -6,6 +6,7 @@ import { DashboardPage } from '../modules/dashboard/DashboardPage';
 import { LegajosPage } from '../modules/legajos/LegajosPage';
 import { PersonasPage } from '../modules/personas/PersonasPage';
 import { PrestamosPage } from '../modules/prestamos/PrestamosPage';
+import { SimuladorPrestamosPage } from '../modules/prestamos/SimuladorPrestamosPage';
 
 export const router = createBrowserRouter([
   {
@@ -16,6 +17,7 @@ export const router = createBrowserRouter([
       { index: true, element: <DashboardPage /> },
       { path: 'personas', element: <PersonasPage /> },
       { path: 'prestamos', element: <PrestamosPage /> },
+      { path: 'simulador', element: <SimuladorPrestamosPage /> },
       { path: 'legajos', element: <LegajosPage /> },
       { path: '*', element: <NoEncontradoPage /> },
     ],

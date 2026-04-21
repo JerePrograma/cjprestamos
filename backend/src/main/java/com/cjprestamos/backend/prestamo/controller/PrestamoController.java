@@ -5,10 +5,17 @@ import com.cjprestamos.backend.prestamo.dto.CalculoPrestamoEntrada;
 import com.cjprestamos.backend.prestamo.dto.CalculoPrestamoResultado;
 import com.cjprestamos.backend.prestamo.dto.PrestamoRequest;
 import com.cjprestamos.backend.prestamo.dto.PrestamoResponse;
+import com.cjprestamos.backend.prestamo.dto.SimulacionPrestamoRequest;
+import com.cjprestamos.backend.prestamo.dto.SimulacionPrestamoResponse;
 import com.cjprestamos.backend.prestamo.service.PrestamoService;
+import com.cjprestamos.backend.prestamo.service.SimuladorPrestamoService;
 import jakarta.validation.Valid;
 import java.util.List;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,9 +30,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class PrestamoController {
 
     private final PrestamoService prestamoService;
+    private final SimuladorPrestamoService simuladorPrestamoService;
 
-    public PrestamoController(PrestamoService prestamoService) {
+    public PrestamoController(PrestamoService prestamoService, SimuladorPrestamoService simuladorPrestamoService) {
         this.prestamoService = prestamoService;
+        this.simuladorPrestamoService = simuladorPrestamoService;
     }
 
     @PostMapping
@@ -37,6 +46,23 @@ public class PrestamoController {
     @PostMapping("/calcular")
     public CalculoPrestamoResultado calcular(@Valid @RequestBody CalculoPrestamoEntrada request) {
         return prestamoService.calcular(request);
+    }
+
+
+    @PostMapping("/simulador")
+    public SimulacionPrestamoResponse simular(@Valid @RequestBody SimulacionPrestamoRequest request) {
+        return simuladorPrestamoService.simular(request);
+    }
+
+    @PostMapping(value = "/simulador/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    public ResponseEntity<byte[]> generarPdfSimulacion(@Valid @RequestBody SimulacionPrestamoRequest request) {
+        byte[] pdf = simuladorPrestamoService.generarPdfSimulacion(request);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDisposition(ContentDisposition.attachment().filename("simulacion-prestamo.pdf").build());
+
+        return ResponseEntity.ok().headers(headers).body(pdf);
     }
 
     @PutMapping("/{id}/referencia")
