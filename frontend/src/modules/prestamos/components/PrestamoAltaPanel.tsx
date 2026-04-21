@@ -143,16 +143,16 @@ export function PrestamoAltaPanel({
   return (
     <aside className="panel space-y-4 p-4 sm:p-5">
       <div className="space-y-1">
-        <h2 className="text-base font-semibold text-slate-900">Alta de préstamo</h2>
-        <p className="text-xs text-slate-500">
+        <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">Alta de préstamo</h2>
+        <p className="text-xs text-slate-500 dark:text-slate-400">
           Cargá condiciones base sin centavos. Si ingresás decimales, el sistema redondea hacia arriba.
         </p>
       </div>
 
-      <label className="block text-sm text-slate-700">
+      <label className="block text-sm">
         Persona
         <select
-          className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+          className="mt-1 w-full"
           value={formulario.personaId}
           onChange={(event) => actualizarCampo("personaId", event.target.value)}
         >
@@ -165,55 +165,55 @@ export function PrestamoAltaPanel({
         </select>
       </label>
       {personasLoading && (
-        <p className="text-xs text-slate-500">Cargando personas disponibles...</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400">Cargando personas disponibles...</p>
       )}
 
       <div className="grid gap-3 md:grid-cols-2">
-        <label className="text-sm text-slate-700">
+        <label className="text-sm">
           Monto inicial
           <input
             type="number"
             min="0"
             step="1"
-            className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+            className="mt-1 w-full"
             value={formulario.montoInicial}
             onChange={(event) =>
               actualizarCampo("montoInicial", event.target.value)
             }
           />
         </label>
-        <label className="text-sm text-slate-700">
+        <label className="text-sm">
           Cantidad de cuotas
           <input
             type="number"
             min="1"
-            className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+            className="mt-1 w-full"
             value={formulario.cantidadCuotas}
             onChange={(event) =>
               actualizarCampo("cantidadCuotas", event.target.value)
             }
           />
         </label>
-        <label className="text-sm text-slate-700">
+        <label className="text-sm">
           Porcentaje fijo sugerido
           <input
             type="number"
             min="0"
             step="1"
-            className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+            className="mt-1 w-full"
             value={formulario.porcentajeFijoSugerido}
             onChange={(event) =>
               actualizarCampo("porcentajeFijoSugerido", event.target.value)
             }
           />
         </label>
-        <label className="text-sm text-slate-700">
+        <label className="text-sm">
           Interés manual opcional
           <input
             type="number"
             min="0"
             step="1"
-            className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+            className="mt-1 w-full"
             value={formulario.interesManualOpcional}
             onChange={(event) =>
               actualizarCampo("interesManualOpcional", event.target.value)
@@ -223,10 +223,10 @@ export function PrestamoAltaPanel({
       </div>
 
       <div className="grid gap-3 md:grid-cols-3">
-        <label className="text-sm text-slate-700">
+        <label className="text-sm">
           Frecuencia
           <select
-            className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+            className="mt-1 w-full"
             value={formulario.frecuenciaTipo}
             onChange={(event) => {
               const frecuencia = event.target
@@ -249,13 +249,13 @@ export function PrestamoAltaPanel({
           </select>
         </label>
 
-        <label className="text-sm text-slate-700">
+        <label className="text-sm">
           {formulario.frecuenciaTipo === "FECHAS_MANUALES"
             ? "Fecha inicial sugerida (opcional)"
             : "Fecha base"}
           <input
             type="date"
-            className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+            className="mt-1 w-full"
             value={formulario.fechaBase}
             onChange={(event) =>
               actualizarCampo("fechaBase", event.target.value)
@@ -264,12 +264,12 @@ export function PrestamoAltaPanel({
         </label>
 
         {formulario.frecuenciaTipo === "CADA_X_DIAS" && (
-          <label className="text-sm text-slate-700">
+          <label className="text-sm">
             Frecuencia cada X días
             <input
               type="number"
               min="1"
-              className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+              className="mt-1 w-full"
               value={formulario.frecuenciaCadaDias}
               onChange={(event) =>
                 actualizarCampo("frecuenciaCadaDias", event.target.value)
@@ -280,7 +280,7 @@ export function PrestamoAltaPanel({
       </div>
 
       {formulario.frecuenciaTipo === "FECHAS_MANUALES" && (
-        <label className="flex items-center gap-2 text-sm text-slate-700">
+        <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
           <input
             type="checkbox"
             checked={formulario.usarFechasManuales}
@@ -294,10 +294,10 @@ export function PrestamoAltaPanel({
       )}
 
       <div className="grid gap-3 md:grid-cols-2">
-        <label className="text-sm text-slate-700">
+        <label className="text-sm">
           Referencia
           <input
-            className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+            className="mt-1 w-full"
             value={formulario.referenciaCodigo}
             onChange={(event) =>
               actualizarCampo("referenciaCodigo", event.target.value)
@@ -305,10 +305,10 @@ export function PrestamoAltaPanel({
             maxLength={80}
           />
         </label>
-        <label className="text-sm text-slate-700">
+        <label className="text-sm">
           Estado
           <select
-            className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+            className="mt-1 w-full"
             value={formulario.estado}
             onChange={(event) =>
               actualizarCampo(
@@ -325,7 +325,7 @@ export function PrestamoAltaPanel({
         </label>
       </div>
 
-      <label className="block text-sm text-slate-700">
+      <label className="block text-sm">
         Observaciones
         <textarea
           className="mt-1 h-20 w-full rounded border border-slate-300 px-3 py-2"

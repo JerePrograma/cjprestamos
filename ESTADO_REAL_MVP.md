@@ -80,6 +80,7 @@ Responder de forma honesta:
 - segmentación de cuotas en subtareas (generación/carga, listado, renegociación): **HECHO**
 - manejo de ruta no encontrada/error de navegación en frontend: **HECHO**
 - sistema de UI consistente con encabezados de módulo, estados visibles, quick actions y componentes reutilizables: **HECHO**
+- rediseño integral UI 2026 (sistema visual unificado, navegación más robusta, formularios y paneles modernizados en claro/oscuro): **HECHO**
 - política monetaria sin centavos: importes normalizados con redondeo hacia arriba en backend y frontend: **HECHO**
 
 ### Regla funcional crítica alineada

@@ -11,7 +11,7 @@ export function LegajosPage() {
   const [personaSeleccionadaId, setPersonaSeleccionadaId] = useState<number | null>(null);
 
   return (
-    <section className="space-y-4">
+    <section className="space-y-5">
       <PageHeader
         titulo="Legajos"
         descripcion="Información contextual separada de la operación económica diaria. Elegí persona y gestioná notas + adjuntos."
@@ -24,10 +24,10 @@ export function LegajosPage() {
       />
 
       <SectionCard titulo="Selector de persona" descripcion="Elegí a quién corresponde el legajo a editar o consultar.">
-        <label className="text-sm text-slate-700">
+        <label className="text-sm">
           Persona
           <select
-            className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+            className="mt-1 w-full"
             value={personaSeleccionadaId ?? ''}
             onChange={(event) => setPersonaSeleccionadaId(event.target.value ? Number(event.target.value) : null)}
           >
@@ -39,9 +39,9 @@ export function LegajosPage() {
             ))}
           </select>
         </label>
-        <p className="mt-2 text-xs text-slate-500">
+        <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
           Si necesitás corregir datos básicos (nombre, alias, contacto), hacelo desde{' '}
-          <Link to="/personas" className="font-medium text-slate-800 underline decoration-slate-300 underline-offset-2">
+          <Link to="/personas" className="font-semibold text-slate-800 underline decoration-slate-300 underline-offset-2 dark:text-slate-200">
             Personas
           </Link>
           .
@@ -50,11 +50,11 @@ export function LegajosPage() {
 
       {personas.isLoading ? (
         <SectionCard titulo="Legajo" descripcion="Cargando información base.">
-          <p className="text-sm text-slate-500">Cargando personas...</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">Cargando personas...</p>
         </SectionCard>
       ) : personas.isError ? (
         <SectionCard titulo="Legajo" descripcion="Error al cargar datos base.">
-          <p className="text-sm text-red-700">No se pudo cargar el listado de personas.</p>
+          <p className="mensaje-error">No se pudo cargar el listado de personas.</p>
         </SectionCard>
       ) : personaSeleccionadaId === null ? (
         <SectionCard titulo="Legajo" descripcion="Seleccioná persona para continuar.">

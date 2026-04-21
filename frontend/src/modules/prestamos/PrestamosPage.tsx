@@ -74,7 +74,7 @@ export function PrestamosPage() {
   const prestamosTotal = prestamos.data?.length ?? 0;
 
   return (
-    <section className="space-y-4">
+    <section className="space-y-5">
       <PageHeader
         titulo="Préstamos"
         descripcion="Flujo operativo completo: explorá préstamos, abrí workspace y resolvé cuotas/pagos desde una misma pantalla."
@@ -99,16 +99,16 @@ export function PrestamosPage() {
         descripcion="1) Elegir préstamo, 2) revisar resumen/cuotas/pagos, 3) volver al listado."
         suave
       >
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-slate-600 dark:text-slate-300">
           Si todavía no existe el préstamo, usá <strong>Nuevo préstamo</strong>. Para editar datos base de persona, entrá a{' '}
-          <Link to="/personas" className="font-medium text-slate-800 underline decoration-slate-300 underline-offset-2">
+          <Link to="/personas" className="font-semibold text-slate-800 underline decoration-slate-300 underline-offset-2 dark:text-slate-200">
             Personas
           </Link>
           .
         </p>
       </SectionCard>
 
-      <div className="panel p-1.5 sm:hidden">
+      <div className="panel p-2 sm:hidden">
         <nav className="grid grid-cols-2 gap-1" aria-label="Navegación de préstamos en móvil">
           {vistasMoviles.map((vista) => (
             <button
@@ -116,7 +116,7 @@ export function PrestamosPage() {
               type="button"
               onClick={() => setVistaMovil(vista.id)}
               className={`rounded-lg px-2 py-2 text-left text-xs font-medium transition ${
-                vistaMovil === vista.id ? 'bg-slate-800 text-white' : 'text-slate-700 hover:bg-slate-100'
+                vistaMovil === vista.id ? 'bg-slate-900 text-white dark:bg-sky-500 dark:text-slate-950' : 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800'
               }`}
             >
               <span className="block">{vista.etiqueta}</span>
