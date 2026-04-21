@@ -14,12 +14,14 @@ const itemsNavegacion: ItemNavegacion[] = [
   { to: '/', etiqueta: 'Dashboard', descripcion: 'Control general y accesos rápidos' },
   { to: '/personas', etiqueta: 'Personas', descripcion: 'Registro y libreta operativa' },
   { to: '/prestamos', etiqueta: 'Préstamos', descripcion: 'Alta, cuotas, pagos y seguimiento' },
+  { to: '/simulador', etiqueta: 'Simulador', descripcion: 'Estimación de cuotas y descarga PDF' },
   { to: '/legajos', etiqueta: 'Legajos', descripcion: 'Información contextual y adjuntos' },
 ];
 
 const accesosRapidos = [
   { etiqueta: 'Nueva persona', to: '/personas' },
   { etiqueta: 'Nuevo préstamo', to: '/prestamos?alta=1&vista=workspace' },
+  { etiqueta: 'Simular préstamo', to: '/simulador' },
   { etiqueta: 'Ir a legajos', to: '/legajos' },
 ];
 
@@ -133,7 +135,7 @@ export function LayoutPrincipal() {
                 className={({ isActive }) =>
                   `rounded-xl border px-3 py-3 text-sm transition ${
                     isActive
-                      ? 'border-slate-900 bg-slate-900 text-white dark:border-sky-400 dark:bg-sky-500 dark:text-slate-950'
+                      ? 'border-slate-900 bg-slate-900 text-white dark:border-sky-300 dark:bg-sky-300 dark:text-slate-950'
                       : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-slate-700 dark:hover:bg-slate-800'
                   }`
                 }

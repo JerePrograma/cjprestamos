@@ -8,6 +8,8 @@ import type {
   PrestamoPayload,
   PrestamoResponse,
   ReferenciaPrestamoPayload,
+  SimulacionPrestamoPayload,
+  SimulacionPrestamoResponse,
 } from '../../modules/prestamos/types/prestamo';
 
 export async function obtenerPrestamos(): Promise<PrestamoResponse[]> {
@@ -56,4 +58,15 @@ export async function actualizarReferenciaPrestamo(
 export async function calcularPrestamo(payload: CalculoPrestamoPayload): Promise<CalculoPrestamoResultado> {
   const response = await api.post<CalculoPrestamoResultado>('/prestamos/calcular', payload);
   return response.data;
+}
+
+
+export async function simularPrestamo(payload: SimulacionPrestamoPayload): Promise<SimulacionPrestamoResponse> {
+  const response = await api.post<SimulacionPrestamoResponse>('/prestamos/simulador', payload);
+  return response.data;
+}
+
+export async function descargarPdfSimulacionPrestamo(payload: SimulacionPrestamoPayload): Promise<Blob> {
+  const response = await api.post('/prestamos/simulador/pdf', payload, { responseType: 'blob' });
+  return response.data as Blob;
 }
