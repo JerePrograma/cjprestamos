@@ -1,5 +1,6 @@
 package com.cjprestamos.backend.dashboard.controller;
 
+import com.cjprestamos.backend.dashboard.dto.DashboardControlCajaResponse;
 import com.cjprestamos.backend.dashboard.dto.DashboardResumenResponse;
 import com.cjprestamos.backend.dashboard.service.DashboardService;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,5 +20,10 @@ public class DashboardController {
     @GetMapping("/resumen")
     public DashboardResumenResponse obtenerResumen() {
         return dashboardService.obtenerResumen();
+    }
+
+    @GetMapping("/control-caja")
+    public DashboardControlCajaResponse obtenerControlCaja() {
+        return dashboardService.obtenerControlCaja();
     }
 }

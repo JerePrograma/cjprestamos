@@ -34,6 +34,7 @@ Backlog técnico priorizado para reflejar el **estado real** del repo.
 - BT-4003 — UI de pagos dentro del detalle de préstamo
 - BT-5001 — backend del dashboard
 - BT-5002 — UI del dashboard
+- BT-5003 — módulo integral de control de caja (backend + UI: caja, inversión, balance mensual, proyección 30/60/90 y cartera en mora): **HECHA**
 - BT-6001 — referencias del préstamo
 - BT-6002 — colores de referencia para persona
 - BT-0004 — honestidad de navegación / ocultar placeholders

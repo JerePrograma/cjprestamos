@@ -100,6 +100,9 @@ export function DashboardPage() {
           descripcion="Atajos para continuar el flujo operativo sin buscar pantalla por pantalla."
         >
           <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
+            <Link to="/control-caja" className="card-interactiva text-sm">
+              Abrir control de caja
+            </Link>
             <Link to="/personas" className="card-interactiva text-sm">
               Abrir libreta de personas
             </Link>

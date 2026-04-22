@@ -12,6 +12,7 @@ type Tema = 'claro' | 'oscuro';
 
 const itemsNavegacion: ItemNavegacion[] = [
   { to: '/', etiqueta: 'Dashboard', descripcion: 'Control general y accesos rápidos' },
+  { to: '/control-caja', etiqueta: 'Control de caja', descripcion: 'Caja, inversión, ganancias y proyecciones' },
   { to: '/personas', etiqueta: 'Personas', descripcion: 'Registro y libreta operativa' },
   { to: '/prestamos', etiqueta: 'Préstamos', descripcion: 'Alta, cuotas, pagos y seguimiento' },
   { to: '/simulador', etiqueta: 'Simulador', descripcion: 'Estimación de cuotas y descarga PDF' },
@@ -19,6 +20,7 @@ const itemsNavegacion: ItemNavegacion[] = [
 ];
 
 const accesosRapidos = [
+  { etiqueta: 'Control de caja', to: '/control-caja' },
   { etiqueta: 'Nueva persona', to: '/personas' },
   { etiqueta: 'Nuevo préstamo', to: '/prestamos?alta=1&vista=workspace' },
   { etiqueta: 'Simular préstamo', to: '/simulador' },

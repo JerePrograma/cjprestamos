@@ -49,6 +49,7 @@ Responder de forma honesta:
 ### Dashboard
 - backend: **HECHO**
 - UI: **HECHO**
+- módulo de control de caja y contabilidad operativa (`/control-caja`): **HECHO**
 
 
 
