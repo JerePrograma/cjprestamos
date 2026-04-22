@@ -3,6 +3,7 @@ package com.cjprestamos.backend.dashboard.service;
 import com.cjprestamos.backend.common.model.MonedaUtils;
 import com.cjprestamos.backend.cuota.model.Cuota;
 import com.cjprestamos.backend.cuota.repository.CuotaRepository;
+import com.cjprestamos.backend.dashboard.dto.DashboardControlCajaResponse;
 import com.cjprestamos.backend.dashboard.dto.DashboardResumenResponse;
 import com.cjprestamos.backend.pago.model.Pago;
 import com.cjprestamos.backend.pago.model.enums.EstadoPago;
@@ -14,6 +15,8 @@ import com.cjprestamos.backend.prestamo.model.enums.EstadoPrestamo;
 import com.cjprestamos.backend.prestamo.repository.PrestamoRepository;
 import com.cjprestamos.backend.prestamo.service.CalculadoraPrestamoService;
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -94,6 +97,143 @@ public class DashboardService {
         );
     }
 
+    public DashboardControlCajaResponse obtenerControlCaja() {
+        List<Prestamo> prestamosActivos = prestamoRepository.findByEstadoOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO);
+        if (prestamosActivos.isEmpty()) {
+            return new DashboardControlCajaResponse(
+                cero(), cero(), cero(), cero(), cero(), cero(),
+                cero(), cero(), cero(),
+                cero(), cero(), cero(),
+                cero(), 0L, 0L, cero(), cero()
+            );
+        }
+
+        List<Long> prestamosIds = prestamosActivos.stream().map(Prestamo::getId).toList();
+        List<Cuota> cuotas = cuotaRepository.findByPrestamoIdIn(prestamosIds);
+        Map<Long, BigDecimal> cobradoPorPrestamo = pagoRepository.findByPrestamoIdInAndEstado(prestamosIds, EstadoPago.REGISTRADO).stream()
+            .collect(Collectors.groupingBy(
+                pago -> pago.getPrestamo().getId(),
+                Collectors.mapping(Pago::getMonto, Collectors.reducing(cero(), this::sumar))
+            ));
+
+        BigDecimal inversionActiva = cero();
+        BigDecimal capitalRecuperado = cero();
+        BigDecimal gananciaRealizada = cero();
+        BigDecimal gananciaProyectada = cero();
+
+        for (Prestamo prestamo : prestamosActivos) {
+            BigDecimal montoInicial = escalar(prestamo.getMontoInicial());
+            inversionActiva = sumar(inversionActiva, montoInicial);
+
+            CalculoPrestamoResultado calculo = calculadoraPrestamoService.calcular(new CalculoPrestamoEntrada(
+                prestamo.getMontoInicial(),
+                prestamo.getPorcentajeFijoSugerido(),
+                prestamo.getInteresManualOpcional(),
+                prestamo.getCantidadCuotas()
+            ));
+
+            BigDecimal totalADevolver = escalar(calculo.totalADevolver());
+            BigDecimal totalCobrado = escalar(cobradoPorPrestamo.getOrDefault(prestamo.getId(), cero()));
+            BigDecimal interesTotal = restar(totalADevolver, montoInicial);
+
+            BigDecimal capitalRecuperadoPrestamo = min(totalCobrado, montoInicial);
+            capitalRecuperado = sumar(capitalRecuperado, capitalRecuperadoPrestamo);
+
+            BigDecimal gananciaRealizadaPrestamo = min(max(restar(totalCobrado, montoInicial), cero()), interesTotal);
+            gananciaRealizada = sumar(gananciaRealizada, gananciaRealizadaPrestamo);
+            gananciaProyectada = sumar(gananciaProyectada, restar(interesTotal, gananciaRealizadaPrestamo));
+        }
+
+        BigDecimal capitalPendiente = max(restar(inversionActiva, capitalRecuperado), cero());
+        BigDecimal cajaDisponible = sumar(capitalRecuperado, gananciaRealizada);
+
+        List<Pago> pagosActivos = pagoRepository.findByPrestamoIdInAndEstado(prestamosIds, EstadoPago.REGISTRADO);
+        BigDecimal ingresosMesActual = calcularIngresosMesActual(pagosActivos);
+        BigDecimal egresosMesActual = calcularEgresosMesActual(prestamosActivos);
+        BigDecimal balanceMesActual = restar(ingresosMesActual, egresosMesActual);
+
+        LocalDate hoy = LocalDate.now();
+        BigDecimal proyeccionCobro30Dias = cero();
+        BigDecimal proyeccionCobro60Dias = cero();
+        BigDecimal proyeccionCobro90Dias = cero();
+        BigDecimal carteraEnMora = cero();
+        long cuotasPendientes = 0L;
+        long cuotasVencenProximos7Dias = 0L;
+
+        for (Cuota cuota : cuotas) {
+            BigDecimal saldoCuota = max(restar(cuota.getMontoProgramado(), valorSeguro(cuota.getMontoPagado())), cero());
+            if (saldoCuota.compareTo(cero()) == 0) {
+                continue;
+            }
+
+            cuotasPendientes++;
+            LocalDate fechaVencimiento = cuota.getFechaVencimiento();
+            if (fechaVencimiento == null) {
+                continue;
+            }
+
+            if (fechaVencimiento.isBefore(hoy)) {
+                carteraEnMora = sumar(carteraEnMora, saldoCuota);
+            }
+
+            if (!fechaVencimiento.isBefore(hoy) && !fechaVencimiento.isAfter(hoy.plusDays(7))) {
+                cuotasVencenProximos7Dias++;
+            }
+
+            if (!fechaVencimiento.isBefore(hoy) && !fechaVencimiento.isAfter(hoy.plusDays(30))) {
+                proyeccionCobro30Dias = sumar(proyeccionCobro30Dias, saldoCuota);
+            }
+
+            if (!fechaVencimiento.isBefore(hoy) && !fechaVencimiento.isAfter(hoy.plusDays(60))) {
+                proyeccionCobro60Dias = sumar(proyeccionCobro60Dias, saldoCuota);
+            }
+
+            if (!fechaVencimiento.isBefore(hoy) && !fechaVencimiento.isAfter(hoy.plusDays(90))) {
+                proyeccionCobro90Dias = sumar(proyeccionCobro90Dias, saldoCuota);
+            }
+        }
+
+        BigDecimal recuperoCapitalPorcentaje = porcentaje(capitalRecuperado, inversionActiva);
+        BigDecimal rendimientoEsperadoPorcentaje = porcentaje(gananciaProyectada, inversionActiva);
+
+        return new DashboardControlCajaResponse(
+            escalar(cajaDisponible),
+            escalar(inversionActiva),
+            escalar(capitalRecuperado),
+            escalar(capitalPendiente),
+            escalar(gananciaRealizada),
+            escalar(gananciaProyectada),
+            escalar(ingresosMesActual),
+            escalar(egresosMesActual),
+            escalar(balanceMesActual),
+            escalar(proyeccionCobro30Dias),
+            escalar(proyeccionCobro60Dias),
+            escalar(proyeccionCobro90Dias),
+            escalar(carteraEnMora),
+            cuotasPendientes,
+            cuotasVencenProximos7Dias,
+            recuperoCapitalPorcentaje,
+            rendimientoEsperadoPorcentaje
+        );
+    }
+
+    private BigDecimal calcularIngresosMesActual(List<Pago> pagosRegistrados) {
+        YearMonth mesActual = YearMonth.now();
+        return pagosRegistrados.stream()
+            .filter(pago -> YearMonth.from(pago.getFechaPago()).equals(mesActual))
+            .map(Pago::getMonto)
+            .reduce(cero(), this::sumar);
+    }
+
+    private BigDecimal calcularEgresosMesActual(List<Prestamo> prestamosActivos) {
+        YearMonth mesActual = YearMonth.now();
+        return prestamosActivos.stream()
+            .filter(prestamo -> prestamo.getCreatedAt() != null)
+            .filter(prestamo -> YearMonth.from(prestamo.getCreatedAt()).equals(mesActual))
+            .map(Prestamo::getMontoInicial)
+            .reduce(cero(), this::sumar);
+    }
+
     private BigDecimal calcularDeudaPrestamo(
         Prestamo prestamo,
         Map<Long, List<Cuota>> cuotasPorPrestamo,
@@ -112,6 +252,14 @@ public class DashboardService {
 
     private BigDecimal valorSeguro(BigDecimal monto) {
         return monto == null ? cero() : escalar(monto);
+    }
+
+    private BigDecimal porcentaje(BigDecimal numerador, BigDecimal denominador) {
+        if (denominador.compareTo(cero()) <= 0) {
+            return cero();
+        }
+
+        return escalar(numerador.multiply(new BigDecimal("100")).divide(denominador, 2, java.math.RoundingMode.HALF_UP));
     }
 
     private BigDecimal sumar(BigDecimal a, BigDecimal b) {
