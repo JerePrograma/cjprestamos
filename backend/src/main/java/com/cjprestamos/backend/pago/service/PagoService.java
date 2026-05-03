@@ -19,6 +19,7 @@ import com.cjprestamos.backend.prestamo.model.enums.EstadoPrestamo;
 import com.cjprestamos.backend.prestamo.repository.PrestamoRepository;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -57,30 +58,23 @@ public class PagoService {
         validarEstadoPrestamo(prestamo);
         validarMonto(request.monto());
 
-        List<Cuota> cuotasOrdenadas = obtenerCuotasParaImputacion(request);
-
-        validarCuotasDisponibles(cuotasOrdenadas);
-
         BigDecimal montoPago = normalizarMoneda(request.monto());
 
-        validarMontoNoExcedido(montoPago, cuotasOrdenadas);
+        List<Cuota> cuotasObjetivo = obtenerCuotasParaImputacion(request);
+        validarCuotasDisponibles(cuotasObjetivo);
+        validarMontoNoExcedido(montoPago, cuotasObjetivo);
 
-        Pago pago = new Pago();
-        pago.setPrestamo(prestamo);
-        pago.setFechaPago(request.fechaPago());
-        pago.setMonto(montoPago);
-        pago.setReferenciaManual(request.referencia());
-        pago.setObservaciones(request.observacion());
-        pago.setEstado(EstadoPago.REGISTRADO);
-
+        Pago pago = crearPago(prestamo, request, montoPago);
         Pago pagoGuardado = pagoRepository.save(pago);
 
-        List<ImputacionPago> imputaciones = imputarPagoEnCuotas(cuotasOrdenadas, pagoGuardado);
+        List<ImputacionPago> imputaciones = imputarPagoEnCuotas(cuotasObjetivo, pagoGuardado);
 
-        cuotaRepository.saveAll(cuotasOrdenadas);
+        validarImputacionGenerada(imputaciones);
+
+        cuotaRepository.saveAll(cuotasObjetivo);
         imputacionPagoRepository.saveAll(imputaciones);
 
-        actualizarEstadoPrestamoSiCorresponde(prestamo, cuotasOrdenadas);
+        actualizarEstadoPrestamoSegunDeudaTotal(prestamo, request.prestamoId());
         registrarEvento(prestamo, pagoGuardado);
 
         return mapearRespuesta(pagoGuardado);
@@ -100,37 +94,17 @@ public class PagoService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Préstamo no encontrado"));
     }
 
-    private List<Cuota> obtenerCuotasParaImputacion(RegistroPagoRequest request) {
-        List<Long> cuotasSeleccionadas = request.cuotasSeleccionadas();
-        if (cuotasSeleccionadas == null || cuotasSeleccionadas.isEmpty()) {
-            return cuotaRepository.findByPrestamoIdOrderByNumeroCuotaAsc(request.prestamoId());
-        }
-
-        Set<Long> idsSinDuplicados = new LinkedHashSet<>(cuotasSeleccionadas);
-        if (idsSinDuplicados.size() != cuotasSeleccionadas.size()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se permite seleccionar cuotas repetidas");
-        }
-
-        List<Cuota> cuotasSeleccionadasDelPrestamo = cuotaRepository.findByPrestamoIdAndIdIn(request.prestamoId(), idsSinDuplicados);
-        if (cuotasSeleccionadasDelPrestamo.size() != idsSinDuplicados.size()) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Hay cuotas seleccionadas que no existen o no pertenecen al préstamo"
-            );
-        }
-
-        return cuotasSeleccionadasDelPrestamo.stream()
-                .sorted(java.util.Comparator.comparing(Cuota::getNumeroCuota))
-                .toList();
-    }
-
     private void validarEstadoPrestamo(Prestamo prestamo) {
-        if (prestamo.getEstado() != EstadoPrestamo.ACTIVO && prestamo.getEstado() != EstadoPrestamo.RENEGOCIADO) {
+        if (!esEstadoCobrable(prestamo.getEstado())) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Solo se pueden registrar pagos sobre préstamos activos o renegociados"
             );
         }
+    }
+
+    private boolean esEstadoCobrable(EstadoPrestamo estado) {
+        return estado == EstadoPrestamo.ACTIVO || estado == EstadoPrestamo.RENEGOCIADO;
     }
 
     private void validarMonto(BigDecimal monto) {
@@ -139,8 +113,36 @@ public class PagoService {
         }
     }
 
-    private void validarCuotasDisponibles(List<Cuota> cuotasOrdenadas) {
-        if (cuotasOrdenadas.isEmpty()) {
+    private List<Cuota> obtenerCuotasParaImputacion(RegistroPagoRequest request) {
+        List<Long> cuotasSeleccionadas = request.cuotasSeleccionadas();
+
+        if (cuotasSeleccionadas == null || cuotasSeleccionadas.isEmpty()) {
+            return cuotaRepository.findByPrestamoIdOrderByNumeroCuotaAsc(request.prestamoId());
+        }
+
+        Set<Long> idsSinDuplicados = new LinkedHashSet<>(cuotasSeleccionadas);
+
+        if (idsSinDuplicados.size() != cuotasSeleccionadas.size()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se permite seleccionar cuotas repetidas");
+        }
+
+        List<Cuota> cuotasSeleccionadasDelPrestamo =
+                cuotaRepository.findByPrestamoIdAndIdIn(request.prestamoId(), idsSinDuplicados);
+
+        if (cuotasSeleccionadasDelPrestamo.size() != idsSinDuplicados.size()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Hay cuotas seleccionadas que no existen o no pertenecen al préstamo"
+            );
+        }
+
+        return cuotasSeleccionadasDelPrestamo.stream()
+                .sorted(Comparator.comparing(Cuota::getNumeroCuota))
+                .toList();
+    }
+
+    private void validarCuotasDisponibles(List<Cuota> cuotasObjetivo) {
+        if (cuotasObjetivo.isEmpty()) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "El préstamo no tiene cuotas generadas. No se puede imputar el pago"
@@ -148,19 +150,21 @@ public class PagoService {
         }
     }
 
-    private void validarMontoNoExcedido(BigDecimal montoPago, List<Cuota> cuotasOrdenadas) {
-        BigDecimal totalPendiente = cuotasOrdenadas.stream()
+    private void validarMontoNoExcedido(BigDecimal montoPago, List<Cuota> cuotasObjetivo) {
+        BigDecimal totalPendienteObjetivo = cuotasObjetivo.stream()
                 .map(this::calcularSaldoPendiente)
                 .reduce(MonedaUtils.cero(), BigDecimal::add);
 
-        if (totalPendiente.compareTo(MonedaUtils.cero()) <= 0) {
+        totalPendienteObjetivo = normalizarMoneda(totalPendienteObjetivo);
+
+        if (totalPendienteObjetivo.compareTo(MonedaUtils.cero()) <= 0) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Las cuotas seleccionadas no tienen saldo pendiente para imputar"
             );
         }
 
-        if (montoPago.compareTo(totalPendiente) > 0) {
+        if (montoPago.compareTo(totalPendienteObjetivo) > 0) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "El monto del pago supera el total pendiente imputable de las cuotas objetivo"
@@ -168,21 +172,34 @@ public class PagoService {
         }
     }
 
-    private List<ImputacionPago> imputarPagoEnCuotas(List<Cuota> cuotasOrdenadas, Pago pagoGuardado) {
+    private Pago crearPago(Prestamo prestamo, RegistroPagoRequest request, BigDecimal montoPago) {
+        Pago pago = new Pago();
+        pago.setPrestamo(prestamo);
+        pago.setFechaPago(request.fechaPago());
+        pago.setMonto(montoPago);
+        pago.setReferenciaManual(request.referencia());
+        pago.setObservaciones(request.observacion());
+        pago.setEstado(EstadoPago.REGISTRADO);
+        return pago;
+    }
+
+    private List<ImputacionPago> imputarPagoEnCuotas(List<Cuota> cuotasObjetivo, Pago pagoGuardado) {
         BigDecimal montoRestante = normalizarMoneda(pagoGuardado.getMonto());
         List<ImputacionPago> imputaciones = new ArrayList<>();
 
-        for (Cuota cuota : cuotasOrdenadas) {
+        for (Cuota cuota : cuotasObjetivo) {
             if (montoRestante.compareTo(MonedaUtils.cero()) <= 0) {
                 break;
             }
 
             BigDecimal saldoPendiente = calcularSaldoPendiente(cuota);
+
             if (saldoPendiente.compareTo(MonedaUtils.cero()) <= 0) {
                 continue;
             }
 
             BigDecimal montoImputado = montoRestante.min(saldoPendiente);
+
             if (montoImputado.compareTo(MonedaUtils.cero()) <= 0) {
                 continue;
             }
@@ -196,6 +213,7 @@ public class PagoService {
             imputacionPago.setCuota(cuota);
             imputacionPago.setMontoImputado(normalizarMoneda(montoImputado));
             imputacionPago.setFechaImputacion(pagoGuardado.getFechaPago());
+
             imputaciones.add(imputacionPago);
 
             montoRestante = normalizarMoneda(montoRestante.subtract(montoImputado));
@@ -204,10 +222,48 @@ public class PagoService {
         return imputaciones;
     }
 
+    private void validarImputacionGenerada(List<ImputacionPago> imputaciones) {
+        if (imputaciones.isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "No se pudo imputar el pago sobre ninguna cuota"
+            );
+        }
+    }
+
+    private void actualizarEstadoPrestamoSegunDeudaTotal(Prestamo prestamo, Long prestamoId) {
+        if (!esEstadoFinalizable(prestamo.getEstado())) {
+            return;
+        }
+
+        List<Cuota> cuotasDelPrestamo = cuotaRepository.findByPrestamoIdOrderByNumeroCuotaAsc(prestamoId);
+
+        if (cuotasDelPrestamo.isEmpty()) {
+            return;
+        }
+
+        boolean deudaTotalSaldada = cuotasDelPrestamo.stream()
+                .allMatch(cuota -> calcularSaldoPendiente(cuota).compareTo(MonedaUtils.cero()) == 0);
+
+        if (deudaTotalSaldada) {
+            prestamo.setEstado(EstadoPrestamo.FINALIZADO);
+        }
+    }
+
+    private boolean esEstadoFinalizable(EstadoPrestamo estado) {
+        return estado == EstadoPrestamo.ACTIVO || estado == EstadoPrestamo.RENEGOCIADO;
+    }
+
     private BigDecimal calcularSaldoPendiente(Cuota cuota) {
         BigDecimal montoProgramado = obtenerMontoProgramado(cuota);
         BigDecimal montoPagado = obtenerMontoPagado(cuota);
-        return normalizarMoneda(montoProgramado.subtract(montoPagado));
+        BigDecimal saldo = montoProgramado.subtract(montoPagado);
+
+        if (saldo.compareTo(MonedaUtils.cero()) <= 0) {
+            return MonedaUtils.cero();
+        }
+
+        return normalizarMoneda(saldo);
     }
 
     private EstadoCuota calcularEstadoCuota(Cuota cuota) {
@@ -218,24 +274,11 @@ public class PagoService {
             return EstadoCuota.PENDIENTE;
         }
 
-        if (montoPagado.compareTo(montoProgramado) == 0) {
+        if (montoPagado.compareTo(montoProgramado) >= 0) {
             return EstadoCuota.PAGADA;
         }
 
         return EstadoCuota.PARCIAL;
-    }
-
-    private void actualizarEstadoPrestamoSiCorresponde(Prestamo prestamo, List<Cuota> cuotasOrdenadas) {
-        if (prestamo.getEstado() != EstadoPrestamo.ACTIVO) {
-            return;
-        }
-
-        boolean deudaSaldada = cuotasOrdenadas.stream()
-                .allMatch(cuota -> calcularSaldoPendiente(cuota).compareTo(MonedaUtils.cero()) == 0);
-
-        if (deudaSaldada) {
-            prestamo.setEstado(EstadoPrestamo.FINALIZADO);
-        }
     }
 
     private void registrarEvento(Prestamo prestamo, Pago pago) {
@@ -267,6 +310,7 @@ public class PagoService {
         if (cuota.getMontoPagado() == null) {
             return MonedaUtils.cero();
         }
+
         return normalizarMoneda(cuota.getMontoPagado());
     }
 
@@ -277,6 +321,7 @@ public class PagoService {
                     "La cuota posee montoProgramado nulo"
             );
         }
+
         return normalizarMoneda(cuota.getMontoProgramado());
     }
 
@@ -284,6 +329,7 @@ public class PagoService {
         if (valor == null) {
             return MonedaUtils.cero();
         }
+
         return MonedaUtils.normalizar(valor);
     }
 }
