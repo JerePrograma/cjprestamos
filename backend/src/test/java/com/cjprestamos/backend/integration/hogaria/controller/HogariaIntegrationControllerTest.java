@@ -45,6 +45,13 @@ class HogariaIntegrationControllerTest {
             .andExpect(status().isUnauthorized());
     }
 
+
+    @Test
+    void loansActivosV1_sinBasicAuth_deberiaResponder401() throws Exception {
+        mockMvc.perform(get("/api/v1/integration/hogaria/loans/active"))
+            .andExpect(status().isUnauthorized());
+    }
+
     @Test
     void loansActivos_credencialesInvalidas_deberiaResponder401() throws Exception {
         mockMvc.perform(get("/api/integration/hogaria/loans/active").with(httpBasic("bad", "creds")))
@@ -203,4 +210,42 @@ class HogariaIntegrationControllerTest {
             .andExpect(jsonPath("$").isArray())
             .andExpect(jsonPath("$").isEmpty());
     }
+
+
+    @Test
+    @org.springframework.security.test.context.support.WithMockUser(roles = "INTEGRATION")
+    void obtenerDashboard_v1_deberiaRetornarMismaEstructuraQueAliasActual() throws Exception {
+        when(hogariaIntegrationService.obtenerDashboard()).thenReturn(
+            new HogariaDashboardResponse(
+                new BigDecimal("1500.00"),
+                new BigDecimal("100.00"),
+                new BigDecimal("300.00"),
+                new BigDecimal("1200.00"),
+                3L
+            )
+        );
+
+        mockMvc.perform(get("/api/v1/integration/hogaria/dashboard"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.montoInvertido").isNumber())
+            .andExpect(jsonPath("$.prestamosActivos").value(3));
+    }
+
+    @Test
+    @org.springframework.security.test.context.support.WithMockUser(roles = "INTEGRATION")
+    void listarCuotas_v1_deberiaDelegarAlMismoService() throws Exception {
+        when(hogariaIntegrationService.listarCuotasPorPrestamo(7L)).thenReturn(List.of(
+            new HogariaInstallmentResponse(
+                1L, 7L, 1,
+                LocalDate.of(2026, 6, 1),
+                new BigDecimal("120.00"), new BigDecimal("20.00"),
+                new BigDecimal("100.00"), EstadoCuota.PARCIAL
+            )
+        ));
+
+        mockMvc.perform(get("/api/v1/integration/hogaria/loans/7/installments"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].prestamoId").value(7));
+    }
+
 }
