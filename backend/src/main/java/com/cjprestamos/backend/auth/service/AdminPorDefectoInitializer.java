@@ -18,15 +18,27 @@ public class AdminPorDefectoInitializer implements ApplicationRunner {
     private final UsuarioSistemaRepository usuarioSistemaRepository;
     private final PasswordEncoder passwordEncoder;
     private final boolean habilitado;
+    private final boolean integrationUserHabilitado;
+    private final String integrationUserUsername;
+    private final String integrationUserPassword;
+    private final String integrationUserRole;
 
     public AdminPorDefectoInitializer(
         UsuarioSistemaRepository usuarioSistemaRepository,
         PasswordEncoder passwordEncoder,
-        @Value("${app.auth.bootstrap-admin.enabled:true}") boolean habilitado
+        @Value("${app.auth.bootstrap-admin.enabled:true}") boolean habilitado,
+        @Value("${app.auth.integration-user.enabled:false}") boolean integrationUserHabilitado,
+        @Value("${app.auth.integration-user.username:}") String integrationUserUsername,
+        @Value("${app.auth.integration-user.password:}") String integrationUserPassword,
+        @Value("${app.auth.integration-user.role:INTEGRATION}") String integrationUserRole
     ) {
         this.usuarioSistemaRepository = usuarioSistemaRepository;
         this.passwordEncoder = passwordEncoder;
         this.habilitado = habilitado;
+        this.integrationUserHabilitado = integrationUserHabilitado;
+        this.integrationUserUsername = integrationUserUsername;
+        this.integrationUserPassword = integrationUserPassword;
+        this.integrationUserRole = integrationUserRole;
     }
 
     @Override
@@ -36,17 +48,48 @@ public class AdminPorDefectoInitializer implements ApplicationRunner {
             return;
         }
 
-        if (usuarioSistemaRepository.existsByUsernameIgnoreCase("admin")) {
+        if (!usuarioSistemaRepository.existsByUsernameIgnoreCase("admin")) {
+            UsuarioSistema admin = new UsuarioSistema();
+            admin.setUsername("admin");
+            admin.setPassword(passwordEncoder.encode("admin"));
+            admin.setRol("OPERADORA");
+            admin.setActivo(true);
+
+            usuarioSistemaRepository.save(admin);
+            log.info("Usuario admin por defecto creado para ingreso inicial.");
+        }
+
+        crearUsuarioIntegracionSiCorresponde();
+    }
+
+    private void crearUsuarioIntegracionSiCorresponde() {
+        if (!integrationUserHabilitado) {
             return;
         }
 
-        UsuarioSistema admin = new UsuarioSistema();
-        admin.setUsername("admin");
-        admin.setPassword(passwordEncoder.encode("admin"));
-        admin.setRol("OPERADORA");
-        admin.setActivo(true);
+        String username = integrationUserUsername == null ? "" : integrationUserUsername.trim();
+        String password = integrationUserPassword == null ? "" : integrationUserPassword.trim();
+        if (username.isBlank() || password.isBlank()) {
+            log.warn("Usuario técnico de integración habilitado pero incompleto: username/password requeridos.");
+            return;
+        }
 
-        usuarioSistemaRepository.save(admin);
-        log.info("Usuario admin por defecto creado para ingreso inicial.");
+        if (usuarioSistemaRepository.existsByUsernameIgnoreCase(username)) {
+            return;
+        }
+
+        UsuarioSistema integrationUser = new UsuarioSistema();
+        integrationUser.setUsername(username);
+        integrationUser.setPassword(passwordEncoder.encode(password));
+        integrationUser.setRol(normalizarRol(integrationUserRole));
+        integrationUser.setActivo(true);
+
+        usuarioSistemaRepository.save(integrationUser);
+        log.info("Usuario técnico de integración creado: {}", username);
+    }
+
+    private String normalizarRol(String rol) {
+        String valor = rol == null ? "INTEGRATION" : rol.trim().toUpperCase();
+        return valor.isBlank() ? "INTEGRATION" : valor;
     }
 }

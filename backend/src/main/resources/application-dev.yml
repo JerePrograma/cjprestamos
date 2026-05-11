@@ -33,3 +33,9 @@ app:
   auth:
     bootstrap-admin:
       enabled: true
+
+    integration-user:
+      enabled: true
+      username: hogaria_tech
+      password: cambiar-en-entorno
+      role: INTEGRATION

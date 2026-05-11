@@ -34,7 +34,11 @@ class AdminPorDefectoInitializerTest {
         AdminPorDefectoInitializer initializer = new AdminPorDefectoInitializer(
             usuarioSistemaRepository,
             passwordEncoder,
-            true
+            true,
+            false,
+            "",
+            "",
+            "INTEGRATION"
         );
 
         initializer.run(new DefaultApplicationArguments(new String[0]));
@@ -54,7 +58,11 @@ class AdminPorDefectoInitializerTest {
         AdminPorDefectoInitializer initializer = new AdminPorDefectoInitializer(
             usuarioSistemaRepository,
             passwordEncoder,
-            true
+            true,
+            false,
+            "",
+            "",
+            "INTEGRATION"
         );
 
         initializer.run(new DefaultApplicationArguments(new String[0]));
