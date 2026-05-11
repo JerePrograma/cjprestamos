@@ -6,6 +6,8 @@ import com.cjprestamos.backend.cuota.service.CuotaService;
 import com.cjprestamos.backend.dashboard.dto.DashboardControlCajaResponse;
 import com.cjprestamos.backend.dashboard.dto.DashboardResumenResponse;
 import com.cjprestamos.backend.dashboard.service.DashboardService;
+import com.cjprestamos.backend.integration.hogaria.dto.HogariaCashControlResponse;
+import com.cjprestamos.backend.integration.hogaria.dto.HogariaDashboardResponse;
 import com.cjprestamos.backend.integration.hogaria.dto.HogariaInstallmentResponse;
 import com.cjprestamos.backend.integration.hogaria.dto.HogariaLoanActiveResponse;
 import com.cjprestamos.backend.integration.hogaria.dto.HogariaPaymentResponse;
@@ -101,12 +103,38 @@ public class HogariaIntegrationService {
         }).toList();
     }
 
-    public DashboardResumenResponse obtenerDashboard() {
-        return dashboardService.obtenerResumen();
+    public HogariaDashboardResponse obtenerDashboard() {
+        DashboardResumenResponse dashboard = dashboardService.obtenerResumen();
+        return new HogariaDashboardResponse(
+            dashboard.montoInvertido(),
+            dashboard.montoGanado(),
+            dashboard.montoPorGanar(),
+            dashboard.deudaTotal(),
+            dashboard.prestamosActivos()
+        );
     }
 
-    public DashboardControlCajaResponse obtenerControlCaja() {
-        return dashboardService.obtenerControlCaja();
+    public HogariaCashControlResponse obtenerControlCaja() {
+        DashboardControlCajaResponse controlCaja = dashboardService.obtenerControlCaja();
+        return new HogariaCashControlResponse(
+            controlCaja.cajaDisponible(),
+            controlCaja.inversionActiva(),
+            controlCaja.capitalRecuperado(),
+            controlCaja.capitalPendiente(),
+            controlCaja.gananciaRealizada(),
+            controlCaja.gananciaProyectada(),
+            controlCaja.ingresosMesActual(),
+            controlCaja.egresosMesActual(),
+            controlCaja.balanceMesActual(),
+            controlCaja.proyeccionCobro30Dias(),
+            controlCaja.proyeccionCobro60Dias(),
+            controlCaja.proyeccionCobro90Dias(),
+            controlCaja.carteraEnMora(),
+            controlCaja.cuotasPendientes(),
+            controlCaja.cuotasVencenProximos7Dias(),
+            controlCaja.recuperoCapitalPorcentaje(),
+            controlCaja.rendimientoEsperadoPorcentaje()
+        );
     }
 
     public List<HogariaInstallmentResponse> listarCuotasPorPrestamo(Long prestamoId) {

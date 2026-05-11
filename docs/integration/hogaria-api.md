@@ -33,7 +33,7 @@ Campos:
 - `updatedAt`
 
 ### 2) `GET /api/integration/hogaria/dashboard`
-Retorna resumen de dashboard:
+Retorna `HogariaDashboardResponse` (contrato estable de integración):
 - `montoInvertido`
 - `montoGanado`
 - `montoPorGanar`
@@ -41,7 +41,7 @@ Retorna resumen de dashboard:
 - `prestamosActivos`
 
 ### 3) `GET /api/integration/hogaria/control-caja`
-Retorna control de caja:
+Retorna `HogariaCashControlResponse` (contrato estable de integración):
 - `cajaDisponible`
 - `inversionActiva`
 - `capitalRecuperado`

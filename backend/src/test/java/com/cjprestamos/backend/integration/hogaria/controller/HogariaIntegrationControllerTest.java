@@ -6,8 +6,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.cjprestamos.backend.config.SecurityConfig;
-import com.cjprestamos.backend.dashboard.dto.DashboardControlCajaResponse;
-import com.cjprestamos.backend.dashboard.dto.DashboardResumenResponse;
+import com.cjprestamos.backend.integration.hogaria.dto.HogariaCashControlResponse;
+import com.cjprestamos.backend.integration.hogaria.dto.HogariaDashboardResponse;
 import com.cjprestamos.backend.integration.hogaria.dto.HogariaInstallmentResponse;
 import com.cjprestamos.backend.integration.hogaria.dto.HogariaLoanActiveResponse;
 import com.cjprestamos.backend.integration.hogaria.dto.HogariaPaymentResponse;
@@ -63,7 +63,7 @@ class HogariaIntegrationControllerTest {
     @WithMockUser
     void obtenerDashboard_deberiaRetornarResumen() throws Exception {
         when(hogariaIntegrationService.obtenerDashboard()).thenReturn(
-            new DashboardResumenResponse(
+            new HogariaDashboardResponse(
                 new BigDecimal("1500.00"),
                 new BigDecimal("100.00"),
                 new BigDecimal("300.00"),
@@ -82,7 +82,7 @@ class HogariaIntegrationControllerTest {
     @WithMockUser
     void obtenerControlCaja_deberiaRetornarMetricas() throws Exception {
         when(hogariaIntegrationService.obtenerControlCaja()).thenReturn(
-            new DashboardControlCajaResponse(
+            new HogariaCashControlResponse(
                 new BigDecimal("1200.00"), new BigDecimal("1800.00"), new BigDecimal("900.00"),
                 new BigDecimal("900.00"), new BigDecimal("150.00"), new BigDecimal("300.00"),
                 new BigDecimal("450.00"), new BigDecimal("120.00"), new BigDecimal("330.00"),
