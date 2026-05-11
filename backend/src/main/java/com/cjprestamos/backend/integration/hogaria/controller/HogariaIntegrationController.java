@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/integration/hogaria")
+@RequestMapping({"/api/integration/hogaria", "/api/v1/integration/hogaria"})
 public class HogariaIntegrationController {
 
     private final HogariaIntegrationService hogariaIntegrationService;
