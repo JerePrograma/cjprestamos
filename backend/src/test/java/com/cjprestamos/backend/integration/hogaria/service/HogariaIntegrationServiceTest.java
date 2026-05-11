@@ -121,6 +121,23 @@ class HogariaIntegrationServiceTest {
         assertEquals(new BigDecimal("0.00"), pagos.getFirst().interestCollected());
     }
 
+
+    @Test
+    void listarPagos_pagoIgualAlCapitalPendiente_deberiaImputarTodoACapitalSinInteres() {
+        when(prestamoRepository.findById(7L)).thenReturn(Optional.of(crearPrestamo(7L, 9L, "Ana", "1000.00")));
+        when(pagoService.listarPorPrestamo(7L)).thenReturn(List.of(
+            pago(10L, 7L, "2026-05-10", "700.00"),
+            pago(11L, 7L, "2026-05-11", "300.00")
+        ));
+
+        List<HogariaPaymentResponse> pagos = service.listarPagosPorPrestamo(7L);
+
+        assertEquals(new BigDecimal("700.00"), pagos.get(0).principalRecovered());
+        assertEquals(new BigDecimal("0.00"), pagos.get(0).interestCollected());
+        assertEquals(new BigDecimal("300.00"), pagos.get(1).principalRecovered());
+        assertEquals(new BigDecimal("0.00"), pagos.get(1).interestCollected());
+    }
+
     @Test
     void listarPagos_pagoQueCruzaCapitalAInteres_deberiaSepararComponentes() {
         when(prestamoRepository.findById(7L)).thenReturn(Optional.of(crearPrestamo(7L, 9L, "Ana", "1000.00")));
