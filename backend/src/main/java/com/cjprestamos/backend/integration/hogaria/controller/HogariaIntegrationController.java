@@ -3,6 +3,7 @@ package com.cjprestamos.backend.integration.hogaria.controller;
 import com.cjprestamos.backend.integration.hogaria.dto.HogariaCashControlResponse;
 import com.cjprestamos.backend.integration.hogaria.dto.HogariaDashboardResponse;
 import com.cjprestamos.backend.integration.hogaria.dto.HogariaInstallmentResponse;
+import com.cjprestamos.backend.integration.hogaria.dto.HogariaIntegrationHealthResponse;
 import com.cjprestamos.backend.integration.hogaria.dto.HogariaLoanActiveResponse;
 import com.cjprestamos.backend.integration.hogaria.dto.HogariaPaymentResponse;
 import com.cjprestamos.backend.integration.hogaria.service.HogariaIntegrationService;
@@ -20,6 +21,11 @@ public class HogariaIntegrationController {
 
     public HogariaIntegrationController(HogariaIntegrationService hogariaIntegrationService) {
         this.hogariaIntegrationService = hogariaIntegrationService;
+    }
+
+    @GetMapping("/health")
+    public HogariaIntegrationHealthResponse healthIntegracion() {
+        return new HogariaIntegrationHealthResponse("OK", "Bridge HogarIA disponible y autenticado");
     }
 
     @GetMapping("/loans/active")

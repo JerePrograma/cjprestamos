@@ -48,6 +48,7 @@ No se fusionan bases porque:
 
 ## 5) Endpoints remotos de cjprestamos consumidos por HogarIA
 
+- `GET /api/integration/hogaria/health`
 - `GET /api/integration/hogaria/loans/active`
 - `GET /api/integration/hogaria/dashboard`
 - `GET /api/integration/hogaria/control-caja`
@@ -121,3 +122,38 @@ No se requiere build funcional para este entregable porque no se modificó códi
 - **Impacto en contratos API**: se explicita contrato externo de HogarIA y contrato remoto consumido en cjprestamos.
 - **Impacto en IDs (`profileId` / `accountId`)**: se mantiene ownership en HogarIA; la asociación con préstamos externos debe mapearse sin asumir equivalencia con `Persona`.
 - **Impacto en separación capital/interés/recupero/caja**: se declara como condición central para avanzar sync fase 2.
+
+
+## 11) Guía operativa mínima para fase 2 manual/dry-run
+
+### 11.1 Habilitar read-only
+1. En HogarIA activar `CJP_INTEGRATION_ENABLED=true`.
+2. Configurar `CJP_BASE_URL`, `CJP_USERNAME`, `CJP_PASSWORD`.
+3. Probar conectividad sin side-effects con `GET /api/integration/hogaria/health` en cjprestamos (debe responder `status=OK` con Basic Auth válida).
+4. Mantener deshabilitado cualquier modo de sync automático (no scheduler).
+
+### 11.2 Ejecutar dry-run
+1. Ejecutar `summary` por `profileId` y revisar cantidad de préstamos y pagos recuperados.
+2. Ejecutar `sync` en modo dry-run en HogarIA (sin persistir movimientos).
+3. Verificar salida operativa: movimientos creados/omitidos y diferencias contables.
+
+### 11.3 Habilitar sync manual real
+1. Usar `sync-config` para activar sync manual por perfil puntual.
+2. Ejecutar `POST /external-loans/sync` sólo bajo operador responsable y ventana controlada.
+3. Validar inmediatamente en HogarIA: totales por categoría + no duplicación por reintento.
+
+### 11.4 Si falla Basic Auth
+- Validar usuario/clave de integración en cjprestamos.
+- Confirmar que el usuario tenga rol de integración y esté activo.
+- Verificar URL base efectiva y prefijo (`/api/integration/hogaria`).
+- Diferenciar errores: `401` (credenciales), `403` (rol/permisos), `5xx` (caída remota).
+
+### 11.5 Si aparecen duplicados
+- Revisar si hubo reintentos manuales de sync sin clave idempotente.
+- Comparar referencia de origen (loanId/paymentId) y timestamp de corrida.
+- Marcar corrida como fallida/parcial y frenar nuevos sync hasta reconciliar.
+
+### 11.6 Comandos recomendados antes de fase 2
+- Backend cjprestamos: `mvn test`
+- Frontend cjprestamos: `npm run build` y `npm run test`
+- HogarIA (si repo disponible): tests/build del módulo `external-loans` + prueba manual de `summary`, `dry-run` y `sync` con perfil de staging.
