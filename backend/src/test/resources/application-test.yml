@@ -26,3 +26,9 @@ app:
   auth:
     bootstrap-admin:
       enabled: true
+
+    integration-user:
+      enabled: true
+      username: integration_test
+      password: integration_test_pass
+      role: INTEGRATION

@@ -38,6 +38,7 @@ class HogariaIntegrationControllerTest {
     @MockBean
     private HogariaIntegrationService hogariaIntegrationService;
 
+
         @Test
     void loansActivos_sinBasicAuth_deberiaResponder401() throws Exception {
         mockMvc.perform(get("/api/integration/hogaria/loans/active"))
@@ -51,7 +52,7 @@ class HogariaIntegrationControllerTest {
     }
 
     @Test
-    @org.springframework.security.test.context.support.WithMockUser
+    @org.springframework.security.test.context.support.WithMockUser(roles = "INTEGRATION")
     void listarPrestamosActivos_credencialesValidas_deberiaRetornarContrato() throws Exception {
         when(hogariaIntegrationService.listarPrestamosActivos()).thenReturn(List.of(
             new HogariaLoanActiveResponse(
@@ -81,7 +82,7 @@ class HogariaIntegrationControllerTest {
     }
 
     @Test
-    @org.springframework.security.test.context.support.WithMockUser
+    @org.springframework.security.test.context.support.WithMockUser(roles = "INTEGRATION")
     void obtenerDashboard_deberiaRetornarMetricasDecimalesYCamposControlados() throws Exception {
         when(hogariaIntegrationService.obtenerDashboard()).thenReturn(
             new HogariaDashboardResponse(
@@ -105,7 +106,7 @@ class HogariaIntegrationControllerTest {
     }
 
     @Test
-    @org.springframework.security.test.context.support.WithMockUser
+    @org.springframework.security.test.context.support.WithMockUser(roles = "INTEGRATION")
     void obtenerControlCaja_deberiaRetornarEstructuraEstable() throws Exception {
         when(hogariaIntegrationService.obtenerControlCaja()).thenReturn(
             new HogariaCashControlResponse(
@@ -127,7 +128,7 @@ class HogariaIntegrationControllerTest {
     }
 
     @Test
-    @org.springframework.security.test.context.support.WithMockUser
+    @org.springframework.security.test.context.support.WithMockUser(roles = "INTEGRATION")
     void listarCuotas_prestamoConCuotas_deberiaRetornarLista() throws Exception {
         when(hogariaIntegrationService.listarCuotasPorPrestamo(7L)).thenReturn(List.of(
             new HogariaInstallmentResponse(
@@ -145,7 +146,7 @@ class HogariaIntegrationControllerTest {
     }
 
     @Test
-    @org.springframework.security.test.context.support.WithMockUser
+    @org.springframework.security.test.context.support.WithMockUser(roles = "INTEGRATION")
     void listarCuotas_prestamoSinCuotas_deberiaRetornarListaVacia() throws Exception {
         when(hogariaIntegrationService.listarCuotasPorPrestamo(8L)).thenReturn(List.of());
 
@@ -156,7 +157,7 @@ class HogariaIntegrationControllerTest {
     }
 
     @Test
-    @org.springframework.security.test.context.support.WithMockUser
+    @org.springframework.security.test.context.support.WithMockUser(roles = "INTEGRATION")
     void listarCuotas_prestamoInexistente_deberiaRetornarListaVacia() throws Exception {
         when(hogariaIntegrationService.listarCuotasPorPrestamo(999L)).thenReturn(List.of());
 
@@ -167,7 +168,7 @@ class HogariaIntegrationControllerTest {
     }
 
     @Test
-    @org.springframework.security.test.context.support.WithMockUser
+    @org.springframework.security.test.context.support.WithMockUser(roles = "INTEGRATION")
     void listarPagos_prestamoConPagos_deberiaRetornarPagos() throws Exception {
         when(hogariaIntegrationService.listarPagosPorPrestamo(7L)).thenReturn(List.of(
             new HogariaPaymentResponse(
@@ -182,7 +183,7 @@ class HogariaIntegrationControllerTest {
     }
 
     @Test
-    @org.springframework.security.test.context.support.WithMockUser
+    @org.springframework.security.test.context.support.WithMockUser(roles = "INTEGRATION")
     void listarPagos_prestamoSinPagos_deberiaRetornarListaVacia() throws Exception {
         when(hogariaIntegrationService.listarPagosPorPrestamo(8L)).thenReturn(List.of());
 
@@ -193,7 +194,7 @@ class HogariaIntegrationControllerTest {
     }
 
     @Test
-    @org.springframework.security.test.context.support.WithMockUser
+    @org.springframework.security.test.context.support.WithMockUser(roles = "INTEGRATION")
     void listarPagos_prestamoInexistente_deberiaRetornarListaVacia() throws Exception {
         when(hogariaIntegrationService.listarPagosPorPrestamo(999L)).thenReturn(List.of());
 
