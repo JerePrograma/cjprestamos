@@ -46,6 +46,13 @@ class HogariaIntegrationControllerTest {
     }
 
 
+
+    @Test
+    void health_sinBasicAuth_deberiaResponder401() throws Exception {
+        mockMvc.perform(get("/api/integration/hogaria/health"))
+            .andExpect(status().isUnauthorized());
+    }
+
     @Test
     void loansActivosV1_sinBasicAuth_deberiaResponder401() throws Exception {
         mockMvc.perform(get("/api/v1/integration/hogaria/loans/active"))
@@ -56,6 +63,16 @@ class HogariaIntegrationControllerTest {
     void loansActivos_credencialesInvalidas_deberiaResponder401() throws Exception {
         mockMvc.perform(get("/api/integration/hogaria/loans/active").with(httpBasic("bad", "creds")))
             .andExpect(status().isUnauthorized());
+    }
+
+
+    @Test
+    @org.springframework.security.test.context.support.WithMockUser(roles = "INTEGRATION")
+    void health_deberiaRetornarEstadoOk() throws Exception {
+        mockMvc.perform(get("/api/integration/hogaria/health"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value("OK"))
+            .andExpect(jsonPath("$.detalle").isNotEmpty());
     }
 
     @Test
