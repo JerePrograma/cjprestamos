@@ -31,6 +31,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -110,15 +111,74 @@ class HogariaIntegrationServiceTest {
     }
 
     @Test
-    void listarPagos_deberiaMapearCamposDelContrato() {
-        when(pagoService.listarPorPrestamo(7L)).thenReturn(List.of(new PagoResponse(
-            10L, 7L, LocalDate.of(2026, 5, 10), new BigDecimal("300.00"), "TRX-1", "Pago parcial", EstadoPago.REGISTRADO,
-            LocalDateTime.of(2026, 5, 10, 12, 0), LocalDateTime.of(2026, 5, 10, 12, 1)
-        )));
+    void listarPagos_pagoAntesDeRecuperarCapitalCompleto_deberiaImputarTodoACapital() {
+        when(prestamoRepository.findById(7L)).thenReturn(Optional.of(crearPrestamo(7L, 9L, "Ana", "1000.00")));
+        when(pagoService.listarPorPrestamo(7L)).thenReturn(List.of(pago(10L, 7L, "2026-05-10", "300.00")));
+
         List<HogariaPaymentResponse> pagos = service.listarPagosPorPrestamo(7L);
-        assertEquals(1, pagos.size());
-        assertEquals("TRX-1", pagos.getFirst().referenciaManual());
-        assertEquals("Pago parcial", pagos.getFirst().observaciones());
+
+        assertEquals(new BigDecimal("300.00"), pagos.getFirst().principalRecovered());
+        assertEquals(new BigDecimal("0.00"), pagos.getFirst().interestCollected());
+    }
+
+    @Test
+    void listarPagos_pagoQueCruzaCapitalAInteres_deberiaSepararComponentes() {
+        when(prestamoRepository.findById(7L)).thenReturn(Optional.of(crearPrestamo(7L, 9L, "Ana", "1000.00")));
+        when(pagoService.listarPorPrestamo(7L)).thenReturn(List.of(
+            pago(11L, 7L, "2026-05-11", "300.00"),
+            pago(10L, 7L, "2026-05-10", "800.00")
+        ));
+
+        List<HogariaPaymentResponse> pagos = service.listarPagosPorPrestamo(7L);
+
+        assertEquals(new BigDecimal("800.00"), pagos.get(0).principalRecovered());
+        assertEquals(new BigDecimal("0.00"), pagos.get(0).interestCollected());
+        assertEquals(new BigDecimal("200.00"), pagos.get(1).principalRecovered());
+        assertEquals(new BigDecimal("100.00"), pagos.get(1).interestCollected());
+    }
+
+    @Test
+    void listarPagos_pagoCompletamenteInteres_deberiaImputarTodoAInteres() {
+        when(prestamoRepository.findById(7L)).thenReturn(Optional.of(crearPrestamo(7L, 9L, "Ana", "1000.00")));
+        when(pagoService.listarPorPrestamo(7L)).thenReturn(List.of(
+            pago(11L, 7L, "2026-05-11", "250.00"),
+            pago(10L, 7L, "2026-05-10", "1000.00")
+        ));
+
+        List<HogariaPaymentResponse> pagos = service.listarPagosPorPrestamo(7L);
+
+        assertEquals(new BigDecimal("0.00"), pagos.get(1).principalRecovered());
+        assertEquals(new BigDecimal("250.00"), pagos.get(1).interestCollected());
+    }
+
+    @Test
+    void listarPagos_multiplesPagos_deberiaRespetarOrdenCronologico() {
+        when(prestamoRepository.findById(7L)).thenReturn(Optional.of(crearPrestamo(7L, 9L, "Ana", "1000.00")));
+        when(pagoService.listarPorPrestamo(7L)).thenReturn(List.of(
+            pago(13L, 7L, "2026-05-13", "200.00"),
+            pago(12L, 7L, "2026-05-12", "400.00"),
+            pago(11L, 7L, "2026-05-11", "350.00"),
+            pago(10L, 7L, "2026-05-10", "300.00")
+        ));
+
+        List<HogariaPaymentResponse> pagos = service.listarPagosPorPrestamo(7L);
+
+        assertEquals(LocalDate.of(2026, 5, 10), pagos.get(0).fechaPago());
+        assertEquals(new BigDecimal("300.00"), pagos.get(0).principalRecovered());
+        assertEquals(new BigDecimal("0.00"), pagos.get(0).interestCollected());
+        assertEquals(new BigDecimal("350.00"), pagos.get(1).principalRecovered());
+        assertEquals(new BigDecimal("0.00"), pagos.get(1).interestCollected());
+        assertEquals(new BigDecimal("350.00"), pagos.get(2).principalRecovered());
+        assertEquals(new BigDecimal("50.00"), pagos.get(2).interestCollected());
+        assertEquals(new BigDecimal("0.00"), pagos.get(3).principalRecovered());
+        assertEquals(new BigDecimal("200.00"), pagos.get(3).interestCollected());
+    }
+
+    private PagoResponse pago(Long id, Long prestamoId, String fecha, String monto) {
+        return new PagoResponse(
+            id, prestamoId, LocalDate.parse(fecha), new BigDecimal(monto), "TRX-" + id, "Obs " + id, EstadoPago.REGISTRADO,
+            LocalDateTime.of(2026, 5, 10, 12, 0), LocalDateTime.of(2026, 5, 10, 12, 1)
+        );
     }
 
     private Prestamo crearPrestamo(Long id, Long personaId, String nombrePersona, String montoInicial) {

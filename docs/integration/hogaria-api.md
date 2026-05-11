@@ -72,11 +72,16 @@ Retorna cuotas del préstamo:
 - `estado`
 
 ### 5) `GET /api/integration/hogaria/loans/{loanId}/payments`
-Retorna pagos del préstamo:
+Retorna pagos del préstamo. La composición contable se calcula por pago en orden cronológico:
+- mientras el cobrado acumulado no supera `montoInicial`, se imputa a `principalRecovered`;
+- al superar `montoInicial`, el excedente se imputa a `interestCollected`.
+
 - `id`
 - `prestamoId`
 - `fechaPago`
 - `monto`
+- `principalRecovered`
+- `interestCollected`
 - `referenciaManual`
 - `observaciones`
 - `estado`
