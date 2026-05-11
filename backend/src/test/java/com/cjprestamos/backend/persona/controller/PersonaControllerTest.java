@@ -33,7 +33,7 @@ class PersonaControllerTest {
     private PersonaService personaService;
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "OPERADORA")
     void crear_deberiaRetornar201() throws Exception {
         PersonaResponse response = new PersonaResponse(1L, "Ana", "Ani", "123", "Obs", "verde", true, true, true, null, null);
         when(personaService.crear(org.mockito.ArgumentMatchers.any())).thenReturn(response);
@@ -60,7 +60,7 @@ class PersonaControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "OPERADORA")
     void listar_deberiaRetornar200() throws Exception {
         when(personaService.listar()).thenReturn(List.of(
             new PersonaResponse(1L, "Ana", "Ani", "123", null, null, true, false, true, null, null)
@@ -72,7 +72,7 @@ class PersonaControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "OPERADORA")
     void obtenerPorId_deberiaRetornar200() throws Exception {
         when(personaService.obtenerPorId(1L)).thenReturn(
             new PersonaResponse(1L, "Ana", "Ani", "123", null, null, true, false, true, null, null)
@@ -84,7 +84,7 @@ class PersonaControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "OPERADORA")
     void actualizar_conPayloadInvalido_deberiaRetornar400() throws Exception {
         String bodyInvalido = """
             {
@@ -102,7 +102,7 @@ class PersonaControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "OPERADORA")
     void eliminar_deberiaRetornar204() throws Exception {
         mockMvc.perform(delete("/api/personas/1"))
             .andExpect(status().isNoContent());

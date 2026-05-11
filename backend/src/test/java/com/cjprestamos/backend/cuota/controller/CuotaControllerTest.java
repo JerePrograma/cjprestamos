@@ -35,7 +35,7 @@ class CuotaControllerTest {
     private CuotaService cuotaService;
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "OPERADORA")
     void generar_deberiaRetornar201() throws Exception {
         when(cuotaService.generar(org.mockito.ArgumentMatchers.eq(1L), org.mockito.ArgumentMatchers.any())).thenReturn(List.of(
             new CuotaResponse(1L, 1, LocalDate.of(2026, 4, 20), new BigDecimal("600.00"), BigDecimal.ZERO.setScale(2), EstadoCuota.PENDIENTE)
@@ -49,7 +49,7 @@ class CuotaControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "OPERADORA")
     void listar_deberiaRetornar200() throws Exception {
         when(cuotaService.listarPorPrestamo(2L)).thenReturn(List.of(
             new CuotaResponse(2L, 1, LocalDate.of(2026, 4, 10), new BigDecimal("400.00"), BigDecimal.ZERO.setScale(2), EstadoCuota.PENDIENTE)
@@ -63,7 +63,7 @@ class CuotaControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "OPERADORA")
     void ajustarFuturas_deberiaRetornar200() throws Exception {
         when(cuotaService.ajustarFuturas(org.mockito.ArgumentMatchers.eq(2L), org.mockito.ArgumentMatchers.any())).thenReturn(List.of(
             new CuotaResponse(2L, 1, LocalDate.of(2026, 5, 10), new BigDecimal("450.00"), BigDecimal.ZERO.setScale(2), EstadoCuota.PENDIENTE)

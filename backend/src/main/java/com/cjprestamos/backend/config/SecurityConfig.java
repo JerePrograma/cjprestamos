@@ -27,6 +27,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/health").permitAll()
                 .requestMatchers("/api/integration/hogaria/**", "/api/v1/integration/hogaria/**").hasAnyRole("INTEGRATION", "OPERADORA", "ADMIN")
+                .requestMatchers("/api/auth/me").authenticated()
+                .requestMatchers("/api/**").hasAnyRole("OPERADORA", "ADMIN")
                 .anyRequest().authenticated()
             )
             .httpBasic(Customizer.withDefaults())

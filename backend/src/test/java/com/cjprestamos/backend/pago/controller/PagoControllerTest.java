@@ -33,7 +33,7 @@ class PagoControllerTest {
     private PagoService pagoService;
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "OPERADORA")
     void registrar_deberiaRetornar201() throws Exception {
         when(pagoService.registrar(org.mockito.ArgumentMatchers.any())).thenReturn(
             new PagoResponse(
@@ -67,7 +67,7 @@ class PagoControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "OPERADORA")
     void registrar_conPayloadInvalido_deberiaRetornar400() throws Exception {
         String body = """
             {
@@ -83,7 +83,7 @@ class PagoControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "OPERADORA")
     void listarPorPrestamo_deberiaRetornar200() throws Exception {
         when(pagoService.listarPorPrestamo(7L)).thenReturn(List.of(
             new PagoResponse(

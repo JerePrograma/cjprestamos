@@ -34,7 +34,7 @@ class LegajoAdjuntoControllerTest {
     private LegajoAdjuntoService legajoAdjuntoService;
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "OPERADORA")
     void listar_deberiaRetornarAdjuntos() throws Exception {
         when(legajoAdjuntoService.listarPorPersona(1L)).thenReturn(List.of(
             new LegajoAdjuntoResponse(9L, 1L, "dni.pdf", "application/pdf", 123L, null)
@@ -47,7 +47,7 @@ class LegajoAdjuntoControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "OPERADORA")
     void subir_deberiaRetornar201() throws Exception {
         when(legajoAdjuntoService.subir(org.mockito.ArgumentMatchers.eq(1L), org.mockito.ArgumentMatchers.any()))
             .thenReturn(new LegajoAdjuntoResponse(3L, 1L, "recibo.pdf", "application/pdf", 100L, null));
@@ -60,7 +60,7 @@ class LegajoAdjuntoControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "OPERADORA")
     void descargar_deberiaRetornarArchivo() throws Exception {
         when(legajoAdjuntoService.descargar(1L, 3L)).thenReturn(
             new LegajoAdjuntoDescarga("recibo.pdf", "application/pdf", new ByteArrayResource("hola".getBytes()))
@@ -72,7 +72,7 @@ class LegajoAdjuntoControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "OPERADORA")
     void eliminar_deberiaRetornar204() throws Exception {
         mockMvc.perform(delete("/api/personas/1/legajo/adjuntos/3"))
             .andExpect(status().isNoContent());
