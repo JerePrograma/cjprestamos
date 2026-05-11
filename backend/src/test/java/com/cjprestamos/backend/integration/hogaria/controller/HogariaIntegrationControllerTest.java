@@ -186,7 +186,11 @@ class HogariaIntegrationControllerTest {
 
         mockMvc.perform(get("/api/integration/hogaria/loans/7/payments"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$[0].referenciaManual").value("TRX-1"));
+            .andExpect(jsonPath("$[0].referenciaManual").value("TRX-1"))
+            .andExpect(jsonPath("$[0].principalRecovered").value(300.00))
+            .andExpect(jsonPath("$[0].interestCollected").value(0.00))
+            .andExpect(jsonPath("$[0].fechaPago").value("2026-05-10"))
+            .andExpect(jsonPath("$[0].estado").value("REGISTRADO"));
     }
 
     @Test
@@ -246,6 +250,72 @@ class HogariaIntegrationControllerTest {
         mockMvc.perform(get("/api/v1/integration/hogaria/loans/7/installments"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$[0].prestamoId").value(7));
+    }
+
+
+    @Test
+    @org.springframework.security.test.context.support.WithMockUser(roles = "INTEGRATION")
+    void prefijoV1_deberiaMantenerContratoEnEndpointsRestantes() throws Exception {
+        when(hogariaIntegrationService.listarPrestamosActivos()).thenReturn(List.of(
+            new HogariaLoanActiveResponse(
+                11L, 3L, "Juana", new BigDecimal("2500.00"), 12,
+                FrecuenciaTipo.MENSUAL, EstadoPrestamo.ACTIVO,
+                new BigDecimal("1000.00"), new BigDecimal("1800.00"),
+                new BigDecimal("200.00"), new BigDecimal("400.00"),
+                LocalDateTime.of(2026, 2, 1, 8, 0),
+                LocalDateTime.of(2026, 2, 2, 9, 30)
+            )
+        ));
+        when(hogariaIntegrationService.obtenerControlCaja()).thenReturn(
+            new HogariaCashControlResponse(
+                new BigDecimal("1.00"), new BigDecimal("2.00"), new BigDecimal("3.00"),
+                new BigDecimal("4.00"), new BigDecimal("5.00"), new BigDecimal("6.00"),
+                new BigDecimal("7.00"), new BigDecimal("8.00"), new BigDecimal("9.00"),
+                new BigDecimal("10.00"), new BigDecimal("11.00"), new BigDecimal("12.00"),
+                new BigDecimal("13.00"), 14L, 15L, new BigDecimal("16.00"), new BigDecimal("17.00")
+            )
+        );
+        when(hogariaIntegrationService.listarPagosPorPrestamo(11L)).thenReturn(List.of(
+            new HogariaPaymentResponse(
+                21L, 11L, LocalDate.of(2026, 3, 10),
+                new BigDecimal("350.00"), new BigDecimal("320.00"), new BigDecimal("30.00"),
+                "TRX-V1", "Pago test", EstadoPago.REGISTRADO
+            )
+        ));
+
+        mockMvc.perform(get("/api/v1/integration/hogaria/loans/active"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].id").value(11))
+            .andExpect(jsonPath("$[0].frecuenciaTipo").value("MENSUAL"));
+
+        mockMvc.perform(get("/api/v1/integration/hogaria/control-caja"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.cuotasPendientes").value(14));
+
+        mockMvc.perform(get("/api/v1/integration/hogaria/loans/11/payments"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].principalRecovered").value(320.00))
+            .andExpect(jsonPath("$[0].interestCollected").value(30.00));
+    }
+
+    @Test
+    @org.springframework.security.test.context.support.WithMockUser(roles = "INTEGRATION")
+    void headersContextoHogaria_noDebenRomperRequests() throws Exception {
+        when(hogariaIntegrationService.obtenerDashboard()).thenReturn(
+            new HogariaDashboardResponse(
+                new BigDecimal("1500.00"),
+                new BigDecimal("100.00"),
+                new BigDecimal("300.00"),
+                new BigDecimal("1200.00"),
+                3L
+            )
+        );
+
+        mockMvc.perform(get("/api/integration/hogaria/dashboard")
+                .header("X-Profile-Id", "profile-77")
+                .header("X-User-Id", "user-44"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.prestamosActivos").value(3));
     }
 
 }
