@@ -1,7 +1,7 @@
 package com.cjprestamos.backend.integration.hogaria.controller;
 
-import com.cjprestamos.backend.dashboard.dto.DashboardControlCajaResponse;
-import com.cjprestamos.backend.dashboard.dto.DashboardResumenResponse;
+import com.cjprestamos.backend.integration.hogaria.dto.HogariaCashControlResponse;
+import com.cjprestamos.backend.integration.hogaria.dto.HogariaDashboardResponse;
 import com.cjprestamos.backend.integration.hogaria.dto.HogariaInstallmentResponse;
 import com.cjprestamos.backend.integration.hogaria.dto.HogariaLoanActiveResponse;
 import com.cjprestamos.backend.integration.hogaria.dto.HogariaPaymentResponse;
@@ -28,12 +28,12 @@ public class HogariaIntegrationController {
     }
 
     @GetMapping("/dashboard")
-    public DashboardResumenResponse obtenerDashboard() {
+    public HogariaDashboardResponse obtenerDashboard() {
         return hogariaIntegrationService.obtenerDashboard();
     }
 
     @GetMapping("/control-caja")
-    public DashboardControlCajaResponse obtenerControlCaja() {
+    public HogariaCashControlResponse obtenerControlCaja() {
         return hogariaIntegrationService.obtenerControlCaja();
     }
 
