@@ -129,6 +129,18 @@ Para estado detallado: ver `ESTADO_REAL_MVP.md` y `BACKLOG_CODEX.md`.
 
 ---
 
+
+## Integración con HogarIA (estado real)
+
+HogarIA ya cuenta con módulo `external-loans` (cliente hacia cjprestamos, summary, sync-config y sync).
+
+Resumen y riesgos actuales de esta integración:
+- ver `docs/integracion-hogaria-cjprestamos.md`.
+- estado recomendado actual: **read-only**.
+- sync: **fase 2 condicionada** (no documentado como baseline de producción hasta cerrar seguridad/read-only e idempotencia).
+
+---
+
 ## Stack actual
 
 ### Backend
