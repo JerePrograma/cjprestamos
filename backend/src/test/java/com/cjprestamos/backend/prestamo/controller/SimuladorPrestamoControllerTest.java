@@ -38,7 +38,7 @@ class SimuladorPrestamoControllerTest {
     private SimuladorPrestamoService simuladorPrestamoService;
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "OPERADORA")
     void simular_deberiaRetornar200() throws Exception {
         when(simuladorPrestamoService.simular(any())).thenReturn(new SimulacionPrestamoResponse(
             new BigDecimal("1000.00"),
@@ -67,7 +67,7 @@ class SimuladorPrestamoControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "OPERADORA")
     void generarPdf_deberiaRetornarPdf() throws Exception {
         when(simuladorPrestamoService.generarPdfSimulacion(any())).thenReturn("%PDF-sim".getBytes());
 

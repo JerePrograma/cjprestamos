@@ -29,7 +29,7 @@ class DashboardControllerTest {
     private DashboardService dashboardService;
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "OPERADORA")
     void obtenerResumen_deberiaRetornarResumenDashboard() throws Exception {
         when(dashboardService.obtenerResumen()).thenReturn(
             new DashboardResumenResponse(
@@ -51,7 +51,7 @@ class DashboardControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "OPERADORA")
     void obtenerControlCaja_deberiaRetornarMetricasContables() throws Exception {
         when(dashboardService.obtenerControlCaja()).thenReturn(
             new DashboardControlCajaResponse(

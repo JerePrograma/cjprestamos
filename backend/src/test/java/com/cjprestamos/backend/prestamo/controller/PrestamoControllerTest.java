@@ -40,7 +40,7 @@ class PrestamoControllerTest {
     private SimuladorPrestamoService simuladorPrestamoService;
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "OPERADORA")
     void crear_deberiaRetornar201() throws Exception {
         when(prestamoService.crear(org.mockito.ArgumentMatchers.any())).thenReturn(
             new PrestamoResponse(
@@ -82,7 +82,7 @@ class PrestamoControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "OPERADORA")
     void crear_conPayloadInvalido_deberiaRetornar400() throws Exception {
         String body = """
             {
@@ -101,7 +101,7 @@ class PrestamoControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "OPERADORA")
     void calcular_deberiaRetornar200() throws Exception {
         when(prestamoService.calcular(org.mockito.ArgumentMatchers.any())).thenReturn(
             new CalculoPrestamoResultado(
@@ -130,7 +130,7 @@ class PrestamoControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "OPERADORA")
     void actualizarReferencia_deberiaRetornar200() throws Exception {
         when(prestamoService.actualizarReferencia(org.mockito.ArgumentMatchers.eq(4L), org.mockito.ArgumentMatchers.any())).thenReturn(
             new PrestamoResponse(
@@ -167,7 +167,7 @@ class PrestamoControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "OPERADORA")
     void obtenerPorId_deberiaRetornar200() throws Exception {
         when(prestamoService.obtenerPorId(5L)).thenReturn(
             new PrestamoResponse(
@@ -195,7 +195,7 @@ class PrestamoControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "OPERADORA")
     void listar_deberiaRetornar200() throws Exception {
         when(prestamoService.listar()).thenReturn(List.of(
             new PrestamoResponse(1L, 2L, new BigDecimal("1000.00"), null, null, 2, FrecuenciaTipo.MENSUAL,
@@ -208,7 +208,7 @@ class PrestamoControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "OPERADORA")
     void listarActivos_deberiaRetornar200() throws Exception {
         when(prestamoService.listarActivos()).thenReturn(List.of(
             new PrestamoResponse(2L, 3L, new BigDecimal("900.00"), null, null, 3, FrecuenciaTipo.CADA_X_DIAS,

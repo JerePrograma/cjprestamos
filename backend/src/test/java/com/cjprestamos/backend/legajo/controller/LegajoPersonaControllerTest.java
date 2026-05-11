@@ -31,7 +31,7 @@ class LegajoPersonaControllerTest {
     private LegajoPersonaService legajoPersonaService;
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "OPERADORA")
     void crear_deberiaRetornar201() throws Exception {
         LegajoPersonaResponse response = new LegajoPersonaResponse(
             1L,
@@ -63,7 +63,7 @@ class LegajoPersonaControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "OPERADORA")
     void obtener_cuandoNoExiste_deberiaRetornar404() throws Exception {
         when(legajoPersonaService.obtenerPorPersonaId(5L))
             .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Legajo no encontrado para la persona"));
@@ -73,7 +73,7 @@ class LegajoPersonaControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "OPERADORA")
     void crear_conPayloadInvalido_deberiaRetornar400() throws Exception {
         String bodyInvalido = """
             {

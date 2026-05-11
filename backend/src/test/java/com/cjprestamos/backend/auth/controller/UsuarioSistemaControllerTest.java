@@ -30,7 +30,7 @@ class UsuarioSistemaControllerTest {
     private UsuarioSistemaService usuarioService;
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "OPERADORA")
     void listar_devuelveUsuarios() throws Exception {
         when(usuarioService.listar()).thenReturn(List.of(new UsuarioResponse(1L, "operadora", "OPERADORA", true)));
 
@@ -40,7 +40,7 @@ class UsuarioSistemaControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "OPERADORA")
     void crear_devuelveCreado() throws Exception {
         when(usuarioService.crear(any())).thenReturn(new UsuarioResponse(2L, "ana", "OPERADORA", true));
 
