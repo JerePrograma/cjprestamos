@@ -23,6 +23,7 @@ import com.cjprestamos.backend.prestamo.model.enums.EstadoPrestamo;
 import com.cjprestamos.backend.prestamo.repository.PrestamoRepository;
 import com.cjprestamos.backend.prestamo.service.CalculadoraPrestamoService;
 import java.math.BigDecimal;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -153,21 +154,43 @@ public class HogariaIntegrationService {
     }
 
     public List<HogariaPaymentResponse> listarPagosPorPrestamo(Long prestamoId) {
-        return pagoService.listarPorPrestamo(prestamoId).stream()
-            .map(this::mapearPago)
+        List<PagoResponse> pagosOrdenados = pagoService.listarPorPrestamo(prestamoId).stream()
+            .sorted(Comparator.comparing(PagoResponse::fechaPago).thenComparing(PagoResponse::id))
             .toList();
-    }
 
-    private HogariaPaymentResponse mapearPago(PagoResponse pago) {
-        return new HogariaPaymentResponse(
-            pago.id(),
-            pago.prestamoId(),
-            pago.fechaPago(),
-            pago.monto(),
-            pago.referencia(),
-            pago.observacion(),
-            pago.estado()
-        );
+        if (pagosOrdenados.isEmpty()) {
+            return List.of();
+        }
+
+        BigDecimal montoInicial = prestamoRepository.findById(prestamoId)
+            .map(Prestamo::getMontoInicial)
+            .map(MonedaUtils::normalizar)
+            .orElse(MonedaUtils.cero());
+
+        List<HogariaPaymentResponse> respuesta = new java.util.ArrayList<>();
+        BigDecimal acumuladoCobrado = MonedaUtils.cero();
+
+        for (PagoResponse pago : pagosOrdenados) {
+            BigDecimal montoPago = MonedaUtils.normalizar(pago.monto());
+            BigDecimal capitalPendientePrevio = maxCero(montoInicial.subtract(acumuladoCobrado));
+            BigDecimal principalRecovered = min(montoPago, capitalPendientePrevio);
+            BigDecimal interestCollected = maxCero(montoPago.subtract(principalRecovered));
+            acumuladoCobrado = MonedaUtils.normalizar(acumuladoCobrado.add(montoPago));
+
+            respuesta.add(new HogariaPaymentResponse(
+                pago.id(),
+                pago.prestamoId(),
+                pago.fechaPago(),
+                montoPago,
+                principalRecovered,
+                interestCollected,
+                pago.referencia(),
+                pago.observacion(),
+                pago.estado()
+            ));
+        }
+
+        return respuesta;
     }
 
     private BigDecimal valorSeguro(BigDecimal valor) {

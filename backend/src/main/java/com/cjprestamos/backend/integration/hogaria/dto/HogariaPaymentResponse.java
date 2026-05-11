@@ -9,6 +9,8 @@ public record HogariaPaymentResponse(
     Long prestamoId,
     LocalDate fechaPago,
     BigDecimal monto,
+    BigDecimal principalRecovered,
+    BigDecimal interestCollected,
     String referenciaManual,
     String observaciones,
     EstadoPago estado

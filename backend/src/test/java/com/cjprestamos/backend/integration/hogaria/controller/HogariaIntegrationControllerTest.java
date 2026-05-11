@@ -120,7 +120,7 @@ class HogariaIntegrationControllerTest {
         when(hogariaIntegrationService.listarPagosPorPrestamo(7L)).thenReturn(List.of(
             new HogariaPaymentResponse(
                 10L, 7L, LocalDate.of(2026, 5, 10),
-                new BigDecimal("300.00"), "TRX-1", "Pago parcial", EstadoPago.REGISTRADO
+                new BigDecimal("300.00"), new BigDecimal("300.00"), new BigDecimal("0.00"), "TRX-1", "Pago parcial", EstadoPago.REGISTRADO
             )
         ));
 
