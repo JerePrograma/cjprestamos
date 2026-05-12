@@ -1,6 +1,7 @@
 package com.cjprestamos.backend.config;
 
 import java.util.List;
+import org.springframework.http.HttpMethod;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,7 +27,8 @@ public class SecurityConfig {
             .cors(Customizer.withDefaults())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/health").permitAll()
-                .requestMatchers("/api/integration/hogaria/**", "/api/v1/integration/hogaria/**").hasAnyRole("INTEGRATION", "OPERADORA", "ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/integration/hogaria/**", "/api/v1/integration/hogaria/**").hasAnyRole("INTEGRATION", "OPERADORA", "ADMIN")
+                .requestMatchers("/api/integration/hogaria/**", "/api/v1/integration/hogaria/**").hasAnyRole("OPERADORA", "ADMIN")
                 .requestMatchers("/api/auth/me").authenticated()
                 .requestMatchers("/api/**").hasAnyRole("OPERADORA", "ADMIN")
                 .anyRequest().authenticated()
