@@ -27,6 +27,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 @WebMvcTest(HogariaIntegrationController.class)
 @Import(SecurityConfig.class)
@@ -269,6 +270,33 @@ class HogariaIntegrationControllerTest {
             .andExpect(jsonPath("$[0].prestamoId").value(7));
     }
 
+
+    @Test
+    @org.springframework.security.test.context.support.WithMockUser(roles = "INTEGRATION")
+    void dashboard_legacyYV1_debenRetornarMismaEstructuraYPayload() throws Exception {
+        when(hogariaIntegrationService.obtenerDashboard()).thenReturn(
+            new HogariaDashboardResponse(
+                new BigDecimal("1500.00"),
+                new BigDecimal("100.00"),
+                new BigDecimal("300.00"),
+                new BigDecimal("1200.00"),
+                3L
+            )
+        );
+
+        MvcResult legacy = mockMvc.perform(get("/api/integration/hogaria/dashboard"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        MvcResult v1 = mockMvc.perform(get("/api/v1/integration/hogaria/dashboard"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        org.junit.jupiter.api.Assertions.assertEquals(
+            legacy.getResponse().getContentAsString(),
+            v1.getResponse().getContentAsString()
+        );
+    }
 
     @Test
     @org.springframework.security.test.context.support.WithMockUser(roles = "INTEGRATION")
