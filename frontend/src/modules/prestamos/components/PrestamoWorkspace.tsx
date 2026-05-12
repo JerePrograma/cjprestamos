@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
-import { redondearMontoHaciaArriba } from "../../../utils/moneda";
-import { usePagosPrestamo, useRegistrarPago } from "../../pagos/hooks/usePagos";
+import { useEffect, useMemo, useState } from 'react';
+import { redondearMontoHaciaArriba } from '../../../utils/moneda';
+import { usePagosPrestamo, useRegistrarPago } from '../../pagos/hooks/usePagos';
 import {
   crearPayloadPago,
   formularioInicialPago,
   type PagoFormulario,
-} from "../../pagos/types/pago";
+} from '../../pagos/types/pago';
 import {
   useActualizarReferenciaPrestamo,
   useAjustarCuotasFuturasPrestamo,
@@ -13,21 +13,21 @@ import {
   useDetallePrestamo,
   useGenerarCuotasPrestamo,
   useResumenPrestamo,
-} from "../hooks/usePrestamos";
+} from '../hooks/usePrestamos';
 import type {
   AjustarCuotasFuturasPayload,
   CuotaManualPayload,
   GenerarCuotasPayload,
   ReferenciaPrestamoPayload,
-} from "../types/prestamo";
-import { obtenerMensajeError } from "../utils/prestamoUi";
+} from '../types/prestamo';
+import { obtenerMensajeError } from '../utils/prestamoUi';
 import {
   CuotasPrestamoPanel,
   type CuotaAjusteFila,
   type CuotaManualFila,
-} from "./CuotasPrestamoPanel";
-import { PagosPrestamoPanel } from "./PagosPrestamoPanel";
-import { PrestamoDetallePanel } from "./PrestamoDetallePanel";
+} from './CuotasPrestamoPanel';
+import { PagosPrestamoPanel } from './PagosPrestamoPanel';
+import { PrestamoDetallePanel } from './PrestamoDetallePanel';
 
 function construirFilasCuotasManuales(
   cantidadCuotas: number,
@@ -35,8 +35,8 @@ function construirFilasCuotasManuales(
 ): CuotaManualFila[] {
   return Array.from({ length: cantidadCuotas }, (_, index) => ({
     numeroCuota: String(index + 1),
-    fechaVencimiento: index === 0 ? (fechaPrimeraCuota ?? "") : "",
-    montoProgramado: "",
+    fechaVencimiento: index === 0 ? (fechaPrimeraCuota ?? '') : '',
+    montoProgramado: '',
   }));
 }
 
@@ -44,29 +44,63 @@ type PrestamoWorkspaceProps = {
   prestamoId: number | null;
   personasPorId: Map<number, string>;
 };
-type SeccionWorkspace = "resumen" | "cuotas" | "pagos";
+
+type SeccionWorkspace = 'resumen' | 'cuotas' | 'pagos';
+
+const seccionesWorkspace: Array<{ id: SeccionWorkspace; etiqueta: string }> = [
+  { id: 'resumen', etiqueta: 'Resumen' },
+  { id: 'cuotas', etiqueta: 'Cuotas' },
+  { id: 'pagos', etiqueta: 'Pagos' },
+];
+
+function TabWorkspace({
+  activa,
+  children,
+  onClick,
+}: {
+  activa: boolean;
+  children: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={[
+        'rounded-lg px-2 py-1.5 text-xs font-semibold transition sm:text-sm',
+        activa
+          ? 'bg-surface-raised text-app shadow-app-xs'
+          : 'text-muted hover:bg-surface-raised hover:text-app',
+      ].join(' ')}
+    >
+      {children}
+    </button>
+  );
+}
 
 export function PrestamoWorkspace({
   prestamoId,
   personasPorId,
 }: PrestamoWorkspaceProps) {
-  const [seccionActiva, setSeccionActiva] = useState<SeccionWorkspace>("resumen");
+  const [seccionActiva, setSeccionActiva] = useState<SeccionWorkspace>('resumen');
+
   const [formularioPago, setFormularioPago] = useState<PagoFormulario>(
     formularioInicialPago,
   );
   const [errorPago, setErrorPago] = useState<string | null>(null);
   const [mensajePago, setMensajePago] = useState<string | null>(null);
+
   const [formularioReferencia, setFormularioReferencia] = useState({
-    referenciaCodigo: "",
-    observaciones: "",
+    referenciaCodigo: '',
+    observaciones: '',
   });
   const [errorReferencia, setErrorReferencia] = useState<string | null>(null);
   const [mensajeReferencia, setMensajeReferencia] = useState<string | null>(null);
-  const [filasCuotasManuales, setFilasCuotasManuales] = useState<CuotaManualFila[]>(
-    [],
-  );
+
+  const [filasCuotasManuales, setFilasCuotasManuales] = useState<CuotaManualFila[]>([]);
   const [errorCuotas, setErrorCuotas] = useState<string | null>(null);
   const [mensajeCuotas, setMensajeCuotas] = useState<string | null>(null);
+
   const [cuotasAjuste, setCuotasAjuste] = useState<CuotaAjusteFila[]>([]);
   const [errorAjusteCuotas, setErrorAjusteCuotas] = useState<string | null>(null);
   const [mensajeAjusteCuotas, setMensajeAjusteCuotas] = useState<string | null>(null);
@@ -82,8 +116,8 @@ export function PrestamoWorkspace({
   const actualizarReferenciaPrestamo = useActualizarReferenciaPrestamo();
 
   const puedeRegistrarPago =
-    detallePrestamo.data?.estado === "ACTIVO" ||
-    detallePrestamo.data?.estado === "RENEGOCIADO";
+    detallePrestamo.data?.estado === 'ACTIVO' ||
+    detallePrestamo.data?.estado === 'RENEGOCIADO';
 
   useEffect(() => {
     setErrorPago(null);
@@ -96,7 +130,7 @@ export function PrestamoWorkspace({
   }, [prestamoId]);
 
   useEffect(() => {
-    setSeccionActiva("resumen");
+    setSeccionActiva('resumen');
   }, [prestamoId]);
 
   useEffect(() => {
@@ -105,8 +139,8 @@ export function PrestamoWorkspace({
     }
 
     setFormularioReferencia({
-      referenciaCodigo: detallePrestamo.data.referenciaCodigo ?? "",
-      observaciones: detallePrestamo.data.observaciones ?? "",
+      referenciaCodigo: detallePrestamo.data.referenciaCodigo ?? '',
+      observaciones: detallePrestamo.data.observaciones ?? '',
     });
     setErrorReferencia(null);
     setMensajeReferencia(null);
@@ -114,7 +148,8 @@ export function PrestamoWorkspace({
 
   useEffect(() => {
     const detalle = detallePrestamo.data;
-    if (!detalle || detalle.frecuenciaTipo !== "FECHAS_MANUALES") {
+
+    if (!detalle || detalle.frecuenciaTipo !== 'FECHAS_MANUALES') {
       setFilasCuotasManuales([]);
       return;
     }
@@ -129,6 +164,7 @@ export function PrestamoWorkspace({
           };
           return copia;
         }
+
         return actual;
       }
 
@@ -142,6 +178,7 @@ export function PrestamoWorkspace({
   ]);
 
   const cuotasActuales = cuotasPrestamo.data ?? [];
+
   const cuotasConSaldo = useMemo(
     () => cuotasActuales.filter((cuota) => cuota.montoProgramado > cuota.montoPagado),
     [cuotasActuales],
@@ -151,7 +188,11 @@ export function PrestamoWorkspace({
     if (resumenPrestamo.data) {
       return resumenPrestamo.data.totalADevolver;
     }
-    return cuotasActuales.reduce((acumulado, cuota) => acumulado + cuota.montoProgramado, 0);
+
+    return cuotasActuales.reduce(
+      (acumulado, cuota) => acumulado + cuota.montoProgramado,
+      0,
+    );
   }, [resumenPrestamo.data, cuotasActuales]);
 
   const totalPagado = useMemo(
@@ -168,7 +209,7 @@ export function PrestamoWorkspace({
         .map((cuota) => ({
           cuotaId: cuota.id,
           numeroCuota: cuota.numeroCuota,
-          fechaVencimiento: cuota.fechaVencimiento ?? "",
+          fechaVencimiento: cuota.fechaVencimiento ?? '',
           montoProgramado: String(cuota.montoProgramado),
           montoPagado: cuota.montoPagado,
           estado: cuota.estado,
@@ -191,12 +232,12 @@ export function PrestamoWorkspace({
     }
 
     if (formularioReferencia.referenciaCodigo.length > 80) {
-      setErrorReferencia("La referencia no puede superar 80 caracteres.");
+      setErrorReferencia('La referencia no puede superar 80 caracteres.');
       return;
     }
 
     if (formularioReferencia.observaciones.length > 600) {
-      setErrorReferencia("Las observaciones no pueden superar 600 caracteres.");
+      setErrorReferencia('Las observaciones no pueden superar 600 caracteres.');
       return;
     }
 
@@ -208,21 +249,24 @@ export function PrestamoWorkspace({
     setErrorReferencia(null);
 
     try {
-      await actualizarReferenciaPrestamo.mutateAsync({ id: detallePrestamo.data.id, payload });
-      setMensajeReferencia("Referencia del préstamo actualizada.");
+      await actualizarReferenciaPrestamo.mutateAsync({
+        id: detallePrestamo.data.id,
+        payload,
+      });
+      setMensajeReferencia('Referencia del préstamo actualizada.');
     } catch {
-      setErrorReferencia("No se pudo actualizar la referencia del préstamo.");
+      setErrorReferencia('No se pudo actualizar la referencia del préstamo.');
     }
   };
 
   const guardarPago = async () => {
     if (!prestamoId) {
-      setErrorPago("Seleccioná un préstamo antes de registrar un pago.");
+      setErrorPago('Seleccioná un préstamo antes de registrar un pago.');
       return;
     }
 
     if (!formularioPago.fechaPago) {
-      setErrorPago("La fecha de pago es obligatoria.");
+      setErrorPago('La fecha de pago es obligatoria.');
       return;
     }
 
@@ -232,26 +276,26 @@ export function PrestamoWorkspace({
       payload = crearPayloadPago(prestamoId, formularioPago);
     } catch (error) {
       setErrorPago(
-        obtenerMensajeError(error, "No se pudo construir el pago. Revisá el monto ingresado."),
+        obtenerMensajeError(error, 'No se pudo construir el pago. Revisá el monto ingresado.'),
       );
       return;
     }
 
     try {
       await registrarPago.mutateAsync(payload);
-      setMensajePago("Pago registrado correctamente.");
+      setMensajePago('Pago registrado correctamente.');
       setFormularioPago((actual) => ({
         ...actual,
-        monto: "",
-        referencia: "",
-        observacion: "",
+        monto: '',
+        referencia: '',
+        observacion: '',
         cuotasSeleccionadas: [],
       }));
     } catch (error) {
       setErrorPago(
         obtenerMensajeError(
           error,
-          "No se pudo registrar el pago. Revisá los datos e intentá nuevamente.",
+          'No se pudo registrar el pago. Revisá los datos e intentá nuevamente.',
         ),
       );
     }
@@ -274,17 +318,23 @@ export function PrestamoWorkspace({
   const alternarCuotaPago = (cuotaId: number, seleccionada: boolean) => {
     setFormularioPago((actual) => {
       const ids = new Set(actual.cuotasSeleccionadas);
-      if (seleccionada) ids.add(cuotaId);
-      else ids.delete(cuotaId);
+
+      if (seleccionada) {
+        ids.add(cuotaId);
+      } else {
+        ids.delete(cuotaId);
+      }
+
       return { ...actual, cuotasSeleccionadas: Array.from(ids) };
     });
+
     setErrorPago(null);
     setMensajePago(null);
   };
 
   const actualizarCuotaAjuste = (
     cuotaId: number,
-    campo: "fechaVencimiento" | "montoProgramado",
+    campo: 'fechaVencimiento' | 'montoProgramado',
     valor: string,
   ) => {
     setCuotasAjuste((actual) =>
@@ -304,7 +354,7 @@ export function PrestamoWorkspace({
     if (filas.length !== cantidadCuotas) {
       return {
         valido: false,
-        mensaje: "La cantidad de cuotas cargadas no coincide con la cantidad esperada.",
+        mensaje: 'La cantidad de cuotas cargadas no coincide con la cantidad esperada.',
       };
     }
 
@@ -319,20 +369,24 @@ export function PrestamoWorkspace({
       if (!Number.isInteger(numero)) {
         return { valido: false, mensaje: `La cuota ${index + 1} debe tener número obligatorio.` };
       }
+
       if (numero < 1 || numero > cantidadCuotas) {
         return {
           valido: false,
           mensaje: `La cuota ${index + 1} debe tener un número entre 1 y ${cantidadCuotas}.`,
         };
       }
+
       if (numeros.has(numero)) {
-        return { valido: false, mensaje: "No puede haber números de cuota repetidos." };
+        return { valido: false, mensaje: 'No puede haber números de cuota repetidos.' };
       }
+
       numeros.add(numero);
 
       if (!fila.fechaVencimiento) {
         return { valido: false, mensaje: `La cuota ${numero} debe tener fecha de vencimiento.` };
       }
+
       if (!(monto > 0)) {
         return { valido: false, mensaje: `La cuota ${numero} debe tener un monto mayor a 0.` };
       }
@@ -352,7 +406,7 @@ export function PrestamoWorkspace({
     if (Math.round(totalCargado * 100) !== Math.round(totalADevolver * 100)) {
       return {
         valido: false,
-        mensaje: "La suma de las cuotas debe coincidir con el total a devolver.",
+        mensaje: 'La suma de las cuotas debe coincidir con el total a devolver.',
       };
     }
 
@@ -365,15 +419,15 @@ export function PrestamoWorkspace({
     }
 
     if ((cuotasPrestamo.data ?? []).length > 0) {
-      setErrorCuotas("Este préstamo ya tiene cuotas generadas. No se puede regenerar.");
+      setErrorCuotas('Este préstamo ya tiene cuotas generadas. No se puede regenerar.');
       return;
     }
 
     let payload: GenerarCuotasPayload | undefined;
 
-    if (detallePrestamo.data.frecuenciaTipo === "FECHAS_MANUALES") {
+    if (detallePrestamo.data.frecuenciaTipo === 'FECHAS_MANUALES') {
       if (!resumenPrestamo.data) {
-        setErrorCuotas("No se pudo obtener el total a devolver para validar cuotas manuales.");
+        setErrorCuotas('No se pudo obtener el total a devolver para validar cuotas manuales.');
         return;
       }
 
@@ -392,17 +446,21 @@ export function PrestamoWorkspace({
     }
 
     try {
-      await generarCuotasPrestamo.mutateAsync({ id: detallePrestamo.data.id, payload });
+      await generarCuotasPrestamo.mutateAsync({
+        id: detallePrestamo.data.id,
+        payload,
+      });
+
       setMensajeCuotas(
-        detallePrestamo.data.frecuenciaTipo === "FECHAS_MANUALES"
-          ? "Cuotas manuales guardadas correctamente."
-          : "Cuotas generadas correctamente.",
+        detallePrestamo.data.frecuenciaTipo === 'FECHAS_MANUALES'
+          ? 'Cuotas manuales guardadas correctamente.'
+          : 'Cuotas generadas correctamente.',
       );
     } catch (error) {
       setErrorCuotas(
         obtenerMensajeError(
           error,
-          "No se pudo generar las cuotas del préstamo. Revisá los datos e intentá nuevamente.",
+          'No se pudo generar las cuotas del préstamo. Revisá los datos e intentá nuevamente.',
         ),
       );
     }
@@ -414,21 +472,25 @@ export function PrestamoWorkspace({
     }
 
     if (cuotasAjuste.length === 0) {
-      setErrorAjusteCuotas("No hay cuotas futuras disponibles para ajustar.");
+      setErrorAjusteCuotas('No hay cuotas futuras disponibles para ajustar.');
       return;
     }
 
     const cuotas = [];
+
     for (const cuota of cuotasAjuste) {
       if (!cuota.fechaVencimiento) {
         setErrorAjusteCuotas(`La cuota #${cuota.numeroCuota} requiere fecha de vencimiento.`);
         return;
       }
+
       const monto = redondearMontoHaciaArriba(Number(cuota.montoProgramado));
+
       if (!(monto > 0)) {
         setErrorAjusteCuotas(`La cuota #${cuota.numeroCuota} requiere monto mayor a 0.`);
         return;
       }
+
       cuotas.push({
         cuotaId: cuota.cuotaId,
         fechaVencimiento: cuota.fechaVencimiento,
@@ -438,7 +500,7 @@ export function PrestamoWorkspace({
 
     if (
       !window.confirm(
-        "¿Confirmás la renegociación manual de cuotas futuras? Esta acción no modifica pagos ya registrados.",
+        '¿Confirmás la renegociación manual de cuotas futuras? Esta acción no modifica pagos ya registrados.',
       )
     ) {
       return;
@@ -450,63 +512,61 @@ export function PrestamoWorkspace({
     };
 
     try {
-      await ajustarCuotasFuturas.mutateAsync({ id: detallePrestamo.data.id, payload });
-      setMensajeAjusteCuotas("Renegociación de cuotas guardada correctamente.");
+      await ajustarCuotasFuturas.mutateAsync({
+        id: detallePrestamo.data.id,
+        payload,
+      });
+      setMensajeAjusteCuotas('Renegociación de cuotas guardada correctamente.');
     } catch (error) {
       setErrorAjusteCuotas(
-        obtenerMensajeError(error, "No se pudo guardar la renegociación de cuotas."),
+        obtenerMensajeError(error, 'No se pudo guardar la renegociación de cuotas.'),
       );
     }
   };
 
   return (
-    <div className="panel space-y-3 p-4 sm:p-5">
-      <div className="flex flex-wrap items-start justify-between gap-2">
+    <div className="panel space-y-4 p-4 sm:p-5">
+      <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-sm font-semibold text-slate-900">Workspace del préstamo</h2>
-          <p className="text-xs text-slate-500">
+          <h2 className="text-sm font-semibold text-app">
+            Workspace del préstamo
+          </h2>
+
+          <p className="mt-0.5 text-xs text-muted">
             Resumen económico, cuotas y pagos del préstamo seleccionado.
           </p>
         </div>
+
         {detallePrestamo.data && (
-          <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-600">
-            #{detallePrestamo.data.id} ·{" "}
+          <span className="badge-ui">
+            #{detallePrestamo.data.id} ·{' '}
             {personasPorId.get(detallePrestamo.data.personaId) ??
               `Persona ${detallePrestamo.data.personaId}`}
           </span>
         )}
-      </div>
+      </header>
 
       {prestamoId === null ? (
-        <p className="text-sm text-slate-500">Seleccioná un préstamo para ver el detalle.</p>
+        <p className="text-sm text-muted">Seleccioná un préstamo para ver el detalle.</p>
       ) : detallePrestamo.isLoading ? (
-        <p className="text-sm text-slate-500">Cargando detalle...</p>
+        <p className="text-sm text-muted">Cargando detalle...</p>
       ) : detallePrestamo.isError || !detallePrestamo.data ? (
-        <p className="text-sm text-red-700">No se pudo cargar el detalle del préstamo.</p>
+        <p className="mensaje-error">No se pudo cargar el detalle del préstamo.</p>
       ) : (
-        <div className="space-y-3">
-          <nav className="grid grid-cols-3 gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1">
-            {[
-              { id: "resumen", etiqueta: "Resumen" },
-              { id: "cuotas", etiqueta: "Cuotas" },
-              { id: "pagos", etiqueta: "Pagos" },
-            ].map((seccion) => (
-              <button
+        <div className="space-y-4">
+          <nav className="grid grid-cols-3 gap-1 rounded-xl border border-subtle bg-surface-inset p-1">
+            {seccionesWorkspace.map((seccion) => (
+              <TabWorkspace
                 key={seccion.id}
-                type="button"
-                onClick={() => setSeccionActiva(seccion.id as SeccionWorkspace)}
-                className={`rounded-md px-2 py-1.5 text-xs font-medium sm:text-sm ${
-                  seccionActiva === seccion.id
-                    ? "bg-slate-800 text-white"
-                    : "text-slate-700 hover:bg-white"
-                }`}
+                activa={seccionActiva === seccion.id}
+                onClick={() => setSeccionActiva(seccion.id)}
               >
                 {seccion.etiqueta}
-              </button>
+              </TabWorkspace>
             ))}
           </nav>
 
-          {seccionActiva === "resumen" && (
+          {seccionActiva === 'resumen' && (
             <PrestamoDetallePanel
               detalle={detallePrestamo.data}
               personasPorId={personasPorId}
@@ -526,7 +586,7 @@ export function PrestamoWorkspace({
             />
           )}
 
-          {seccionActiva === "cuotas" && (
+          {seccionActiva === 'cuotas' && (
             <CuotasPrestamoPanel
               detalle={detallePrestamo.data}
               cuotas={cuotasActuales}
@@ -550,7 +610,7 @@ export function PrestamoWorkspace({
             />
           )}
 
-          {seccionActiva === "pagos" && (
+          {seccionActiva === 'pagos' && (
             <PagosPrestamoPanel
               formularioPago={formularioPago}
               onCambiarCampoPago={actualizarCampoPago}

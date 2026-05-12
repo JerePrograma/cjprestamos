@@ -87,8 +87,11 @@ export function PersonasPage() {
 
     try {
       const persona = await crear.mutateAsync(nuevo);
+
       setNuevo(payloadInicialPersona);
+      setMostrarAlta(false);
       setSeleccionId(persona.id);
+
       setSearchParams((actual) => {
         const siguiente = new URLSearchParams(actual);
         siguiente.set('personaId', String(persona.id));
@@ -136,14 +139,27 @@ export function PersonasPage() {
     }
   };
 
+  const limpiarFiltro = () => {
+    setBusqueda('');
+    setSearchParams((actual) => {
+      const siguiente = new URLSearchParams(actual);
+      siguiente.delete('q');
+      return siguiente;
+    });
+  };
+
   return (
-    <section className="space-y-5">
+    <section className="space-y-6">
       <PageHeader
         titulo="Personas"
         descripcion="Libreta operativa central: buscá rápido, editá datos base y saltá a préstamos o legajos sin fricción."
         breadcrumbs={[{ etiqueta: 'Inicio', to: '/' }, { etiqueta: 'Personas' }]}
         acciones={[
-          { etiqueta: mostrarAlta ? 'Ocultar alta' : 'Alta rápida', onClick: () => setMostrarAlta((actual) => !actual), variante: 'principal' },
+          {
+            etiqueta: mostrarAlta ? 'Ocultar alta' : 'Alta rápida',
+            onClick: () => setMostrarAlta((actual) => !actual),
+            variante: 'principal',
+          },
           { etiqueta: 'Ir a legajos', to: '/legajos', variante: 'secundario' },
         ]}
         estados={[
@@ -155,73 +171,118 @@ export function PersonasPage() {
 
       <div className="grid gap-4 xl:grid-cols-[360px_1fr]">
         <aside className="space-y-4">
-          <SectionCard titulo="Búsqueda y listado" descripcion="Filtrá por nombre, alias o teléfono para abrir una ficha en un clic.">
+          <SectionCard
+            titulo="Búsqueda y listado"
+            descripcion="Filtrá por nombre, alias o teléfono para abrir una ficha en un clic."
+          >
             <label className="block text-sm">
-              Buscar por nombre, alias o teléfono
+              <span className="label-ui mb-1 block">
+                Buscar por nombre, alias o teléfono
+              </span>
+
               <input
                 value={busqueda}
                 onChange={(event) => {
                   const valor = event.target.value;
+
                   setBusqueda(valor);
                   setSearchParams((actual) => {
                     const siguiente = new URLSearchParams(actual);
-                    if (valor.trim()) siguiente.set('q', valor);
-                    else siguiente.delete('q');
+
+                    if (valor.trim()) {
+                      siguiente.set('q', valor);
+                    } else {
+                      siguiente.delete('q');
+                    }
+
                     return siguiente;
                   });
                 }}
                 placeholder="Ej: Ana, Ani, 11..."
-                className="mt-1 w-full"
               />
             </label>
 
-            <div className="mt-3 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
-              <div className="flex items-center justify-between border-b border-slate-200 px-3 py-2 text-sm dark:border-slate-800">
-                <span className="font-medium text-slate-700 dark:text-slate-200">Resultados</span>
-                {busqueda.trim() ? <StatusPill texto="Filtro activo" tone="neutral" /> : <span className="text-xs text-slate-500 dark:text-slate-400">Sin filtro</span>}
+            <div className="mt-4 overflow-hidden rounded-2xl border border-subtle bg-surface">
+              <div className="flex items-center justify-between border-b border-subtle px-3 py-2">
+                <span className="text-sm font-semibold text-app">
+                  Resultados
+                </span>
+
+                {busqueda.trim() ? (
+                  <StatusPill texto="Filtro activo" tone="neutral" />
+                ) : (
+                  <span className="text-xs text-muted">Sin filtro</span>
+                )}
               </div>
 
               {listado.isLoading ? (
-                <p className="px-3 py-4 text-sm text-slate-600 dark:text-slate-300">Cargando personas...</p>
+                <p className="px-3 py-4 text-sm text-muted">
+                  Cargando personas...
+                </p>
               ) : listado.isError ? (
-                <p className="px-3 py-4 text-sm text-red-700 dark:text-red-300">No se pudo cargar el listado.</p>
+                <p className="mensaje-error m-3">
+                  No se pudo cargar el listado.
+                </p>
               ) : personasFiltradas.length === 0 ? (
                 <div className="p-3">
-                  <EmptyState titulo="No hay resultados" descripcion="Probá otro término o registrá una persona nueva." accion={{ etiqueta: 'Limpiar filtro', onClick: () => setBusqueda('') }} />
+                  <EmptyState
+                    titulo="No hay resultados"
+                    descripcion="Probá otro término o registrá una persona nueva."
+                    accion={{ etiqueta: 'Limpiar filtro', onClick: limpiarFiltro }}
+                  />
                 </div>
               ) : (
-                <ul className="max-h-[58vh] overflow-auto">
-                  {personasFiltradas.map((persona) => (
-                    <li key={persona.id}>
-                      <button
-                        onClick={() => {
-                          setSeleccionId(persona.id);
-                          setSearchParams((actual) => {
-                            const siguiente = new URLSearchParams(actual);
-                            siguiente.set('personaId', String(persona.id));
-                            return siguiente;
-                          });
-                          setModoEdicion(false);
-                        }}
-                        className={`w-full border-b border-slate-100 px-3 py-3 text-left text-sm transition hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800 ${
-                          seleccionId === persona.id ? 'bg-slate-100 dark:bg-slate-800' : ''
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="inline-block h-2.5 w-2.5 rounded-full border border-slate-300" style={estiloColor(persona.colorReferencia)} />
-                          <span className="font-medium text-slate-900 dark:text-slate-100">{persona.nombre}</span>
-                        </div>
-                        <div className="text-xs text-slate-500 dark:text-slate-400">{persona.alias || persona.telefono || 'Sin dato extra'}</div>
-                      </button>
-                    </li>
-                  ))}
+                <ul className="grid max-h-[58vh] gap-2 overflow-auto p-2">
+                  {personasFiltradas.map((persona) => {
+                    const activa = seleccionId === persona.id;
+
+                    return (
+                      <li key={persona.id}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSeleccionId(persona.id);
+                            setSearchParams((actual) => {
+                              const siguiente = new URLSearchParams(actual);
+                              siguiente.set('personaId', String(persona.id));
+                              return siguiente;
+                            });
+                            setModoEdicion(false);
+                          }}
+                          className={[
+                            'w-full text-left',
+                            activa ? 'card-activa' : 'card-interactiva',
+                          ].join(' ')}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span
+                              aria-hidden="true"
+                              className="inline-block h-2.5 w-2.5 rounded-full border border-subtle"
+                              style={estiloColor(persona.colorReferencia)}
+                            />
+
+                            <span className="truncate font-semibold text-app">
+                              {persona.nombre}
+                            </span>
+                          </div>
+
+                          <div className="mt-1 truncate text-xs text-muted">
+                            {persona.alias || persona.telefono || 'Sin dato extra'}
+                          </div>
+                        </button>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </div>
           </SectionCard>
 
           {mostrarAlta && (
-            <SectionCard titulo="Alta de persona" descripcion="Completá solo lo necesario. Se puede editar después.">
+            <SectionCard
+              titulo="Alta de persona"
+              descripcion="Completá solo lo necesario. Se puede editar después."
+            >
               <PersonaFormulario
                 titulo="Nueva persona"
                 textoBoton="Guardar persona"
@@ -235,13 +296,22 @@ export function PersonasPage() {
           )}
         </aside>
 
-        <div className="space-y-3">
+        <div className="space-y-4">
           {!detalle.data && !detalle.isLoading && !detalle.isError && !seleccionId ? (
-            <SectionCard titulo="Detalle de persona" descripcion="Seleccioná una persona del listado para ver su información operativa.">
-              <EmptyState titulo="Sin persona seleccionada" descripcion="Elegí una persona para editar datos, revisar préstamos y operar legajo." />
+            <SectionCard
+              titulo="Detalle de persona"
+              descripcion="Seleccioná una persona del listado para ver su información operativa."
+            >
+              <EmptyState
+                titulo="Sin persona seleccionada"
+                descripcion="Elegí una persona para editar datos, revisar préstamos y operar legajo."
+              />
             </SectionCard>
           ) : modoEdicion ? (
-            <SectionCard titulo="Editar persona" descripcion="Ajustes de datos operativos de contacto y referencia.">
+            <SectionCard
+              titulo="Editar persona"
+              descripcion="Ajustes de datos operativos de contacto y referencia."
+            >
               <PersonaFormulario
                 titulo="Editar persona"
                 textoBoton="Guardar cambios"
@@ -265,13 +335,19 @@ export function PersonasPage() {
               />
 
               {detalle.data && (
-                <div className="panel-soft rounded-xl px-4 py-3 text-sm text-slate-600 dark:text-slate-300">
+                <div className="panel-accent text-sm text-soft">
                   Consejo rápido: desde esta persona podés abrir préstamos relacionados en el módulo{' '}
-                  <Link to="/prestamos" className="font-semibold text-slate-800 underline decoration-slate-300 underline-offset-2 dark:text-slate-200">
+                  <Link
+                    to="/prestamos"
+                    className="font-semibold text-app underline decoration-sky-300 underline-offset-4"
+                  >
                     Préstamos
                   </Link>{' '}
                   o revisar información contextual en{' '}
-                  <Link to={`/legajos`} className="font-semibold text-slate-800 underline decoration-slate-300 underline-offset-2 dark:text-slate-200">
+                  <Link
+                    to="/legajos"
+                    className="font-semibold text-app underline decoration-sky-300 underline-offset-4"
+                  >
                     Legajos
                   </Link>
                   .

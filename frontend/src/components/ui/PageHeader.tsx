@@ -26,7 +26,8 @@ type PageHeaderProps = {
 };
 
 function BotonAccion({ accion }: { accion: Action }) {
-  const className = accion.variante === 'principal' ? 'boton-principal' : 'boton-secundario';
+  const className =
+    accion.variante === 'principal' ? 'boton-principal' : 'boton-secundario';
 
   if (accion.to) {
     return (
@@ -43,31 +44,63 @@ function BotonAccion({ accion }: { accion: Action }) {
   );
 }
 
-export function PageHeader({ titulo, descripcion, breadcrumbs = [], acciones = [], estados = [] }: PageHeaderProps) {
+export function PageHeader({
+  titulo,
+  descripcion,
+  breadcrumbs = [],
+  acciones = [],
+  estados = [],
+}: PageHeaderProps) {
   return (
-    <header className="panel space-y-5 p-5 sm:p-6">
+    <header className="panel-elevado space-y-5 p-5 sm:p-6">
       {breadcrumbs.length > 0 && (
-        <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-          {breadcrumbs.map((item, index) => (
-            <span key={`${item.etiqueta}-${index}`} className="inline-flex items-center gap-1.5">
-              {item.to ? (
-                <Link to={item.to} className="font-medium transition hover:text-slate-800 dark:hover:text-slate-200">
-                  {item.etiqueta}
-                </Link>
-              ) : (
-                <span className="text-slate-800 dark:text-slate-200">{item.etiqueta}</span>
-              )}
-              {index < breadcrumbs.length - 1 && <span>/</span>}
-            </span>
-          ))}
+        <nav
+          aria-label="Breadcrumb"
+          className="flex flex-wrap items-center gap-1.5 text-xs text-muted"
+        >
+          {breadcrumbs.map((item, index) => {
+            const esUltimo = index === breadcrumbs.length - 1;
+
+            return (
+              <span
+                key={`${item.etiqueta}-${index}`}
+                className="inline-flex items-center gap-1.5"
+              >
+                {item.to && !esUltimo ? (
+                  <Link
+                    to={item.to}
+                    className="font-medium no-underline transition hover:text-app"
+                  >
+                    {item.etiqueta}
+                  </Link>
+                ) : (
+                  <span className="font-medium text-app">
+                    {item.etiqueta}
+                  </span>
+                )}
+
+                {!esUltimo && (
+                  <span aria-hidden="true" className="text-faint">
+                    /
+                  </span>
+                )}
+              </span>
+            );
+          })}
         </nav>
       )}
 
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="max-w-3xl space-y-2">
-          <h1 className="titulo-seccion">{titulo}</h1>
-          <p className="subtitulo-seccion">{descripcion}</p>
+          <h1 className="titulo-seccion">
+            {titulo}
+          </h1>
+
+          <p className="subtitulo-seccion">
+            {descripcion}
+          </p>
         </div>
+
         {acciones.length > 0 && (
           <div className="flex flex-wrap items-center gap-2">
             {acciones.map((accion) => (
@@ -80,9 +113,14 @@ export function PageHeader({ titulo, descripcion, breadcrumbs = [], acciones = [
       {estados.length > 0 && (
         <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
           {estados.map((estado) => (
-            <div key={estado.etiqueta} className="panel-soft rounded-xl px-3 py-2.5">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{estado.etiqueta}</p>
-              <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">{estado.valor}</p>
+            <div key={estado.etiqueta} className="surface-inset">
+              <p className="label-ui">
+                {estado.etiqueta}
+              </p>
+
+              <p className="mt-1 text-sm font-semibold text-app">
+                {estado.valor}
+              </p>
             </div>
           ))}
         </div>

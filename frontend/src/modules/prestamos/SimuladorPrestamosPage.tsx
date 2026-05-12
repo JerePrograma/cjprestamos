@@ -1,4 +1,5 @@
 import { FormEvent, useMemo, useState } from 'react';
+import { EmptyState } from '../../components/ui/EmptyState';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { SectionCard } from '../../components/ui/SectionCard';
 import { formatearMonedaSinCentavos } from '../../utils/moneda';
@@ -6,7 +7,11 @@ import {
   descargarPdfSimulacionPrestamo,
   simularPrestamo,
 } from '../../services/prestamos/prestamosApi';
-import type { FrecuenciaTipo, SimulacionPrestamoPayload, SimulacionPrestamoResponse } from './types/prestamo';
+import type {
+  FrecuenciaTipo,
+  SimulacionPrestamoPayload,
+  SimulacionPrestamoResponse,
+} from './types/prestamo';
 
 type FormularioSimulador = {
   montoInicial: string;
@@ -30,8 +35,13 @@ const formularioInicial: FormularioSimulador = {
 
 function numeroOpcional(valor: string): number | null {
   const v = valor.trim();
-  if (!v) return null;
+
+  if (!v) {
+    return null;
+  }
+
   const n = Number(v);
+
   return Number.isFinite(n) ? Math.ceil(n) : null;
 }
 
@@ -53,9 +63,26 @@ function construirPayload(formulario: FormularioSimulador): SimulacionPrestamoPa
     interesManualOpcional: numeroOpcional(formulario.interesManualOpcional),
     cantidadCuotas,
     frecuenciaTipo: formulario.frecuenciaTipo,
-    frecuenciaCadaDias: formulario.frecuenciaTipo === 'CADA_X_DIAS' ? Number(formulario.frecuenciaCadaDias) : null,
-    fechaPrimerVencimiento: formulario.frecuenciaTipo === 'FECHAS_MANUALES' ? null : formulario.fechaPrimerVencimiento || null,
+    frecuenciaCadaDias:
+      formulario.frecuenciaTipo === 'CADA_X_DIAS'
+        ? Number(formulario.frecuenciaCadaDias)
+        : null,
+    fechaPrimerVencimiento:
+      formulario.frecuenciaTipo === 'FECHAS_MANUALES'
+        ? null
+        : formulario.fechaPrimerVencimiento || null,
   };
+}
+
+function MiniResultado({ titulo, valor }: { titulo: string; valor: number }) {
+  return (
+    <article className="surface-inset">
+      <p className="label-ui">{titulo}</p>
+      <p className="mt-1 text-lg font-semibold text-app">
+        {formatearMonedaSinCentavos(valor)}
+      </p>
+    </article>
+  );
 }
 
 export function SimuladorPrestamosPage() {
@@ -65,7 +92,10 @@ export function SimuladorPrestamosPage() {
   const [cargando, setCargando] = useState(false);
   const [descargando, setDescargando] = useState(false);
 
-  const puedeDescargar = useMemo(() => simulacion !== null && !descargando, [simulacion, descargando]);
+  const puedeDescargar = useMemo(
+    () => simulacion !== null && !descargando,
+    [simulacion, descargando],
+  );
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -90,9 +120,11 @@ export function SimuladorPrestamosPage() {
       const blob = await descargarPdfSimulacionPrestamo(payload);
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
+
       link.href = url;
       link.download = 'simulacion-prestamo.pdf';
       link.click();
+
       window.URL.revokeObjectURL(url);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo generar el PDF.');
@@ -102,7 +134,7 @@ export function SimuladorPrestamosPage() {
   };
 
   return (
-    <section className="space-y-5">
+    <section className="space-y-6">
       <PageHeader
         titulo="Simulador de préstamos"
         descripcion="Estimá el plan de cuotas antes de registrar el préstamo real."
@@ -111,53 +143,125 @@ export function SimuladorPrestamosPage() {
 
       <div className="grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
         <SectionCard titulo="Parámetros" descripcion="Definí monto, interés y frecuencia de cobro.">
-          <form className="space-y-3" onSubmit={onSubmit}>
-            <input placeholder="Monto inicial" value={formulario.montoInicial} onChange={(e) => setFormulario((f) => ({ ...f, montoInicial: e.target.value }))} />
-            <input
-              placeholder="% fijo sugerido"
-              value={formulario.porcentajeFijoSugerido}
-              onChange={(e) => setFormulario((f) => ({ ...f, porcentajeFijoSugerido: e.target.value }))}
-            />
-            <input
-              placeholder="Interés manual (opcional)"
-              value={formulario.interesManualOpcional}
-              onChange={(e) => setFormulario((f) => ({ ...f, interesManualOpcional: e.target.value }))}
-            />
-            <input
-              placeholder="Cantidad de cuotas"
-              value={formulario.cantidadCuotas}
-              onChange={(e) => setFormulario((f) => ({ ...f, cantidadCuotas: e.target.value }))}
-            />
-            <select
-              value={formulario.frecuenciaTipo}
-              onChange={(e) => setFormulario((f) => ({ ...f, frecuenciaTipo: e.target.value as FrecuenciaTipo }))}
-            >
-              <option value="MENSUAL">Mensual</option>
-              <option value="CADA_X_DIAS">Cada X días</option>
-              <option value="FECHAS_MANUALES">Fechas manuales</option>
-            </select>
+          <form className="space-y-4" onSubmit={onSubmit}>
+            <label className="block text-sm">
+              <span className="label-ui mb-1 block">Monto inicial</span>
+              <input
+                placeholder="Ej: 100000"
+                value={formulario.montoInicial}
+                onChange={(event) =>
+                  setFormulario((actual) => ({
+                    ...actual,
+                    montoInicial: event.target.value,
+                  }))
+                }
+              />
+            </label>
+
+            <label className="block text-sm">
+              <span className="label-ui mb-1 block">% fijo sugerido</span>
+              <input
+                placeholder="Ej: 30"
+                value={formulario.porcentajeFijoSugerido}
+                onChange={(event) =>
+                  setFormulario((actual) => ({
+                    ...actual,
+                    porcentajeFijoSugerido: event.target.value,
+                  }))
+                }
+              />
+            </label>
+
+            <label className="block text-sm">
+              <span className="label-ui mb-1 block">Interés manual opcional</span>
+              <input
+                placeholder="Ej: 35000"
+                value={formulario.interesManualOpcional}
+                onChange={(event) =>
+                  setFormulario((actual) => ({
+                    ...actual,
+                    interesManualOpcional: event.target.value,
+                  }))
+                }
+              />
+            </label>
+
+            <label className="block text-sm">
+              <span className="label-ui mb-1 block">Cantidad de cuotas</span>
+              <input
+                placeholder="Ej: 4"
+                value={formulario.cantidadCuotas}
+                onChange={(event) =>
+                  setFormulario((actual) => ({
+                    ...actual,
+                    cantidadCuotas: event.target.value,
+                  }))
+                }
+              />
+            </label>
+
+            <label className="block text-sm">
+              <span className="label-ui mb-1 block">Frecuencia</span>
+              <select
+                value={formulario.frecuenciaTipo}
+                onChange={(event) =>
+                  setFormulario((actual) => ({
+                    ...actual,
+                    frecuenciaTipo: event.target.value as FrecuenciaTipo,
+                  }))
+                }
+              >
+                <option value="MENSUAL">Mensual</option>
+                <option value="CADA_X_DIAS">Cada X días</option>
+                <option value="FECHAS_MANUALES">Fechas manuales</option>
+              </select>
+            </label>
+
             {formulario.frecuenciaTipo === 'CADA_X_DIAS' && (
-              <input
-                placeholder="Cada cuántos días"
-                value={formulario.frecuenciaCadaDias}
-                onChange={(e) => setFormulario((f) => ({ ...f, frecuenciaCadaDias: e.target.value }))}
-              />
+              <label className="block text-sm">
+                <span className="label-ui mb-1 block">Cada cuántos días</span>
+                <input
+                  placeholder="Ej: 7"
+                  value={formulario.frecuenciaCadaDias}
+                  onChange={(event) =>
+                    setFormulario((actual) => ({
+                      ...actual,
+                      frecuenciaCadaDias: event.target.value,
+                    }))
+                  }
+                />
+              </label>
             )}
+
             {formulario.frecuenciaTipo !== 'FECHAS_MANUALES' && (
-              <input
-                type="date"
-                value={formulario.fechaPrimerVencimiento}
-                onChange={(e) => setFormulario((f) => ({ ...f, fechaPrimerVencimiento: e.target.value }))}
-              />
+              <label className="block text-sm">
+                <span className="label-ui mb-1 block">Primer vencimiento</span>
+                <input
+                  type="date"
+                  value={formulario.fechaPrimerVencimiento}
+                  onChange={(event) =>
+                    setFormulario((actual) => ({
+                      ...actual,
+                      fechaPrimerVencimiento: event.target.value,
+                    }))
+                  }
+                />
+              </label>
             )}
 
             {error && <p className="mensaje-error">{error}</p>}
 
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <button type="submit" className="boton-principal" disabled={cargando}>
                 {cargando ? 'Simulando...' : 'Simular cuotas'}
               </button>
-              <button type="button" className="boton-secundario" disabled={!puedeDescargar} onClick={onDescargarPdf}>
+
+              <button
+                type="button"
+                className="boton-secundario"
+                disabled={!puedeDescargar}
+                onClick={onDescargarPdf}
+              >
                 {descargando ? 'Generando PDF...' : 'Descargar PDF'}
               </button>
             </div>
@@ -166,28 +270,30 @@ export function SimuladorPrestamosPage() {
 
         <SectionCard titulo="Resultado" descripcion="Vista previa del plan estimado.">
           {simulacion ? (
-            <div className="space-y-3">
-              <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-                <div className="panel-soft p-3 text-sm">Monto inicial: <strong>{formatearMonedaSinCentavos(simulacion.montoInicial)}</strong></div>
-                <div className="panel-soft p-3 text-sm">Interés: <strong>{formatearMonedaSinCentavos(simulacion.interesAplicado)}</strong></div>
-                <div className="panel-soft p-3 text-sm">Total: <strong>{formatearMonedaSinCentavos(simulacion.totalADevolver)}</strong></div>
-                <div className="panel-soft p-3 text-sm">Cuota estimada: <strong>{formatearMonedaSinCentavos(simulacion.montoPorCuotaEstimado)}</strong></div>
+            <div className="space-y-4">
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <MiniResultado titulo="Monto inicial" valor={simulacion.montoInicial} />
+                <MiniResultado titulo="Interés" valor={simulacion.interesAplicado} />
+                <MiniResultado titulo="Total" valor={simulacion.totalADevolver} />
+                <MiniResultado titulo="Cuota estimada" valor={simulacion.montoPorCuotaEstimado} />
               </div>
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-sm">
+
+              <div className="tabla-ui overflow-x-auto">
+                <table className="min-w-full">
                   <thead>
-                    <tr className="border-b border-slate-200 text-left dark:border-slate-700">
-                      <th className="px-2 py-2">#</th>
-                      <th className="px-2 py-2">Vencimiento</th>
-                      <th className="px-2 py-2">Monto</th>
+                    <tr>
+                      <th>#</th>
+                      <th>Vencimiento</th>
+                      <th>Monto</th>
                     </tr>
                   </thead>
+
                   <tbody>
                     {simulacion.cuotas.map((cuota) => (
-                      <tr key={cuota.numeroCuota} className="border-b border-slate-100 dark:border-slate-800">
-                        <td className="px-2 py-2">{cuota.numeroCuota}</td>
-                        <td className="px-2 py-2">{cuota.fechaVencimiento ?? 'A definir'}</td>
-                        <td className="px-2 py-2">{formatearMonedaSinCentavos(cuota.montoProgramado)}</td>
+                      <tr key={cuota.numeroCuota}>
+                        <td>{cuota.numeroCuota}</td>
+                        <td>{cuota.fechaVencimiento ?? 'A definir'}</td>
+                        <td>{formatearMonedaSinCentavos(cuota.montoProgramado)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -195,7 +301,10 @@ export function SimuladorPrestamosPage() {
               </div>
             </div>
           ) : (
-            <p className="text-sm text-slate-600 dark:text-slate-300">Completá los datos y ejecutá la simulación para ver las cuotas estimadas.</p>
+            <EmptyState
+              titulo="Sin simulación todavía"
+              descripcion="Completá los datos y ejecutá la simulación para ver las cuotas estimadas."
+            />
           )}
         </SectionCard>
       </div>

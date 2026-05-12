@@ -25,6 +25,7 @@ function formatearTamano(bytes: number) {
   }
 
   const kb = bytes / 1024;
+
   if (kb < 1024) {
     return `${kb.toFixed(1)} KB`;
   }
@@ -35,9 +36,11 @@ function formatearTamano(bytes: number) {
 function descargarBlob(blob: Blob, nombreArchivo: string) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
+
   link.href = url;
   link.download = nombreArchivo;
   link.click();
+
   URL.revokeObjectURL(url);
 }
 
@@ -46,6 +49,7 @@ export function PersonaLegajoPanel({ personaId }: Props) {
   const crearLegajo = useCrearLegajoPersona(personaId);
   const actualizarLegajo = useActualizarLegajoPersona(personaId);
   const existeLegajo = legajo.isSuccess;
+
   const adjuntos = useAdjuntosLegajo(personaId, existeLegajo);
   const subirAdjunto = useSubirAdjuntoLegajo(personaId);
   const eliminarAdjunto = useEliminarAdjuntoLegajo(personaId);
@@ -71,6 +75,8 @@ export function PersonaLegajoPanel({ personaId }: Props) {
     () => (existeLegajo ? 'Legajo de la persona' : 'Legajo no creado todavía'),
     [existeLegajo],
   );
+
+  const guardandoLegajo = crearLegajo.isPending || actualizarLegajo.isPending;
 
   const guardarLegajo = async () => {
     setErrorFormulario(null);
@@ -124,86 +130,131 @@ export function PersonaLegajoPanel({ personaId }: Props) {
   };
 
   return (
-    <section className="panel space-y-4 p-4 sm:p-5">
+    <section className="panel space-y-5 p-4 sm:p-5">
       <header className="space-y-1">
-        <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">{textoEncabezado}</h3>
-        <p className="text-sm text-slate-500 dark:text-slate-300">Información contextual y privada separada de los datos básicos.</p>
+        <h3 className="text-base font-semibold text-app">
+          {textoEncabezado}
+        </h3>
+
+        <p className="text-sm text-soft">
+          Información contextual y privada separada de los datos básicos.
+        </p>
       </header>
 
       {legajo.isLoading ? (
-        <p className="text-sm text-slate-600 dark:text-slate-300">Cargando legajo...</p>
+        <p className="text-sm text-muted">Cargando legajo...</p>
       ) : (
         <>
           <div className="grid gap-3 md:grid-cols-2">
             <label className="text-sm">
-              Dirección
+              <span className="label-ui mb-1 block">Dirección</span>
               <input
                 value={formulario.direccion}
-                onChange={(event) => setFormulario((actual) => ({ ...actual, direccion: event.target.value }))}
-                className="mt-1 w-full"
+                onChange={(event) =>
+                  setFormulario((actual) => ({
+                    ...actual,
+                    direccion: event.target.value,
+                  }))
+                }
               />
             </label>
+
             <label className="text-sm">
-              Ocupación
+              <span className="label-ui mb-1 block">Ocupación</span>
               <input
                 value={formulario.ocupacion}
-                onChange={(event) => setFormulario((actual) => ({ ...actual, ocupacion: event.target.value }))}
-                className="mt-1 w-full"
+                onChange={(event) =>
+                  setFormulario((actual) => ({
+                    ...actual,
+                    ocupacion: event.target.value,
+                  }))
+                }
               />
             </label>
+
             <label className="text-sm">
-              Fuente de ingreso
+              <span className="label-ui mb-1 block">Fuente de ingreso</span>
               <input
                 value={formulario.fuenteIngreso}
-                onChange={(event) => setFormulario((actual) => ({ ...actual, fuenteIngreso: event.target.value }))}
-                className="mt-1 w-full"
+                onChange={(event) =>
+                  setFormulario((actual) => ({
+                    ...actual,
+                    fuenteIngreso: event.target.value,
+                  }))
+                }
               />
             </label>
+
             <label className="text-sm">
-              Contacto alternativo
+              <span className="label-ui mb-1 block">Contacto alternativo</span>
               <input
                 value={formulario.contactoAlternativo}
-                onChange={(event) => setFormulario((actual) => ({ ...actual, contactoAlternativo: event.target.value }))}
-                className="mt-1 w-full"
+                onChange={(event) =>
+                  setFormulario((actual) => ({
+                    ...actual,
+                    contactoAlternativo: event.target.value,
+                  }))
+                }
               />
             </label>
           </div>
 
-          <label className="text-sm">
-            Documentación pendiente
+          <label className="block text-sm">
+            <span className="label-ui mb-1 block">Documentación pendiente</span>
             <textarea
               value={formulario.documentacionPendiente}
-              onChange={(event) => setFormulario((actual) => ({ ...actual, documentacionPendiente: event.target.value }))}
-              className="mt-1 w-full"
+              onChange={(event) =>
+                setFormulario((actual) => ({
+                  ...actual,
+                  documentacionPendiente: event.target.value,
+                }))
+              }
               rows={2}
             />
           </label>
 
-          <label className="text-sm">
-            Notas internas
+          <label className="block text-sm">
+            <span className="label-ui mb-1 block">Notas internas</span>
             <textarea
               value={formulario.notasInternas}
-              onChange={(event) => setFormulario((actual) => ({ ...actual, notasInternas: event.target.value }))}
-              className="mt-1 w-full"
+              onChange={(event) =>
+                setFormulario((actual) => ({
+                  ...actual,
+                  notasInternas: event.target.value,
+                }))
+              }
               rows={3}
             />
           </label>
 
-          <label className="text-sm">
-            Observaciones generales
+          <label className="block text-sm">
+            <span className="label-ui mb-1 block">Observaciones generales</span>
             <textarea
               value={formulario.observacionesGenerales}
-              onChange={(event) => setFormulario((actual) => ({ ...actual, observacionesGenerales: event.target.value }))}
-              className="mt-1 w-full"
+              onChange={(event) =>
+                setFormulario((actual) => ({
+                  ...actual,
+                  observacionesGenerales: event.target.value,
+                }))
+              }
               rows={3}
             />
           </label>
 
-          {errorFormulario && <p className="mensaje-error">{errorFormulario}</p>}
+          {errorFormulario && (
+            <p className="mensaje-error">
+              {errorFormulario}
+            </p>
+          )}
 
-          <div className="flex justify-end border-t border-slate-200 pt-3 dark:border-slate-800">
-            <button onClick={guardarLegajo} className="boton-principal px-3 py-2" disabled={crearLegajo.isPending || actualizarLegajo.isPending}>
-              {crearLegajo.isPending || actualizarLegajo.isPending
+          <div className="flex justify-end border-t border-subtle pt-4">
+            <button
+              type="button"
+              onClick={guardarLegajo}
+              className="boton-principal px-3 py-2"
+              disabled={guardandoLegajo}
+            >
+              {guardandoLegajo
                 ? 'Guardando...'
                 : existeLegajo
                   ? 'Guardar cambios de legajo'
@@ -211,48 +262,85 @@ export function PersonaLegajoPanel({ personaId }: Props) {
             </button>
           </div>
 
-          <div className="space-y-3 border-t border-slate-200 pt-3 dark:border-slate-800">
-            <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-100">Adjuntos del legajo</h4>
+          <div className="space-y-4 border-t border-subtle pt-4">
+            <header className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h4 className="text-sm font-semibold text-app">
+                  Adjuntos del legajo
+                </h4>
+
+                <p className="mt-1 text-xs text-muted">
+                  Documentación y archivos asociados a esta persona.
+                </p>
+              </div>
+            </header>
 
             {!existeLegajo ? (
-              <p className="text-sm text-slate-500 dark:text-slate-300">Primero guardá el legajo para poder subir adjuntos.</p>
+              <p className="surface-inset text-sm">
+                Primero guardá el legajo para poder subir adjuntos.
+              </p>
             ) : (
               <>
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <div className="surface-inset flex flex-col gap-2 sm:flex-row sm:items-center">
                   <input
                     type="file"
                     onChange={(event) => setArchivo(event.target.files?.[0] ?? null)}
                     className="text-sm"
                   />
-                  <button className="boton-secundario px-3 py-2" onClick={subirArchivo} disabled={subirAdjunto.isPending}>
+
+                  <button
+                    type="button"
+                    className="boton-secundario px-3 py-2"
+                    onClick={subirArchivo}
+                    disabled={subirAdjunto.isPending}
+                  >
                     {subirAdjunto.isPending ? 'Subiendo...' : 'Subir adjunto'}
                   </button>
                 </div>
 
-                {errorAdjuntos && <p className="mensaje-error">{errorAdjuntos}</p>}
+                {errorAdjuntos && (
+                  <p className="mensaje-error">
+                    {errorAdjuntos}
+                  </p>
+                )}
 
                 {adjuntos.isLoading ? (
-                  <p className="text-sm text-slate-600 dark:text-slate-300">Cargando adjuntos...</p>
+                  <p className="text-sm text-muted">Cargando adjuntos...</p>
                 ) : adjuntos.isError ? (
                   <p className="mensaje-error">No se pudieron cargar los adjuntos.</p>
                 ) : (adjuntos.data ?? []).length === 0 ? (
-                  <p className="text-sm text-slate-500 dark:text-slate-300">Todavía no hay adjuntos cargados.</p>
+                  <p className="surface-inset text-sm">
+                    Todavía no hay adjuntos cargados.
+                  </p>
                 ) : (
                   <ul className="space-y-2">
                     {(adjuntos.data ?? []).map((adjunto) => (
-                      <li key={adjunto.id} className="card-interactiva flex flex-col gap-2 p-2 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="text-sm">
-                          <p className="font-medium text-slate-800 dark:text-slate-100">{adjunto.nombreOriginal}</p>
-                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                      <li
+                        key={adjunto.id}
+                        className="card-interactiva flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between"
+                      >
+                        <div className="min-w-0 text-sm">
+                          <p className="truncate font-semibold text-app">
+                            {adjunto.nombreOriginal}
+                          </p>
+
+                          <p className="mt-0.5 text-xs text-muted">
                             {adjunto.tipoContenido} · {formatearTamano(adjunto.tamanoBytes)}
                           </p>
                         </div>
-                        <div className="flex gap-2">
-                          <button className="boton-secundario px-3 py-1.5 text-xs" onClick={() => descargarArchivo(adjunto)}>
+
+                        <div className="flex shrink-0 flex-wrap gap-2">
+                          <button
+                            type="button"
+                            className="boton-secundario px-3 py-1.5 text-xs"
+                            onClick={() => descargarArchivo(adjunto)}
+                          >
                             Descargar
                           </button>
+
                           <button
-                            className="boton-secundario px-3 py-1.5 text-xs"
+                            type="button"
+                            className="boton-danger px-3 py-1.5 text-xs"
                             onClick={() => eliminarArchivo(adjunto.id)}
                             disabled={eliminarAdjunto.isPending}
                           >

@@ -1,14 +1,14 @@
-import { useEffect, useMemo, useState } from "react";
-import { formatearMonedaSinCentavos } from "../../../utils/moneda";
-import type { Persona } from "../../personas/types/persona";
-import { useCalcularPrestamo, useCrearPrestamo } from "../hooks/usePrestamos";
+import { useEffect, useMemo, useState } from 'react';
+import { formatearMonedaSinCentavos } from '../../../utils/moneda';
+import type { Persona } from '../../personas/types/persona';
+import { useCalcularPrestamo, useCrearPrestamo } from '../hooks/usePrestamos';
 import {
   crearPayloadCalculo,
   crearPayloadPrestamo,
   formularioInicialPrestamo,
   type CalculoPrestamoResultado,
   type PrestamoFormulario,
-} from "../types/prestamo";
+} from '../types/prestamo';
 
 type PrestamoAltaPanelProps = {
   personas: Persona[];
@@ -24,6 +24,18 @@ function esFormularioMinimoValido(formulario: PrestamoFormulario) {
   );
 }
 
+function moneda(valor: number | null | undefined) {
+  return valor === null || valor === undefined ? '—' : formatearMonedaSinCentavos(valor);
+}
+
+function FilaCalculo({ etiqueta, valor }: { etiqueta: string; valor: number | null | undefined }) {
+  return (
+    <div className="flex justify-between gap-3">
+      <dt className="text-muted">{etiqueta}</dt>
+      <dd className="font-semibold text-app">{moneda(valor)}</dd>
+    </div>
+  );
+}
 
 export function PrestamoAltaPanel({
   personas,
@@ -67,59 +79,49 @@ export function PrestamoAltaPanel({
 
   const guardarPrestamo = async () => {
     if (!esFormularioMinimoValido(formulario)) {
-      setErrorFormulario(
-        "Completá persona, monto inicial y cantidad de cuotas.",
-      );
+      setErrorFormulario('Completá persona, monto inicial y cantidad de cuotas.');
       return;
     }
 
     if (
-      formulario.frecuenciaTipo === "CADA_X_DIAS" &&
+      formulario.frecuenciaTipo === 'CADA_X_DIAS' &&
       Number(formulario.frecuenciaCadaDias) <= 0
     ) {
-      setErrorFormulario(
-        "Para CADA_X_DIAS, la frecuencia debe ser mayor que 0.",
-      );
+      setErrorFormulario('Para CADA_X_DIAS, la frecuencia debe ser mayor que 0.');
       return;
     }
 
-    if (Number(formulario.porcentajeFijoSugerido || "0") < 0) {
-      setErrorFormulario("El porcentaje fijo sugerido no puede ser negativo.");
+    if (Number(formulario.porcentajeFijoSugerido || '0') < 0) {
+      setErrorFormulario('El porcentaje fijo sugerido no puede ser negativo.');
       return;
     }
 
-    if (Number(formulario.interesManualOpcional || "0") < 0) {
-      setErrorFormulario("El interés manual no puede ser negativo.");
+    if (Number(formulario.interesManualOpcional || '0') < 0) {
+      setErrorFormulario('El interés manual no puede ser negativo.');
       return;
     }
 
     if (
-      formulario.frecuenciaTipo !== "FECHAS_MANUALES" &&
+      formulario.frecuenciaTipo !== 'FECHAS_MANUALES' &&
       formulario.usarFechasManuales
     ) {
-      setErrorFormulario(
-        "Usar fechas manuales solo aplica cuando la frecuencia es FECHAS_MANUALES.",
-      );
+      setErrorFormulario('Usar fechas manuales solo aplica cuando la frecuencia es FECHAS_MANUALES.');
       return;
     }
 
     if (
-      formulario.frecuenciaTipo === "FECHAS_MANUALES" &&
+      formulario.frecuenciaTipo === 'FECHAS_MANUALES' &&
       !formulario.usarFechasManuales
     ) {
-      setErrorFormulario(
-        'Para FECHAS_MANUALES, activá "Usar fechas manuales".',
-      );
+      setErrorFormulario('Para FECHAS_MANUALES, activá "Usar fechas manuales".');
       return;
     }
 
     if (
-      formulario.frecuenciaTipo !== "FECHAS_MANUALES" &&
+      formulario.frecuenciaTipo !== 'FECHAS_MANUALES' &&
       !formulario.fechaBase
     ) {
-      setErrorFormulario(
-        "La fecha base es obligatoria para frecuencia automática.",
-      );
+      setErrorFormulario('La fecha base es obligatoria para frecuencia automática.');
       return;
     }
 
@@ -127,34 +129,35 @@ export function PrestamoAltaPanel({
       const prestamo = await crearPrestamo.mutateAsync(
         crearPayloadPrestamo(formulario),
       );
+
       onCreado(prestamo.id);
       setFormulario(formularioInicialPrestamo);
-      setMensajeExito("Préstamo creado correctamente.");
+      setMensajeExito('Préstamo creado correctamente.');
     } catch {
-      setErrorFormulario(
-        "No se pudo crear el préstamo. Revisá los datos e intentá nuevamente.",
-      );
+      setErrorFormulario('No se pudo crear el préstamo. Revisá los datos e intentá nuevamente.');
     }
   };
 
-  const resultadoAlta: CalculoPrestamoResultado | undefined =
-    calcularPrestamo.data;
+  const resultadoAlta: CalculoPrestamoResultado | undefined = calcularPrestamo.data;
 
   return (
-    <aside className="panel space-y-4 p-4 sm:p-5">
+    <aside className="panel space-y-5 p-4 sm:p-5">
       <div className="space-y-1">
-        <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">Alta de préstamo</h2>
-        <p className="text-xs text-slate-500 dark:text-slate-400">
+        <h2 className="text-base font-semibold text-app">
+          Alta de préstamo
+        </h2>
+
+        <p className="text-xs text-muted">
           Cargá condiciones base sin centavos. Si ingresás decimales, el sistema redondea hacia arriba.
         </p>
       </div>
 
       <label className="block text-sm">
-        Persona
+        <span className="label-ui mb-1 block">Persona</span>
+
         <select
-          className="mt-1 w-full"
           value={formulario.personaId}
-          onChange={(event) => actualizarCampo("personaId", event.target.value)}
+          onChange={(event) => actualizarCampo('personaId', event.target.value)}
         >
           <option value="">Seleccionar persona</option>
           {personas.map((persona) => (
@@ -164,82 +167,69 @@ export function PrestamoAltaPanel({
           ))}
         </select>
       </label>
+
       {personasLoading && (
-        <p className="text-xs text-slate-500 dark:text-slate-400">Cargando personas disponibles...</p>
+        <p className="text-xs text-muted">Cargando personas disponibles...</p>
       )}
 
       <div className="grid gap-3 md:grid-cols-2">
         <label className="text-sm">
-          Monto inicial
+          <span className="label-ui mb-1 block">Monto inicial</span>
           <input
             type="number"
             min="0"
             step="1"
-            className="mt-1 w-full"
             value={formulario.montoInicial}
-            onChange={(event) =>
-              actualizarCampo("montoInicial", event.target.value)
-            }
+            onChange={(event) => actualizarCampo('montoInicial', event.target.value)}
           />
         </label>
+
         <label className="text-sm">
-          Cantidad de cuotas
+          <span className="label-ui mb-1 block">Cantidad de cuotas</span>
           <input
             type="number"
             min="1"
-            className="mt-1 w-full"
             value={formulario.cantidadCuotas}
-            onChange={(event) =>
-              actualizarCampo("cantidadCuotas", event.target.value)
-            }
+            onChange={(event) => actualizarCampo('cantidadCuotas', event.target.value)}
           />
         </label>
+
         <label className="text-sm">
-          Porcentaje fijo sugerido
+          <span className="label-ui mb-1 block">Porcentaje fijo sugerido</span>
           <input
             type="number"
             min="0"
             step="1"
-            className="mt-1 w-full"
             value={formulario.porcentajeFijoSugerido}
-            onChange={(event) =>
-              actualizarCampo("porcentajeFijoSugerido", event.target.value)
-            }
+            onChange={(event) => actualizarCampo('porcentajeFijoSugerido', event.target.value)}
           />
         </label>
+
         <label className="text-sm">
-          Interés manual opcional
+          <span className="label-ui mb-1 block">Interés manual opcional</span>
           <input
             type="number"
             min="0"
             step="1"
-            className="mt-1 w-full"
             value={formulario.interesManualOpcional}
-            onChange={(event) =>
-              actualizarCampo("interesManualOpcional", event.target.value)
-            }
+            onChange={(event) => actualizarCampo('interesManualOpcional', event.target.value)}
           />
         </label>
       </div>
 
       <div className="grid gap-3 md:grid-cols-3">
         <label className="text-sm">
-          Frecuencia
+          <span className="label-ui mb-1 block">Frecuencia</span>
           <select
-            className="mt-1 w-full"
             value={formulario.frecuenciaTipo}
             onChange={(event) => {
-              const frecuencia = event.target
-                .value as PrestamoFormulario["frecuenciaTipo"];
+              const frecuencia = event.target.value as PrestamoFormulario['frecuenciaTipo'];
 
-              actualizarCampo("frecuenciaTipo", frecuencia);
-              actualizarCampo(
-                "usarFechasManuales",
-                frecuencia === "FECHAS_MANUALES",
-              );
+              actualizarCampo('frecuenciaTipo', frecuencia);
+              actualizarCampo('usarFechasManuales', frecuencia === 'FECHAS_MANUALES');
 
-              if (frecuencia !== "CADA_X_DIAS") {
-                actualizarCampo("frecuenciaCadaDias", "");
+              if (frecuencia !== 'CADA_X_DIAS') {
+                actualizarCampo('frecuenciaCadaDias', '');
               }
             }}
           >
@@ -250,71 +240,63 @@ export function PrestamoAltaPanel({
         </label>
 
         <label className="text-sm">
-          {formulario.frecuenciaTipo === "FECHAS_MANUALES"
-            ? "Fecha inicial sugerida (opcional)"
-            : "Fecha base"}
+          <span className="label-ui mb-1 block">
+            {formulario.frecuenciaTipo === 'FECHAS_MANUALES'
+              ? 'Fecha inicial sugerida'
+              : 'Fecha base'}
+          </span>
+
           <input
             type="date"
-            className="mt-1 w-full"
             value={formulario.fechaBase}
-            onChange={(event) =>
-              actualizarCampo("fechaBase", event.target.value)
-            }
+            onChange={(event) => actualizarCampo('fechaBase', event.target.value)}
           />
         </label>
 
-        {formulario.frecuenciaTipo === "CADA_X_DIAS" && (
+        {formulario.frecuenciaTipo === 'CADA_X_DIAS' && (
           <label className="text-sm">
-            Frecuencia cada X días
+            <span className="label-ui mb-1 block">Frecuencia cada X días</span>
             <input
               type="number"
               min="1"
-              className="mt-1 w-full"
               value={formulario.frecuenciaCadaDias}
-              onChange={(event) =>
-                actualizarCampo("frecuenciaCadaDias", event.target.value)
-              }
+              onChange={(event) => actualizarCampo('frecuenciaCadaDias', event.target.value)}
             />
           </label>
         )}
       </div>
 
-      {formulario.frecuenciaTipo === "FECHAS_MANUALES" && (
-        <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+      {formulario.frecuenciaTipo === 'FECHAS_MANUALES' && (
+        <label className="card-interactiva flex cursor-pointer items-center gap-2 py-2 text-sm">
           <input
             type="checkbox"
             checked={formulario.usarFechasManuales}
-            onChange={(event) =>
-              actualizarCampo("usarFechasManuales", event.target.checked)
-            }
+            onChange={(event) => actualizarCampo('usarFechasManuales', event.target.checked)}
             disabled
           />
-          Usar fechas manuales
+
+          <span className="font-medium text-app">
+            Usar fechas manuales
+          </span>
         </label>
       )}
 
       <div className="grid gap-3 md:grid-cols-2">
         <label className="text-sm">
-          Referencia
+          <span className="label-ui mb-1 block">Referencia</span>
           <input
-            className="mt-1 w-full"
             value={formulario.referenciaCodigo}
-            onChange={(event) =>
-              actualizarCampo("referenciaCodigo", event.target.value)
-            }
+            onChange={(event) => actualizarCampo('referenciaCodigo', event.target.value)}
             maxLength={80}
           />
         </label>
+
         <label className="text-sm">
-          Estado
+          <span className="label-ui mb-1 block">Estado</span>
           <select
-            className="mt-1 w-full"
             value={formulario.estado}
             onChange={(event) =>
-              actualizarCampo(
-                "estado",
-                event.target.value as PrestamoFormulario["estado"],
-              )
+              actualizarCampo('estado', event.target.value as PrestamoFormulario['estado'])
             }
           >
             <option value="ACTIVO">Activo</option>
@@ -326,23 +308,17 @@ export function PrestamoAltaPanel({
       </div>
 
       <label className="block text-sm">
-        Observaciones
+        <span className="label-ui mb-1 block">Observaciones</span>
         <textarea
-          className="mt-1 h-20 w-full rounded border border-slate-300 px-3 py-2"
           value={formulario.observaciones}
-          onChange={(event) =>
-            actualizarCampo("observaciones", event.target.value)
-          }
+          onChange={(event) => actualizarCampo('observaciones', event.target.value)}
           maxLength={600}
+          rows={3}
         />
       </label>
 
-      {errorFormulario && (
-        <p className="text-sm text-red-700">{errorFormulario}</p>
-      )}
-      {mensajeExito && (
-        <p className="text-sm text-emerald-700">{mensajeExito}</p>
-      )}
+      {errorFormulario && <p className="mensaje-error">{errorFormulario}</p>}
+      {mensajeExito && <p className="mensaje-exito">{mensajeExito}</p>}
 
       <button
         type="button"
@@ -350,45 +326,29 @@ export function PrestamoAltaPanel({
         disabled={crearPrestamo.isPending || personasLoading}
         className="boton-principal"
       >
-        {crearPrestamo.isPending ? "Guardando..." : "Guardar préstamo"}
+        {crearPrestamo.isPending ? 'Guardando...' : 'Guardar préstamo'}
       </button>
 
-      <div className="panel-soft p-3">
-        <h3 className="mb-2 text-sm font-semibold">
+      <div className="panel-accent">
+        <h3 className="mb-2 text-sm font-semibold text-app">
           Cálculo sugerido del alta
         </h3>
+
         {!puedeCalcularAlta ? (
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-muted">
             Completá persona, monto inicial y cantidad de cuotas.
           </p>
         ) : calcularPrestamo.isPending ? (
-          <p className="text-sm text-slate-500">Calculando...</p>
+          <p className="text-sm text-muted">Calculando...</p>
         ) : calcularPrestamo.isError ? (
-          <p className="text-sm text-red-700">
-            No se pudo obtener cálculo sugerido.
-          </p>
+          <p className="mensaje-error">No se pudo obtener cálculo sugerido.</p>
         ) : (
-          <dl className="space-y-1 text-sm">
-            <div className="flex justify-between">
-              <dt>Total</dt>
-              <dd>{formatearMonedaSinCentavos(resultadoAlta?.totalADevolver)}</dd>
-            </div>
-            <div className="flex justify-between">
-              <dt>Cuota sugerida</dt>
-              <dd>{formatearMonedaSinCentavos(resultadoAlta?.cuotaSugerida)}</dd>
-            </div>
-            <div className="flex justify-between">
-              <dt>Invertido</dt>
-              <dd>{formatearMonedaSinCentavos(resultadoAlta?.montoInvertido)}</dd>
-            </div>
-            <div className="flex justify-between">
-              <dt>Ganado estimado</dt>
-              <dd>{formatearMonedaSinCentavos(resultadoAlta?.montoGanadoEstimado)}</dd>
-            </div>
-            <div className="flex justify-between">
-              <dt>Por ganar</dt>
-              <dd>{formatearMonedaSinCentavos(resultadoAlta?.montoPorGanar)}</dd>
-            </div>
+          <dl className="space-y-2 text-sm">
+            <FilaCalculo etiqueta="Total" valor={resultadoAlta?.totalADevolver} />
+            <FilaCalculo etiqueta="Cuota sugerida" valor={resultadoAlta?.cuotaSugerida} />
+            <FilaCalculo etiqueta="Invertido" valor={resultadoAlta?.montoInvertido} />
+            <FilaCalculo etiqueta="Ganado estimado" valor={resultadoAlta?.montoGanadoEstimado} />
+            <FilaCalculo etiqueta="Por ganar" valor={resultadoAlta?.montoPorGanar} />
           </dl>
         )}
       </div>

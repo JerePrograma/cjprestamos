@@ -1,3 +1,4 @@
+import { StatusPill } from '../../../components/ui/StatusPill';
 import { PersonaLegajoPanel } from './PersonaLegajoPanel';
 import type { Persona } from '../types/persona';
 
@@ -22,9 +23,16 @@ function estiloColor(colorReferencia: string | null) {
   return { backgroundColor: colorReferencia };
 }
 
-export function PersonaDetalle({ persona, loading, error, onEditar, onDarDeBaja, deshabilitarBaja }: Props) {
+export function PersonaDetalle({
+  persona,
+  loading,
+  error,
+  onEditar,
+  onDarDeBaja,
+  deshabilitarBaja,
+}: Props) {
   if (loading) {
-    return <p className="text-sm text-slate-600 dark:text-slate-300">Cargando detalle...</p>;
+    return <p className="text-sm text-muted">Cargando detalle...</p>;
   }
 
   if (error) {
@@ -32,63 +40,106 @@ export function PersonaDetalle({ persona, loading, error, onEditar, onDarDeBaja,
   }
 
   if (!persona) {
-    return <p className="text-sm text-slate-600 dark:text-slate-300">Seleccioná una persona para ver el detalle.</p>;
+    return (
+      <p className="text-sm text-muted">
+        Seleccioná una persona para ver el detalle.
+      </p>
+    );
   }
 
   return (
-    <div className="space-y-3">
-      <section className="panel space-y-4 p-4 sm:p-5">
+    <div className="space-y-4">
+      <section className="panel space-y-5 p-4 sm:p-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">{persona.nombre}</h2>
-          <span
-            className={`rounded-full px-3 py-1 text-xs font-semibold ${
-              persona.activo ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200' : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'
-            }`}
-          >
-            {persona.activo ? 'Activa' : 'Inactiva'}
-          </span>
+          <div className="min-w-0">
+            <h2 className="truncate text-xl font-semibold text-app">
+              {persona.nombre}
+            </h2>
+
+            <p className="mt-1 text-sm text-muted">
+              Datos operativos y referencia básica de la persona.
+            </p>
+          </div>
+
+          <StatusPill
+            texto={persona.activo ? 'Activa' : 'Inactiva'}
+            tone={persona.activo ? 'success' : 'neutral'}
+          />
         </div>
 
-        <p className="label-ui">Datos básicos de persona</p>
+        <div>
+          <p className="label-ui mb-2">
+            Datos básicos de persona
+          </p>
 
-        <dl className="grid gap-2 text-sm sm:grid-cols-2">
-          <div className="card-interactiva">
-            <dt className="label-ui">Alias</dt>
-            <dd className="mt-1 font-medium text-slate-900 dark:text-slate-100">{valorTexto(persona.alias)}</dd>
-          </div>
-          <div className="card-interactiva">
-            <dt className="label-ui">Teléfono</dt>
-            <dd className="mt-1 font-medium text-slate-900 dark:text-slate-100">{valorTexto(persona.telefono)}</dd>
-          </div>
-          <div className="card-interactiva">
-            <dt className="label-ui">Color de referencia</dt>
-            <dd className="mt-1 flex items-center gap-2 font-medium text-slate-900 dark:text-slate-100">
-              <span className="inline-block h-3 w-3 rounded-full border border-slate-300" style={estiloColor(persona.colorReferencia)} />
-              {valorTexto(persona.colorReferencia)}
-            </dd>
-          </div>
-          <div className="card-interactiva">
-            <dt className="label-ui">Cobra en fecha</dt>
-            <dd className="mt-1 font-medium text-slate-900 dark:text-slate-100">{persona.cobraEnFecha ? 'Sí' : 'No'}</dd>
-          </div>
-          <div className="card-interactiva sm:col-span-2">
-            <dt className="label-ui">Tiene ingreso extra</dt>
-            <dd className="mt-1 font-medium text-slate-900 dark:text-slate-100">{persona.tieneIngresoExtra ? 'Sí' : 'No'}</dd>
-          </div>
-        </dl>
+          <dl className="grid gap-3 text-sm sm:grid-cols-2">
+            <div className="card-interactiva">
+              <dt className="label-ui">Alias</dt>
+              <dd className="mt-1 font-semibold text-app">
+                {valorTexto(persona.alias)}
+              </dd>
+            </div>
+
+            <div className="card-interactiva">
+              <dt className="label-ui">Teléfono</dt>
+              <dd className="mt-1 font-semibold text-app">
+                {valorTexto(persona.telefono)}
+              </dd>
+            </div>
+
+            <div className="card-interactiva">
+              <dt className="label-ui">Color de referencia</dt>
+              <dd className="mt-1 flex items-center gap-2 font-semibold text-app">
+                <span
+                  aria-hidden="true"
+                  className="inline-block h-3 w-3 rounded-full border border-subtle"
+                  style={estiloColor(persona.colorReferencia)}
+                />
+                {valorTexto(persona.colorReferencia)}
+              </dd>
+            </div>
+
+            <div className="card-interactiva">
+              <dt className="label-ui">Cobra en fecha</dt>
+              <dd className="mt-1 font-semibold text-app">
+                {persona.cobraEnFecha ? 'Sí' : 'No'}
+              </dd>
+            </div>
+
+            <div className="card-interactiva sm:col-span-2">
+              <dt className="label-ui">Tiene ingreso extra</dt>
+              <dd className="mt-1 font-semibold text-app">
+                {persona.tieneIngresoExtra ? 'Sí' : 'No'}
+              </dd>
+            </div>
+          </dl>
+        </div>
 
         <div>
-          <h3 className="label-ui">Observación rápida</h3>
-          <p className="mt-1 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
+          <h3 className="label-ui">
+            Observación rápida
+          </h3>
+
+          <p className="surface-inset mt-2 text-sm">
             {valorTexto(persona.observacionRapida)}
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          <button onClick={onEditar} className="boton-principal px-3 py-2">
+        <div className="flex flex-wrap gap-2 border-t border-subtle pt-4">
+          <button
+            type="button"
+            onClick={onEditar}
+            className="boton-principal px-3 py-2"
+          >
             Editar
           </button>
-          <button onClick={onDarDeBaja} disabled={!persona.activo || deshabilitarBaja} className="boton-secundario px-3 py-2">
+
+          <button
+            type="button"
+            onClick={onDarDeBaja}
+            disabled={!persona.activo || deshabilitarBaja}
+            className="boton-secundario px-3 py-2"
+          >
             {deshabilitarBaja ? 'Procesando...' : 'Dar de baja'}
           </button>
         </div>

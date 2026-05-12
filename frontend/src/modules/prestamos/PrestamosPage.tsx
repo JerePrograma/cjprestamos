@@ -11,22 +11,31 @@ import { useListadoPrestamos } from './hooks/usePrestamos';
 
 type VistaMovilPrestamos = 'listado' | 'workspace';
 
-const vistasMoviles: Array<{ id: VistaMovilPrestamos; etiqueta: string; descripcion: string }> = [
+const vistasMoviles: Array<{
+  id: VistaMovilPrestamos;
+  etiqueta: string;
+  descripcion: string;
+}> = [
   { id: 'listado', etiqueta: 'Explorar', descripcion: 'Buscar y elegir préstamo' },
   { id: 'workspace', etiqueta: 'Operar', descripcion: 'Cuotas, pagos y resumen' },
 ];
 
 export function PrestamosPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+
   const [seleccionId, setSeleccionId] = useState<number | null>(() => {
     const prestamoId = searchParams.get('prestamoId');
     return prestamoId ? Number(prestamoId) : null;
   });
+
   const [vistaMovil, setVistaMovil] = useState<VistaMovilPrestamos>(() => {
     const vista = searchParams.get('vista');
     return vista === 'workspace' || vista === 'listado' ? vista : 'listado';
   });
-  const [mostrarAlta, setMostrarAlta] = useState(() => searchParams.get('alta') === '1');
+
+  const [mostrarAlta, setMostrarAlta] = useState(
+    () => searchParams.get('alta') === '1',
+  );
 
   const personas = useListadoPersonas();
   const prestamos = useListadoPrestamos();
@@ -42,26 +51,32 @@ export function PrestamosPage() {
   useEffect(() => {
     setSearchParams((actual) => {
       const siguiente = new URLSearchParams(actual);
+
       if (seleccionId) {
         siguiente.set('prestamoId', String(seleccionId));
       } else {
         siguiente.delete('prestamoId');
       }
+
       siguiente.set('vista', vistaMovil);
+
       if (mostrarAlta) {
         siguiente.set('alta', '1');
       } else {
         siguiente.delete('alta');
       }
+
       return siguiente;
     });
   }, [seleccionId, vistaMovil, mostrarAlta, setSearchParams]);
 
   const personasPorId = useMemo(() => {
     const mapa = new Map<number, string>();
+
     (personas.data ?? []).forEach((persona) => {
       mapa.set(persona.id, persona.nombre);
     });
+
     return mapa;
   }, [personas.data]);
 
@@ -74,7 +89,7 @@ export function PrestamosPage() {
   const prestamosTotal = prestamos.data?.length ?? 0;
 
   return (
-    <section className="space-y-5">
+    <section className="space-y-6">
       <PageHeader
         titulo="Préstamos"
         descripcion="Flujo operativo completo: explorá préstamos, abrí workspace y resolvé cuotas/pagos desde una misma pantalla."
@@ -99,9 +114,13 @@ export function PrestamosPage() {
         descripcion="1) Elegir préstamo, 2) revisar resumen/cuotas/pagos, 3) volver al listado."
         suave
       >
-        <p className="text-sm text-slate-600 dark:text-slate-300">
-          Si todavía no existe el préstamo, usá <strong>Nuevo préstamo</strong>. Para editar datos base de persona, entrá a{' '}
-          <Link to="/personas" className="font-semibold text-slate-800 underline decoration-slate-300 underline-offset-2 dark:text-slate-200">
+        <p className="text-sm text-soft">
+          Si todavía no existe el préstamo, usá <strong className="text-app">Nuevo préstamo</strong>.
+          Para editar datos base de persona, entrá a{' '}
+          <Link
+            to="/personas"
+            className="font-semibold text-app underline decoration-sky-300 underline-offset-4"
+          >
             Personas
           </Link>
           .
@@ -109,26 +128,37 @@ export function PrestamosPage() {
       </SectionCard>
 
       <div className="panel p-2 sm:hidden">
-        <nav className="grid grid-cols-2 gap-1" aria-label="Navegación de préstamos en móvil">
-          {vistasMoviles.map((vista) => (
-            <button
-              key={vista.id}
-              type="button"
-              onClick={() => setVistaMovil(vista.id)}
-              className={`rounded-lg px-2 py-2 text-left text-xs font-medium transition ${
-                vistaMovil === vista.id ? 'bg-slate-900 text-white dark:bg-sky-500 dark:text-slate-950' : 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800'
-              }`}
-            >
-              <span className="block">{vista.etiqueta}</span>
-              <span className="text-[11px] opacity-80">{vista.descripcion}</span>
-            </button>
-          ))}
+        <nav className="grid grid-cols-2 gap-2" aria-label="Navegación de préstamos en móvil">
+          {vistasMoviles.map((vista) => {
+            const activa = vistaMovil === vista.id;
+
+            return (
+              <button
+                key={vista.id}
+                type="button"
+                onClick={() => setVistaMovil(vista.id)}
+                className={activa ? 'card-activa text-left' : 'card-interactiva text-left'}
+              >
+                <span className="block text-sm font-semibold text-app">
+                  {vista.etiqueta}
+                </span>
+
+                <span className="mt-0.5 block text-xs text-muted">
+                  {vista.descripcion}
+                </span>
+              </button>
+            );
+          })}
         </nav>
       </div>
 
       <div className="space-y-4 xl:hidden">
         {mostrarAlta && (
-          <PrestamoAltaPanel personas={personas.data ?? []} personasLoading={personas.isLoading} onCreado={onCreado} />
+          <PrestamoAltaPanel
+            personas={personas.data ?? []}
+            personasLoading={personas.isLoading}
+            onCreado={onCreado}
+          />
         )}
 
         {vistaMovil === 'listado' && (
@@ -145,7 +175,9 @@ export function PrestamosPage() {
           />
         )}
 
-        {vistaMovil === 'workspace' && <PrestamoWorkspace prestamoId={seleccionId} personasPorId={personasPorId} />}
+        {vistaMovil === 'workspace' && (
+          <PrestamoWorkspace prestamoId={seleccionId} personasPorId={personasPorId} />
+        )}
       </div>
 
       <div className="hidden gap-4 xl:grid xl:grid-cols-[320px_minmax(0,1fr)]">
@@ -160,7 +192,11 @@ export function PrestamosPage() {
 
         <div className="space-y-4">
           {mostrarAlta && (
-            <PrestamoAltaPanel personas={personas.data ?? []} personasLoading={personas.isLoading} onCreado={onCreado} />
+            <PrestamoAltaPanel
+              personas={personas.data ?? []}
+              personasLoading={personas.isLoading}
+              onCreado={onCreado}
+            />
           )}
 
           {prestamosTotal === 0 && !mostrarAlta ? (

@@ -1,6 +1,6 @@
+import { StatusPill } from '../../../components/ui/StatusPill';
 import type { PrestamoResponse } from '../types/prestamo';
 import {
-  etiquetaEstado,
   etiquetaFrecuencia,
   formatearFecha,
   formatearMoneda,
@@ -15,6 +15,13 @@ type PrestamosListadoPanelProps = {
   onSeleccionar: (prestamoId: number) => void;
 };
 
+function tonoEstado(estado: PrestamoResponse['estado']) {
+  if (estado === 'ACTIVO') return 'success';
+  if (estado === 'RENEGOCIADO') return 'warning';
+  if (estado === 'FINALIZADO') return 'neutral';
+  return 'danger';
+}
+
 export function PrestamosListadoPanel({
   isLoading,
   isError,
@@ -25,50 +32,81 @@ export function PrestamosListadoPanel({
 }: PrestamosListadoPanelProps) {
   return (
     <aside className="panel p-3 sm:p-4">
-      <div className="mb-3 flex items-center justify-between gap-2 border-b border-slate-200 pb-2 dark:border-slate-800">
-        <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Listado de préstamos</h2>
-        <span className="text-xs text-slate-500 dark:text-slate-400">Seleccioná uno para operar</span>
-      </div>
+      <header className="mb-3 flex items-center justify-between gap-2 border-b border-subtle pb-3">
+        <div>
+          <h2 className="text-sm font-semibold text-app">
+            Listado de préstamos
+          </h2>
+
+          <p className="mt-0.5 text-xs text-muted">
+            Seleccioná uno para operar
+          </p>
+        </div>
+
+        <span className="badge-count">
+          {prestamos.length}
+        </span>
+      </header>
 
       {isLoading ? (
-        <p className="text-sm text-slate-500 dark:text-slate-400">Cargando préstamos...</p>
+        <p className="text-sm text-muted">Cargando préstamos...</p>
       ) : isError ? (
         <p className="mensaje-error">No se pudo cargar el listado de préstamos.</p>
       ) : prestamos.length === 0 ? (
-        <p className="text-sm text-slate-500 dark:text-slate-400">Todavía no hay préstamos cargados. Usá “Nuevo préstamo” para comenzar.</p>
+        <p className="text-sm text-muted">
+          Todavía no hay préstamos cargados. Usá “Nuevo préstamo” para comenzar.
+        </p>
       ) : (
-        <ul className="max-h-[62vh] space-y-2 overflow-auto pr-1">
-          {prestamos.map((prestamo) => (
-            <li key={prestamo.id}>
-              <button
-                type="button"
-                onClick={() => onSeleccionar(prestamo.id)}
-                className={`w-full rounded-xl border px-3 py-3 text-left text-sm transition ${
-                  seleccionId === prestamo.id
-                    ? 'border-slate-900 bg-slate-900 text-white dark:border-sky-400 dark:bg-sky-500 dark:text-slate-950'
-                    : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-slate-700 dark:hover:bg-slate-800'
-                }`}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-semibold">#{prestamo.id}</span>
-                  <span className={`rounded px-2 py-0.5 text-xs font-medium ${etiquetaEstado(prestamo.estado)}`}>
-                    {prestamo.estado}
-                  </span>
-                </div>
-                <p className="mt-1">{personasPorId.get(prestamo.personaId) ?? `Persona ${prestamo.personaId}`}</p>
-                <p className="text-xs opacity-80">
-                  {formatearMoneda(prestamo.montoInicial)} · {prestamo.cantidadCuotas} cuotas
-                </p>
-                <p className="text-xs opacity-80">{etiquetaFrecuencia(prestamo.frecuenciaTipo, prestamo.frecuenciaCadaDias)}</p>
-                {prestamo.referenciaCodigo && <p className="text-xs opacity-80">Ref: {prestamo.referenciaCodigo}</p>}
-                {prestamo.fechaBase && (
-                  <p className="text-xs opacity-80">
-                    {prestamo.frecuenciaTipo === 'FECHAS_MANUALES' ? 'Inicio aux.' : 'Base'}: {formatearFecha(prestamo.fechaBase)}
+        <ul className="grid max-h-[62vh] gap-2 overflow-auto pr-1">
+          {prestamos.map((prestamo) => {
+            const activo = seleccionId === prestamo.id;
+
+            return (
+              <li key={prestamo.id}>
+                <button
+                  type="button"
+                  onClick={() => onSeleccionar(prestamo.id)}
+                  className={[
+                    'w-full text-left',
+                    activo ? 'card-activa' : 'card-interactiva',
+                  ].join(' ')}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-semibold text-app">
+                      #{prestamo.id}
+                    </span>
+
+                    <StatusPill texto={prestamo.estado} tone={tonoEstado(prestamo.estado)} />
+                  </div>
+
+                  <p className="mt-1 truncate text-sm font-medium text-app">
+                    {personasPorId.get(prestamo.personaId) ?? `Persona ${prestamo.personaId}`}
                   </p>
-                )}
-              </button>
-            </li>
-          ))}
+
+                  <p className="mt-1 text-xs text-muted">
+                    {formatearMoneda(prestamo.montoInicial)} · {prestamo.cantidadCuotas} cuotas
+                  </p>
+
+                  <p className="text-xs text-muted">
+                    {etiquetaFrecuencia(prestamo.frecuenciaTipo, prestamo.frecuenciaCadaDias)}
+                  </p>
+
+                  {prestamo.referenciaCodigo && (
+                    <p className="text-xs text-muted">
+                      Ref: {prestamo.referenciaCodigo}
+                    </p>
+                  )}
+
+                  {prestamo.fechaBase && (
+                    <p className="text-xs text-muted">
+                      {prestamo.frecuenciaTipo === 'FECHAS_MANUALES' ? 'Inicio aux.' : 'Base'}:{' '}
+                      {formatearFecha(prestamo.fechaBase)}
+                    </p>
+                  )}
+                </button>
+              </li>
+            );
+          })}
         </ul>
       )}
     </aside>
