@@ -8,3 +8,10 @@ backend/target/
 frontend/node_modules/
 # Storage local de adjuntos
 backend/storage/
+
+# Frontend build artifacts
+frontend/dist/
+frontend/build/
+frontend/coverage/
+frontend/*.tsbuildinfo
+*.tsbuildinfo
