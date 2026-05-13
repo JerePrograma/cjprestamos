@@ -1,9 +1,23 @@
+import { AxiosError } from 'axios';
 import { api } from '../api';
 import type { LegajoAdjunto, LegajoPersona, LegajoPersonaPayload } from '../../modules/personas/types/legajo';
 
-export async function obtenerLegajoPorPersonaId(personaId: number): Promise<LegajoPersona> {
-  const response = await api.get<LegajoPersona>(`/personas/${personaId}/legajo`);
-  return response.data;
+export async function obtenerLegajoPorPersonaId(personaId: number): Promise<LegajoPersona | null> {
+  try {
+    const response = await api.get<LegajoPersona>(`/personas/${personaId}/legajo`);
+    return response.data;
+  } catch (error) {
+    if (
+      error instanceof AxiosError &&
+      error.response?.status === 404 &&
+      typeof error.response.data?.message === 'string' &&
+      error.response.data.message.includes('Legajo no encontrado para la persona')
+    ) {
+      return null;
+    }
+
+    throw error;
+  }
 }
 
 export async function crearLegajo(personaId: number, payload: LegajoPersonaPayload): Promise<LegajoPersona> {
