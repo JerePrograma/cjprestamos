@@ -183,7 +183,7 @@ cd backend
 mvn spring-boot:run
 ```
 
-API base: `http://localhost:8080/api`
+API base: `http://localhost:8081/api`
 
 Credenciales iniciales desarrollo:
 - usuario: `admin`
@@ -250,3 +250,19 @@ Una funcionalidad no se considera cerrada si:
 - no cierra flujo real de punta a punta.
 
 El criterio de calidad es operativo: menos fricción, más claridad y números confiables.
+
+
+## Runbook local en paralelo con HogarIA
+
+Configuración recomendada para evitar conflictos entre ambos repositorios en desarrollo local:
+
+| App | Frontend | Backend | Auth local | Variables requeridas | Comando de arranque |
+|---|---|---|---|---|---|
+| HogarIA | `http://localhost:5174` | `http://localhost:8080` | JWT Bearer (`/api/auth/login`) con fallback `X-User-Id` solo dev | Backend: `DB_URL`, `DB_USER`, `DB_PASSWORD`, `CORS_ALLOWED_ORIGINS`, `ALLOW_X_USER_ID_FALLBACK`; Frontend: `VITE_API_BASE_URL`, `VITE_ALLOW_DEV_X_USER_ID` | `cd backend && mvn spring-boot:run` + `cd frontend && npm run dev -- --port 5174` |
+| cjprestamos | `http://localhost:5173` | `http://localhost:8081` | Basic Auth (`admin/admin` bootstrap local) | Backend: `CORS_ALLOWED_ORIGINS`; Frontend: `VITE_API_BASE_URL=/api` | `cd backend && mvn spring-boot:run` + `cd frontend && npm run dev` |
+
+Notas de interoperabilidad:
+- En ambos frontends se recomienda `VITE_API_BASE_URL=/api` y usar proxy de Vite para evitar hardcodear hosts y reducir problemas CORS en desarrollo.
+- `cjprestamos` backend ya incluye CORS para `localhost` y `127.0.0.1` en puertos `5173` y `5174`.
+- Si HogarIA frontend se levanta sin proxy y sin backend activo, aparecerá `ERR_CONNECTION_REFUSED`; esto es esperado hasta iniciar `http://localhost:8080`.
+- El endpoint de legajo puede responder `404` cuando la persona todavía no tenga legajo cargado; tratarlo como estado funcional y no como caída técnica.

@@ -26,7 +26,14 @@ function App() {
     return <LoginPage />;
   }
 
-  return <RouterProvider router={router} />;
+  return (
+    <RouterProvider
+      router={router}
+      future={{
+        v7_startTransition: true,
+      }}
+    />
+  );
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
