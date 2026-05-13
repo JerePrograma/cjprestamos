@@ -2,6 +2,8 @@ package com.cjprestamos.backend.integration;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 
+import com.cjprestamos.backend.auth.model.UsuarioSistema;
+import com.cjprestamos.backend.auth.repository.UsuarioSistemaRepository;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -11,29 +13,30 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Testcontainers(disabledWithoutDocker = true)
 public abstract class IntegrationTestBase {
 
     private static final String TEST_USER = "operadora-test";
     private static final String TEST_PASSWORD = "operadora-test-123";
 
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
+    private static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine")
         .withDatabaseName("cjprestamos_test")
         .withUsername("postgres")
         .withPassword("postgres");
+
+    static {
+        POSTGRES.start();
+    }
 
     @Autowired
     protected MockMvc mockMvc;
@@ -41,17 +44,24 @@ public abstract class IntegrationTestBase {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    private UsuarioSistemaRepository usuarioSistemaRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @DynamicPropertySource
     static void registrarDatasource(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-        registry.add("spring.datasource.driver-class-name", postgres::getDriverClassName);
+        registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
+        registry.add("spring.datasource.username", POSTGRES::getUsername);
+        registry.add("spring.datasource.password", POSTGRES::getPassword);
+        registry.add("spring.datasource.driver-class-name", POSTGRES::getDriverClassName);
     }
 
     @BeforeEach
     void limpiarBase() {
         jdbcTemplate.execute("TRUNCATE TABLE legajo_adjunto, legajo_persona, imputacion_pago, evento_prestamo, pago, cuota, prestamo, persona RESTART IDENTITY CASCADE");
+        asegurarUsuarioOperadoraTest();
         limpiarStorageAdjuntos();
     }
 
@@ -81,6 +91,16 @@ public abstract class IntegrationTestBase {
             Integer.class
         );
         return total == null ? 0 : total;
+    }
+
+    private void asegurarUsuarioOperadoraTest() {
+        UsuarioSistema usuario = usuarioSistemaRepository.findByUsernameIgnoreCase(TEST_USER)
+            .orElseGet(UsuarioSistema::new);
+        usuario.setUsername(TEST_USER);
+        usuario.setPassword(passwordEncoder.encode(TEST_PASSWORD));
+        usuario.setRol("OPERADORA");
+        usuario.setActivo(true);
+        usuarioSistemaRepository.save(usuario);
     }
 
     private void limpiarStorageAdjuntos() {
