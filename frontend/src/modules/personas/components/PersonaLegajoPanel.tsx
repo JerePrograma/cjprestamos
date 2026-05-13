@@ -48,7 +48,7 @@ export function PersonaLegajoPanel({ personaId }: Props) {
   const legajo = useLegajoPersona(personaId);
   const crearLegajo = useCrearLegajoPersona(personaId);
   const actualizarLegajo = useActualizarLegajoPersona(personaId);
-  const existeLegajo = legajo.isSuccess;
+  const existeLegajo = Boolean(legajo.data);
 
   const adjuntos = useAdjuntosLegajo(personaId, existeLegajo);
   const subirAdjunto = useSubirAdjuntoLegajo(personaId);
@@ -66,10 +66,10 @@ export function PersonaLegajoPanel({ personaId }: Props) {
       return;
     }
 
-    if (legajo.isError) {
+    if (!legajo.data) {
       setFormulario(payloadInicialLegajo);
     }
-  }, [legajo.data, legajo.isError]);
+  }, [legajo.data]);
 
   const textoEncabezado = useMemo(
     () => (existeLegajo ? 'Legajo de la persona' : 'Legajo no creado todavía'),
@@ -143,8 +143,17 @@ export function PersonaLegajoPanel({ personaId }: Props) {
 
       {legajo.isLoading ? (
         <p className="text-sm text-muted">Cargando legajo...</p>
+      ) : legajo.isError ? (
+        <p className="mensaje-error">No se pudo cargar el legajo de la persona.</p>
       ) : (
         <>
+          {!existeLegajo && (
+            <p className="surface-inset text-sm">
+              La persona todavía no tiene legajo cargado.
+              Completá los datos y presioná "Crear legajo" para registrarlo.
+            </p>
+          )}
+
           <div className="grid gap-3 md:grid-cols-2">
             <label className="text-sm">
               <span className="label-ui mb-1 block">Dirección</span>

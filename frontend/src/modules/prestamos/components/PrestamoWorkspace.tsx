@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { redondearMontoHaciaArriba } from '../../../utils/moneda';
 import { usePagosPrestamo, useRegistrarPago } from '../../pagos/hooks/usePagos';
 import {
@@ -177,7 +177,7 @@ export function PrestamoWorkspace({
     detallePrestamo.data?.fechaBase,
   ]);
 
-  const cuotasActuales = cuotasPrestamo.data ?? [];
+  const cuotasActuales = useMemo(() => cuotasPrestamo.data ?? [], [cuotasPrestamo.data]);
 
   const cuotasConSaldo = useMemo(
     () => cuotasActuales.filter((cuota) => cuota.montoProgramado > cuota.montoPagado),
@@ -202,8 +202,8 @@ export function PrestamoWorkspace({
 
   const saldoPendiente = Math.max(totalProgramado - totalPagado, 0);
 
-  useEffect(() => {
-    setCuotasAjuste(
+  const cuotasAjusteIniciales = useMemo(
+    () =>
       cuotasActuales
         .filter((cuota) => cuota.montoPagado <= 0)
         .map((cuota) => ({
@@ -214,8 +214,36 @@ export function PrestamoWorkspace({
           montoPagado: cuota.montoPagado,
           estado: cuota.estado,
         })),
-    );
-  }, [cuotasActuales]);
+    [cuotasActuales],
+  );
+
+  const firmaCuotasAjuste = useMemo(
+    () =>
+      cuotasAjusteIniciales
+        .map((cuota) =>
+          [
+            cuota.cuotaId,
+            cuota.numeroCuota,
+            cuota.fechaVencimiento,
+            cuota.montoProgramado,
+            cuota.montoPagado,
+            cuota.estado,
+          ].join('|'),
+        )
+        .join(';'),
+    [cuotasAjusteIniciales],
+  );
+
+  const ultimaFirmaCuotasAjusteRef = useRef<string>('');
+
+  useEffect(() => {
+    if (ultimaFirmaCuotasAjusteRef.current === firmaCuotasAjuste) {
+      return;
+    }
+
+    ultimaFirmaCuotasAjusteRef.current = firmaCuotasAjuste;
+    setCuotasAjuste(cuotasAjusteIniciales);
+  }, [firmaCuotasAjuste, cuotasAjusteIniciales]);
 
   const actualizarCampoPago = <K extends keyof PagoFormulario>(
     campo: K,

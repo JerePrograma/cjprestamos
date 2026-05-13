@@ -18,7 +18,15 @@ export function useLegajoPersona(personaId: number | null) {
     queryKey: [...QUERY_KEY_LEGAJO, personaId],
     queryFn: () => obtenerLegajoPorPersonaId(personaId as number),
     enabled: personaId !== null,
-    retry: false,
+    retry: (failureCount, error) => {
+      const status = (error as { response?: { status?: number } }).response?.status;
+
+      if (status === 404) {
+        return false;
+      }
+
+      return failureCount < 2;
+    },
   });
 }
 
@@ -50,7 +58,15 @@ export function useAdjuntosLegajo(personaId: number | null, habilitado = true) {
     queryKey: [...QUERY_KEY_ADJUNTOS, personaId],
     queryFn: () => listarAdjuntosLegajo(personaId as number),
     enabled: personaId !== null && habilitado,
-    retry: false,
+    retry: (failureCount, error) => {
+      const status = (error as { response?: { status?: number } }).response?.status;
+
+      if (status === 404) {
+        return false;
+      }
+
+      return failureCount < 2;
+    },
   });
 }
 
