@@ -1,6 +1,5 @@
 package com.cjprestamos.backend.prestamo.dto;
 
-import com.cjprestamos.backend.prestamo.model.enums.EstadoPrestamo;
 import com.cjprestamos.backend.prestamo.model.enums.FrecuenciaTipo;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
@@ -22,7 +21,6 @@ public record PrestamoRequest(
     LocalDate fechaBase,
     @NotNull Boolean usarFechasManuales,
     @Size(max = 80) String referenciaCodigo,
-    @Size(max = 600) String observaciones,
-    @NotNull EstadoPrestamo estado
+    @Size(max = 600) String observaciones
 ) {
 }

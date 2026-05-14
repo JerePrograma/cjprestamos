@@ -60,8 +60,7 @@ class PrestamoServiceTest {
             LocalDate.of(2026, 4, 20),
             false,
             "REF-1",
-            "Observación",
-            EstadoPrestamo.ACTIVO
+            "Observación"
         );
 
         Persona persona = new Persona();
@@ -104,8 +103,7 @@ class PrestamoServiceTest {
             LocalDate.now(),
             false,
             null,
-            null,
-            EstadoPrestamo.ACTIVO
+            null
         );
 
         when(personaRepository.findById(99L)).thenReturn(Optional.empty());
@@ -128,8 +126,7 @@ class PrestamoServiceTest {
             LocalDate.now(),
             false,
             null,
-            null,
-            EstadoPrestamo.ACTIVO
+            null
         );
 
         Persona persona = new Persona();
@@ -153,8 +150,7 @@ class PrestamoServiceTest {
             LocalDate.now(),
             false,
             null,
-            null,
-            EstadoPrestamo.ACTIVO
+            null
         );
 
         Persona persona = new Persona();
@@ -179,8 +175,7 @@ class PrestamoServiceTest {
             LocalDate.now(),
             false,
             null,
-            null,
-            EstadoPrestamo.ACTIVO
+            null
         );
 
         Persona persona = new Persona();
@@ -205,8 +200,7 @@ class PrestamoServiceTest {
             LocalDate.now(),
             false,
             null,
-            null,
-            EstadoPrestamo.ACTIVO
+            null
         );
 
         Persona persona = new Persona();
@@ -230,8 +224,7 @@ class PrestamoServiceTest {
             LocalDate.now(),
             true,
             null,
-            null,
-            EstadoPrestamo.ACTIVO
+            null
         );
 
         Persona persona = new Persona();
@@ -256,8 +249,7 @@ class PrestamoServiceTest {
             null,
             false,
             null,
-            null,
-            EstadoPrestamo.ACTIVO
+            null
         );
 
         Persona persona = new Persona();
@@ -282,8 +274,7 @@ class PrestamoServiceTest {
             LocalDate.of(2026, 4, 20),
             true,
             null,
-            null,
-            EstadoPrestamo.ACTIVO
+            null
         );
 
         Persona persona = new Persona();
@@ -308,8 +299,7 @@ class PrestamoServiceTest {
             LocalDate.of(2026, 4, 20),
             false,
             "REF-1",
-            "Observación",
-            EstadoPrestamo.ACTIVO
+            "Observación"
         );
 
         Persona persona = new Persona();
@@ -338,8 +328,7 @@ class PrestamoServiceTest {
             LocalDate.of(2026, 5, 1),
             true,
             "REF-1",
-            "Observación",
-            EstadoPrestamo.ACTIVO
+            "Observación"
         );
 
         Persona persona = new Persona();
@@ -441,7 +430,7 @@ class PrestamoServiceTest {
     }
 
     @Test
-    void listarActivos_deberiaFiltrarPorEstadoActivo() {
+    void listarActivos_deberiaIncluirEstadosCobrables() {
         Prestamo prestamo = new Prestamo();
         Persona persona = new Persona();
         prestamo.setPersona(persona);
@@ -451,11 +440,12 @@ class PrestamoServiceTest {
         prestamo.setUsarFechasManuales(false);
         prestamo.setEstado(EstadoPrestamo.ACTIVO);
 
-        when(prestamoRepository.findByEstadoOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO)).thenReturn(List.of(prestamo));
+        when(prestamoRepository.findByEstadoInOrderByCreatedAtDesc(List.of(EstadoPrestamo.ACTIVO, EstadoPrestamo.RENEGOCIADO)))
+            .thenReturn(List.of(prestamo));
 
         List<PrestamoResponse> response = prestamoService.listarActivos();
 
         assertEquals(1, response.size());
-        verify(prestamoRepository).findByEstadoOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO);
+        verify(prestamoRepository).findByEstadoInOrderByCreatedAtDesc(List.of(EstadoPrestamo.ACTIVO, EstadoPrestamo.RENEGOCIADO));
     }
 }

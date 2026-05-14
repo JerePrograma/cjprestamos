@@ -10,4 +10,6 @@ public interface PrestamoRepository extends JpaRepository<Prestamo, Long> {
     List<Prestamo> findAllByOrderByCreatedAtDesc();
 
     List<Prestamo> findByEstadoOrderByCreatedAtDesc(EstadoPrestamo estado);
+
+    List<Prestamo> findByEstadoInOrderByCreatedAtDesc(List<EstadoPrestamo> estados);
 }
