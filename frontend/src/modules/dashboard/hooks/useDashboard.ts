@@ -7,6 +7,7 @@ export function useResumenDashboard() {
   return useQuery({
     queryKey: [...QUERY_KEY_DASHBOARD, 'resumen'],
     queryFn: obtenerResumenDashboard,
+    refetchInterval: 120_000,
   });
 }
 
@@ -14,5 +15,6 @@ export function useControlCajaDashboard() {
   return useQuery({
     queryKey: [...QUERY_KEY_DASHBOARD, 'control-caja'],
     queryFn: obtenerControlCajaDashboard,
+    refetchInterval: 120_000,
   });
 }
