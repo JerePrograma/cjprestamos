@@ -3,6 +3,7 @@ package com.cjprestamos.backend.pago.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -85,7 +86,7 @@ class PagoServiceTest {
                 null
         );
 
-        PagoResponse response = pagoService.registrar(request);
+        PagoResponse response = pagoService.registrar(request, null);
 
         assertEquals(EstadoPago.REGISTRADO, response.estado());
         assertEquals(10L, response.prestamoId());
@@ -122,7 +123,7 @@ class PagoServiceTest {
                 null
         );
 
-        pagoService.registrar(request);
+        pagoService.registrar(request, null);
 
         assertEquals(new BigDecimal("50.00"), cuota1.getMontoPagado());
         assertEquals(EstadoCuota.PARCIAL, cuota1.getEstado());
@@ -157,7 +158,7 @@ class PagoServiceTest {
                 null
         );
 
-        pagoService.registrar(request);
+        pagoService.registrar(request, null);
 
         assertEquals(new BigDecimal("100.00"), cuota1.getMontoPagado());
         assertEquals(EstadoCuota.PAGADA, cuota1.getEstado());
@@ -198,7 +199,7 @@ class PagoServiceTest {
                 null
         );
 
-        pagoService.registrar(request);
+        pagoService.registrar(request, null);
 
         assertEquals(new BigDecimal("100.00"), cuota1.getMontoPagado());
         assertEquals(EstadoCuota.PAGADA, cuota1.getEstado());
@@ -237,7 +238,7 @@ class PagoServiceTest {
 
         ResponseStatusException exception = assertThrows(
                 ResponseStatusException.class,
-                () -> pagoService.registrar(request)
+                () -> pagoService.registrar(request, null)
         );
 
         assertEquals(400, exception.getStatusCode().value());
@@ -263,7 +264,7 @@ class PagoServiceTest {
 
         ResponseStatusException exception = assertThrows(
                 ResponseStatusException.class,
-                () -> pagoService.registrar(request)
+                () -> pagoService.registrar(request, null)
         );
 
         assertEquals(400, exception.getStatusCode().value());
@@ -284,7 +285,7 @@ class PagoServiceTest {
 
         ResponseStatusException exception = assertThrows(
                 ResponseStatusException.class,
-                () -> pagoService.registrar(request)
+                () -> pagoService.registrar(request, null)
         );
 
         assertEquals(404, exception.getStatusCode().value());
@@ -307,7 +308,7 @@ class PagoServiceTest {
 
         ResponseStatusException exception = assertThrows(
                 ResponseStatusException.class,
-                () -> pagoService.registrar(request)
+                () -> pagoService.registrar(request, null)
         );
 
         assertEquals(400, exception.getStatusCode().value());
@@ -351,7 +352,7 @@ class PagoServiceTest {
 
         ResponseStatusException exception = assertThrows(
                 ResponseStatusException.class,
-                () -> pagoService.registrar(request)
+                () -> pagoService.registrar(request, null)
         );
 
         assertEquals(400, exception.getStatusCode().value());
@@ -389,7 +390,7 @@ class PagoServiceTest {
                 List.of(102L)
         );
 
-        pagoService.registrar(request);
+        pagoService.registrar(request, null);
 
         assertEquals(new BigDecimal("0.00"), cuota1.getMontoPagado());
         assertEquals(EstadoCuota.PENDIENTE, cuota1.getEstado());
@@ -428,7 +429,7 @@ class PagoServiceTest {
                 List.of(101L)
         );
 
-        pagoService.registrar(request);
+        pagoService.registrar(request, null);
 
         assertEquals(new BigDecimal("100.00"), cuota1.getMontoPagado());
         assertEquals(EstadoCuota.PAGADA, cuota1.getEstado());
@@ -467,7 +468,7 @@ class PagoServiceTest {
                 List.of(202L)
         );
 
-        pagoService.registrar(request);
+        pagoService.registrar(request, null);
 
         assertEquals(new BigDecimal("100.00"), cuota1.getMontoPagado());
         assertEquals(EstadoCuota.PAGADA, cuota1.getEstado());
@@ -499,7 +500,7 @@ class PagoServiceTest {
 
         ResponseStatusException exception = assertThrows(
                 ResponseStatusException.class,
-                () -> pagoService.registrar(request)
+                () -> pagoService.registrar(request, null)
         );
 
         assertEquals(400, exception.getStatusCode().value());
@@ -526,10 +527,32 @@ class PagoServiceTest {
                 null
         );
 
-        pagoService.registrar(request);
+        pagoService.registrar(request, null);
 
         assertEquals(EstadoCuota.PAGADA, cuota1.getEstado());
         assertEquals(EstadoPrestamo.FINALIZADO, prestamo.getEstado());
+    }
+
+    @Test
+    void registrar_conMismaIdempotencyKey_noDebeDuplicarImputaciones() {
+        Prestamo prestamo = crearPrestamo(24L);
+        Cuota cuota1 = crearCuota(prestamo, 1, "100.00", "0.00", EstadoCuota.PENDIENTE);
+        RegistroPagoRequest request = new RegistroPagoRequest(24L, LocalDate.of(2026, 5, 3), new BigDecimal("100.00"), null, null, null);
+
+        when(prestamoRepository.findById(24L)).thenReturn(Optional.of(prestamo));
+        when(cuotaRepository.findByPrestamoIdOrderByNumeroCuotaAsc(24L)).thenReturn(List.of(cuota1));
+        Pago existente = new Pago();
+        existente.setPrestamo(prestamo);
+        existente.setFechaPago(LocalDate.of(2026, 5, 3));
+        existente.setMonto(new BigDecimal("100.00"));
+        existente.setEstado(EstadoPago.REGISTRADO);
+        when(pagoRepository.findByPrestamoIdAndIdempotencyKey(24L, "k-1")).thenReturn(Optional.empty(), Optional.of(existente));
+        when(pagoRepository.save(org.mockito.ArgumentMatchers.any(Pago.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        pagoService.registrar(request, "k-1");
+        pagoService.registrar(request, "k-1");
+
+        verify(imputacionPagoRepository, times(1)).saveAll(org.mockito.ArgumentMatchers.anyList());
     }
 
     private Prestamo crearPrestamo(Long id) {

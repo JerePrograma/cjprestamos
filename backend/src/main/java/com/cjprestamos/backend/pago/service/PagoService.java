@@ -52,8 +52,16 @@ public class PagoService {
         this.eventoPrestamoRepository = eventoPrestamoRepository;
     }
 
-    public PagoResponse registrar(RegistroPagoRequest request) {
+    public PagoResponse registrar(RegistroPagoRequest request, String idempotencyKeyHeader) {
         Prestamo prestamo = buscarPrestamo(request.prestamoId());
+        String idempotencyKey = normalizarIdempotencyKey(idempotencyKeyHeader);
+        if (idempotencyKey != null) {
+            Pago existente = pagoRepository.findByPrestamoIdAndIdempotencyKey(request.prestamoId(), idempotencyKey)
+                    .orElse(null);
+            if (existente != null) {
+                return mapearRespuesta(existente);
+            }
+        }
 
         validarEstadoPrestamo(prestamo);
         validarMonto(request.monto());
@@ -64,7 +72,7 @@ public class PagoService {
         validarCuotasDisponibles(cuotasObjetivo);
         validarMontoNoExcedido(montoPago, cuotasObjetivo);
 
-        Pago pago = crearPago(prestamo, request, montoPago);
+        Pago pago = crearPago(prestamo, request, montoPago, idempotencyKey);
         Pago pagoGuardado = pagoRepository.save(pago);
 
         List<ImputacionPago> imputaciones = imputarPagoEnCuotas(cuotasObjetivo, pagoGuardado);
@@ -78,6 +86,31 @@ public class PagoService {
         registrarEvento(prestamo, pagoGuardado);
 
         return mapearRespuesta(pagoGuardado);
+    }
+
+    public PagoResponse anular(Long prestamoId, Long pagoId) {
+        Prestamo prestamo = buscarPrestamo(prestamoId);
+        Pago pago = pagoRepository.findByIdAndPrestamoId(pagoId, prestamoId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Pago no encontrado"));
+        if (pago.getEstado() == EstadoPago.ANULADO) {
+            return mapearRespuesta(pago);
+        }
+        List<ImputacionPago> imputaciones = imputacionPagoRepository.findByPagoId(pagoId);
+        for (ImputacionPago imputacion : imputaciones) {
+            Cuota cuota = imputacion.getCuota();
+            BigDecimal nuevoMonto = obtenerMontoPagado(cuota).subtract(normalizarMoneda(imputacion.getMontoImputado()));
+            if (nuevoMonto.compareTo(MonedaUtils.cero()) < 0) {
+                nuevoMonto = MonedaUtils.cero();
+            }
+            cuota.setMontoPagado(normalizarMoneda(nuevoMonto));
+            cuota.setEstado(calcularEstadoCuota(cuota));
+        }
+        cuotaRepository.saveAll(imputaciones.stream().map(ImputacionPago::getCuota).toList());
+        imputacionPagoRepository.deleteAll(imputaciones);
+        pago.setEstado(EstadoPago.ANULADO);
+        actualizarEstadoPrestamoPostAnulacion(prestamoId, prestamo);
+        registrarEventoAnulacion(prestamo, pago);
+        return mapearRespuesta(pago);
     }
 
     @Transactional(readOnly = true)
@@ -172,15 +205,25 @@ public class PagoService {
         }
     }
 
-    private Pago crearPago(Prestamo prestamo, RegistroPagoRequest request, BigDecimal montoPago) {
+    private Pago crearPago(Prestamo prestamo, RegistroPagoRequest request, BigDecimal montoPago, String idempotencyKey) {
         Pago pago = new Pago();
         pago.setPrestamo(prestamo);
         pago.setFechaPago(request.fechaPago());
         pago.setMonto(montoPago);
         pago.setReferenciaManual(request.referencia());
         pago.setObservaciones(request.observacion());
+        pago.setIdempotencyKey(idempotencyKey);
         pago.setEstado(EstadoPago.REGISTRADO);
         return pago;
+    }
+
+    private void actualizarEstadoPrestamoPostAnulacion(Long prestamoId, Prestamo prestamo) {
+        List<Cuota> cuotas = cuotaRepository.findByPrestamoIdOrderByNumeroCuotaAsc(prestamoId);
+        boolean existePendiente = cuotas.stream()
+                .anyMatch(c -> calcularSaldoPendiente(c).compareTo(MonedaUtils.cero()) > 0);
+        if (existePendiente && prestamo.getEstado() == EstadoPrestamo.FINALIZADO) {
+            prestamo.setEstado(EstadoPrestamo.ACTIVO);
+        }
     }
 
     private List<ImputacionPago> imputarPagoEnCuotas(List<Cuota> cuotasObjetivo, Pago pagoGuardado) {
@@ -290,6 +333,21 @@ public class PagoService {
         );
         eventoPrestamo.setFechaEvento(pago.getFechaPago().atStartOfDay());
         eventoPrestamoRepository.save(eventoPrestamo);
+    }
+
+    private void registrarEventoAnulacion(Prestamo prestamo, Pago pago) {
+        EventoPrestamo eventoPrestamo = new EventoPrestamo();
+        eventoPrestamo.setPrestamo(prestamo);
+        eventoPrestamo.setTipoEvento(TipoEventoPrestamo.OBSERVACION);
+        eventoPrestamo.setDescripcion("Se anuló el pago #" + pago.getId() + " del " + pago.getFechaPago());
+        eventoPrestamo.setFechaEvento(java.time.LocalDateTime.now());
+        eventoPrestamoRepository.save(eventoPrestamo);
+    }
+
+    private String normalizarIdempotencyKey(String value) {
+        if (value == null) return null;
+        String trimmed = value.trim();
+        return trimmed.isBlank() ? null : trimmed;
     }
 
     private PagoResponse mapearRespuesta(Pago pago) {

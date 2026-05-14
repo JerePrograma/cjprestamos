@@ -35,7 +35,7 @@ class PagoControllerTest {
     @Test
     @WithMockUser(roles = "OPERADORA")
     void registrar_deberiaRetornar201() throws Exception {
-        when(pagoService.registrar(org.mockito.ArgumentMatchers.any())).thenReturn(
+        when(pagoService.registrar(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any())).thenReturn(
             new PagoResponse(
                 1L,
                 15L,

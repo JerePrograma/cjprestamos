@@ -45,6 +45,9 @@ public class Pago extends EntidadAuditable {
     @Column(name = "observaciones", length = 600)
     private String observaciones;
 
+    @Column(name = "idempotency_key", length = 120)
+    private String idempotencyKey;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "estado", nullable = false, length = 20)
     private EstadoPago estado;
@@ -106,5 +109,13 @@ public class Pago extends EntidadAuditable {
 
     public List<ImputacionPago> getImputaciones() {
         return imputaciones;
+    }
+
+    public String getIdempotencyKey() {
+        return idempotencyKey;
+    }
+
+    public void setIdempotencyKey(String idempotencyKey) {
+        this.idempotencyKey = idempotencyKey;
     }
 }
