@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -26,8 +27,16 @@ public class PagoController {
 
     @PostMapping("/pagos")
     @ResponseStatus(HttpStatus.CREATED)
-    public PagoResponse registrar(@Valid @RequestBody RegistroPagoRequest request) {
-        return pagoService.registrar(request);
+    public PagoResponse registrar(
+            @Valid @RequestBody RegistroPagoRequest request,
+            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey
+    ) {
+        return pagoService.registrar(request, idempotencyKey);
+    }
+
+    @PostMapping("/prestamos/{prestamoId}/pagos/{pagoId}/anulacion")
+    public PagoResponse anular(@PathVariable Long prestamoId, @PathVariable Long pagoId) {
+        return pagoService.anular(prestamoId, pagoId);
     }
 
     @GetMapping("/prestamos/{prestamoId}/pagos")
