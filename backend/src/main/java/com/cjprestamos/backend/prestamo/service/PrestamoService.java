@@ -74,7 +74,7 @@ public class PrestamoService {
 
     @Transactional(readOnly = true)
     public List<PrestamoResponse> listarActivos() {
-        return prestamoRepository.findByEstadoOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO).stream()
+        return prestamoRepository.findByEstadoInOrderByCreatedAtDesc(List.of(EstadoPrestamo.ACTIVO, EstadoPrestamo.RENEGOCIADO)).stream()
             .map(this::mapearRespuesta)
             .toList();
     }
@@ -142,7 +142,7 @@ public class PrestamoService {
         prestamo.setUsarFechasManuales(request.usarFechasManuales());
         prestamo.setReferenciaCodigo(request.referenciaCodigo());
         prestamo.setObservaciones(request.observaciones());
-        prestamo.setEstado(request.estado());
+        prestamo.setEstado(EstadoPrestamo.ACTIVO);
     }
 
     private PrestamoResponse mapearRespuesta(Prestamo prestamo) {
