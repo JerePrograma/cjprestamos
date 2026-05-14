@@ -54,7 +54,8 @@ public class DashboardService {
         List<Long> prestamosIds = prestamosActivos.stream().map(Prestamo::getId).toList();
         Map<Long, List<Cuota>> cuotasPorPrestamo = cuotaRepository.findByPrestamoIdIn(prestamosIds).stream()
             .collect(Collectors.groupingBy(cuota -> cuota.getPrestamo().getId()));
-        Map<Long, BigDecimal> cobradoPorPrestamo = pagoRepository.findByPrestamoIdInAndEstado(prestamosIds, EstadoPago.REGISTRADO).stream()
+        List<Pago> pagosRegistrados = pagoRepository.findByPrestamoIdInAndEstado(prestamosIds, EstadoPago.REGISTRADO);
+        Map<Long, BigDecimal> cobradoPorPrestamo = pagosRegistrados.stream()
             .collect(Collectors.groupingBy(
                 pago -> pago.getPrestamo().getId(),
                 Collectors.mapping(Pago::getMonto, Collectors.reducing(cero(), this::sumar))
@@ -110,7 +111,8 @@ public class DashboardService {
 
         List<Long> prestamosIds = prestamosActivos.stream().map(Prestamo::getId).toList();
         List<Cuota> cuotas = cuotaRepository.findByPrestamoIdIn(prestamosIds);
-        Map<Long, BigDecimal> cobradoPorPrestamo = pagoRepository.findByPrestamoIdInAndEstado(prestamosIds, EstadoPago.REGISTRADO).stream()
+        List<Pago> pagosRegistrados = pagoRepository.findByPrestamoIdInAndEstado(prestamosIds, EstadoPago.REGISTRADO);
+        Map<Long, BigDecimal> cobradoPorPrestamo = pagosRegistrados.stream()
             .collect(Collectors.groupingBy(
                 pago -> pago.getPrestamo().getId(),
                 Collectors.mapping(Pago::getMonto, Collectors.reducing(cero(), this::sumar))
@@ -147,8 +149,7 @@ public class DashboardService {
         BigDecimal capitalPendiente = max(restar(inversionActiva, capitalRecuperado), cero());
         BigDecimal cajaDisponible = sumar(capitalRecuperado, gananciaRealizada);
 
-        List<Pago> pagosActivos = pagoRepository.findByPrestamoIdInAndEstado(prestamosIds, EstadoPago.REGISTRADO);
-        BigDecimal ingresosMesActual = calcularIngresosMesActual(pagosActivos);
+        BigDecimal ingresosMesActual = calcularIngresosMesActual(pagosRegistrados);
         BigDecimal egresosMesActual = calcularEgresosMesActual(prestamosActivos);
         BigDecimal balanceMesActual = restar(ingresosMesActual, egresosMesActual);
 
