@@ -4,6 +4,7 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { SectionCard } from '../../components/ui/SectionCard';
 import { StatusPill } from '../../components/ui/StatusPill';
+import { ErrorState, LoadingState } from '../../components/ui/FeedbackStates';
 import { useListadoPersonas } from '../personas/hooks/usePersonas';
 import { useListadoPrestamosActivos } from '../prestamos/hooks/usePrestamos';
 import type { PrestamoResponse } from '../prestamos/types/prestamo';
@@ -137,14 +138,6 @@ function TarjetaResumen({
   );
 }
 
-function TextoCarga({ children }: { children: string }) {
-  return (
-    <p aria-live="polite" className="text-sm text-muted">
-      {children}
-    </p>
-  );
-}
-
 function LinkSecundario({ to, children }: { to: string; children: string }) {
   return (
     <Link to={to} className="link-action">
@@ -193,17 +186,10 @@ export function DashboardPage() {
       />
 
       {resumen.isError && (
-        <div className="mensaje-error flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <span>No se pudo cargar el resumen del dashboard.</span>
-
-          <button
-            type="button"
-            onClick={() => resumen.refetch()}
-            className="inline-flex w-fit rounded-lg border border-red-300/70 px-2.5 py-1 text-xs font-semibold transition hover:bg-red-100 dark:border-red-500/40 dark:hover:bg-red-950/60"
-          >
-            Reintentar
-          </button>
-        </div>
+        <ErrorState
+          mensaje="No se pudo cargar el resumen del dashboard."
+          onRetry={() => resumen.refetch()}
+        />
       )}
 
       <div
@@ -248,7 +234,7 @@ export function DashboardPage() {
           acciones={<span className="badge-count">5</span>}
         >
           {prestamosActivos.isLoading ? (
-            <TextoCarga>Cargando préstamos activos...</TextoCarga>
+            <LoadingState mensaje="Cargando préstamos activos..." />
           ) : prestamosActivos.isError ? (
             <p className="mensaje-error">No se pudo cargar el listado de activos.</p>
           ) : activosRecientes.length === 0 ? (
@@ -323,7 +309,7 @@ export function DashboardPage() {
           }
         >
           {personas.isLoading ? (
-            <TextoCarga>Cargando personas...</TextoCarga>
+            <LoadingState mensaje="Cargando personas..." />
           ) : personas.isError ? (
             <p className="mensaje-error">No se pudo cargar el listado de personas.</p>
           ) : personasRecientes.length === 0 ? (

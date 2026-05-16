@@ -2,6 +2,7 @@ import { PageHeader } from '../../components/ui/PageHeader';
 import { SectionCard } from '../../components/ui/SectionCard';
 import { formatearMonedaSinCentavos } from '../../utils/moneda';
 import { useControlCajaDashboard } from './hooks/useDashboard';
+import { ErrorState } from '../../components/ui/FeedbackStates';
 
 type TonoTarjeta = 'info' | 'success' | 'warning' | 'danger' | 'neutral';
 
@@ -166,17 +167,10 @@ export function ControlCajaPage() {
       />
 
       {controlCaja.isError && (
-        <div className="mensaje-error flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <span>No se pudo cargar el módulo de control de caja.</span>
-
-          <button
-            type="button"
-            onClick={() => controlCaja.refetch()}
-            className="link-action mt-0"
-          >
-            Reintentar
-          </button>
-        </div>
+        <ErrorState
+          mensaje="No se pudo cargar el módulo de control de caja."
+          onRetry={() => controlCaja.refetch()}
+        />
       )}
 
       <div
