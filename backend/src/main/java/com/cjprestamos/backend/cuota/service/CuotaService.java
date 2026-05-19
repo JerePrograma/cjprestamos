@@ -290,12 +290,13 @@ public class CuotaService {
 
     private CuotaResponse mapearRespuesta(Cuota cuota) {
         return new CuotaResponse(
-            cuota.getId(),
-            cuota.getNumeroCuota(),
-            cuota.getFechaVencimiento(),
-            MonedaUtils.normalizar(cuota.getMontoProgramado()),
-            MonedaUtils.normalizar(cuota.getMontoPagado()),
-            cuota.getEstado()
+                cuota.getId(),
+                cuota.getNumeroCuota(),
+                cuota.getFechaVencimiento(),
+                obtenerFechaPagoCuota(cuota),
+                MonedaUtils.normalizar(cuota.getMontoProgramado()),
+                MonedaUtils.normalizar(cuota.getMontoPagado()),
+                cuota.getEstado()
         );
     }
 
@@ -328,5 +329,20 @@ public class CuotaService {
         );
         eventoPrestamo.setFechaEvento(LocalDateTime.of(fechaRenegociacion, java.time.LocalTime.MIDNIGHT));
         eventoPrestamoRepository.save(eventoPrestamo);
+    }
+
+    private LocalDate obtenerFechaPagoCuota(Cuota cuota) {
+        if (cuota.getImputaciones() == null || cuota.getImputaciones().isEmpty()) {
+            return null;
+        }
+
+        return cuota.getImputaciones().stream()
+                .map(imputacion -> imputacion.getPago() != null
+                        ? imputacion.getPago().getFechaPago()
+                        : imputacion.getFechaImputacion()
+                )
+                .filter(java.util.Objects::nonNull)
+                .max(LocalDate::compareTo)
+                .orElse(null);
     }
 }

@@ -34,6 +34,7 @@ export type CuotaPrestamo = {
   id: number;
   numeroCuota: number;
   fechaVencimiento: string | null;
+  fechaPago: string | null;
   montoProgramado: number;
   montoPagado: number;
   estado: EstadoCuota;

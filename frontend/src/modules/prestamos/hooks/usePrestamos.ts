@@ -14,6 +14,7 @@ import type {
   AjustarCuotasFuturasPayload,
   CalculoPrestamoPayload,
   GenerarCuotasPayload,
+  CuotaPrestamo,
   PrestamoPayload,
   PrestamoResponse,
   ReferenciaPrestamoPayload,

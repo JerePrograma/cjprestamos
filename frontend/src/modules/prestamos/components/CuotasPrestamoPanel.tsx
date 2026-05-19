@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
-import type { CuotaPrestamo, PrestamoResponse } from '../types/prestamo';
-import { formatearFecha, formatearMoneda } from '../utils/prestamoUi';
+import { useMemo, useState } from "react";
+import type { CuotaPrestamo, PrestamoResponse } from "../types/prestamo";
+import { formatearFecha, formatearMoneda } from "../utils/prestamoUi";
 
 export type CuotaManualFila = {
   numeroCuota: string;
@@ -36,7 +36,7 @@ type CuotasPrestamoPanelProps = {
   cuotasAjuste: CuotaAjusteFila[];
   onCambiarCuotaAjuste: (
     cuotaId: number,
-    campo: 'fechaVencimiento' | 'montoProgramado',
+    campo: "fechaVencimiento" | "montoProgramado",
     valor: string,
   ) => void;
   onGuardarAjuste: () => void;
@@ -45,14 +45,19 @@ type CuotasPrestamoPanelProps = {
   mensajeCuotas: string | null;
   errorAjusteCuotas: string | null;
   mensajeAjusteCuotas: string | null;
+  onPagarCuota: (cuota: CuotaPrestamo) => void;
+  pagandoCuotaId: number | null;
+  puedeRegistrarPago: boolean;
+  errorPagoCuota: string | null;
+  mensajePagoCuota: string | null;
 };
 
-type SeccionCuotas = 'generacion' | 'listado' | 'renegociacion';
+type SeccionCuotas = "generacion" | "listado" | "renegociacion";
 
 const secciones: Array<{ id: SeccionCuotas; etiqueta: string }> = [
-  { id: 'generacion', etiqueta: 'Generación/Carga' },
-  { id: 'listado', etiqueta: 'Listado' },
-  { id: 'renegociacion', etiqueta: 'Renegociación' },
+  { id: "generacion", etiqueta: "Generación/Carga" },
+  { id: "listado", etiqueta: "Listado" },
+  { id: "renegociacion", etiqueta: "Renegociación" },
 ];
 
 function TabCuotas({
@@ -69,11 +74,11 @@ function TabCuotas({
       type="button"
       onClick={onClick}
       className={[
-        'rounded-lg px-2 py-1.5 text-xs font-semibold transition sm:text-sm',
+        "rounded-lg px-2 py-1.5 text-xs font-semibold transition sm:text-sm",
         activa
-          ? 'bg-surface-raised text-app shadow-app-xs'
-          : 'text-muted hover:bg-surface-raised hover:text-app',
-      ].join(' ')}
+          ? "bg-surface-raised text-app shadow-app-xs"
+          : "text-muted hover:bg-surface-raised hover:text-app",
+      ].join(" ")}
     >
       {children}
     </button>
@@ -104,8 +109,14 @@ export function CuotasPrestamoPanel({
   mensajeCuotas,
   errorAjusteCuotas,
   mensajeAjusteCuotas,
+  onPagarCuota,
+  pagandoCuotaId,
+  puedeRegistrarPago,
+  errorPagoCuota,
+  mensajePagoCuota,
 }: CuotasPrestamoPanelProps) {
-  const [seccionActiva, setSeccionActiva] = useState<SeccionCuotas>('generacion');
+  const [seccionActiva, setSeccionActiva] =
+    useState<SeccionCuotas>("generacion");
   const tieneCuotasGeneradas = cuotas.length > 0;
 
   const pendientesRenegociacion = useMemo(
@@ -124,7 +135,9 @@ export function CuotasPrestamoPanel({
           <div>
             <dt className="label-ui">Estado</dt>
             <dd className="mt-1 font-semibold text-app">
-              {tieneCuotasGeneradas ? 'Cuotas generadas' : 'Pendiente de generación'}
+              {tieneCuotasGeneradas
+                ? "Cuotas generadas"
+                : "Pendiente de generación"}
             </dd>
           </div>
 
@@ -154,9 +167,9 @@ export function CuotasPrestamoPanel({
       <nav className="grid grid-cols-3 gap-1 rounded-xl border border-subtle bg-surface-inset p-1">
         {secciones.map((seccion) => {
           const cantidad =
-            seccion.id === 'listado'
+            seccion.id === "listado"
               ? cuotas.length
-              : seccion.id === 'renegociacion'
+              : seccion.id === "renegociacion"
                 ? pendientesRenegociacion
                 : null;
 
@@ -166,22 +179,26 @@ export function CuotasPrestamoPanel({
               activa={seccionActiva === seccion.id}
               onClick={() => setSeccionActiva(seccion.id)}
             >
-              {cantidad === null ? seccion.etiqueta : `${seccion.etiqueta} (${cantidad})`}
+              {cantidad === null
+                ? seccion.etiqueta
+                : `${seccion.etiqueta} (${cantidad})`}
             </TabCuotas>
           );
         })}
       </nav>
 
-      {seccionActiva === 'generacion' && (
+      {seccionActiva === "generacion" && (
         <section className="surface-inset">
           {tieneCuotasGeneradas ? (
             <p className="text-sm text-soft">
-              Este préstamo ya tiene cuotas generadas. No se permite regeneración desde esta vista.
+              Este préstamo ya tiene cuotas generadas. No se permite
+              regeneración desde esta vista.
             </p>
-          ) : detalle.frecuenciaTipo === 'FECHAS_MANUALES' ? (
+          ) : detalle.frecuenciaTipo === "FECHAS_MANUALES" ? (
             <div className="space-y-4">
               <p className="text-sm text-soft">
-                Cargá cuotas manuales. Si informaste fecha inicial auxiliar en el alta, ya aparece en la primera fila.
+                Cargá cuotas manuales. Si informaste fecha inicial auxiliar en
+                el alta, ya aparece en la primera fila.
               </p>
 
               <div className="space-y-3">
@@ -191,38 +208,56 @@ export function CuotasPrestamoPanel({
                     className="card-interactiva grid gap-3 lg:grid-cols-3"
                   >
                     <label className="text-sm">
-                      <span className="label-ui mb-1 block">Número de cuota</span>
+                      <span className="label-ui mb-1 block">
+                        Número de cuota
+                      </span>
                       <input
                         type="number"
                         min="1"
                         max={detalle.cantidadCuotas}
                         value={fila.numeroCuota}
                         onChange={(event) =>
-                          onCambiarFilaManual(index, 'numeroCuota', event.target.value)
+                          onCambiarFilaManual(
+                            index,
+                            "numeroCuota",
+                            event.target.value,
+                          )
                         }
                       />
                     </label>
 
                     <label className="text-sm">
-                      <span className="label-ui mb-1 block">Fecha de vencimiento</span>
+                      <span className="label-ui mb-1 block">
+                        Fecha de vencimiento
+                      </span>
                       <input
                         type="date"
                         value={fila.fechaVencimiento}
                         onChange={(event) =>
-                          onCambiarFilaManual(index, 'fechaVencimiento', event.target.value)
+                          onCambiarFilaManual(
+                            index,
+                            "fechaVencimiento",
+                            event.target.value,
+                          )
                         }
                       />
                     </label>
 
                     <label className="text-sm">
-                      <span className="label-ui mb-1 block">Monto programado</span>
+                      <span className="label-ui mb-1 block">
+                        Monto programado
+                      </span>
                       <input
                         type="number"
                         min="1"
                         step="1"
                         value={fila.montoProgramado}
                         onChange={(event) =>
-                          onCambiarFilaManual(index, 'montoProgramado', event.target.value)
+                          onCambiarFilaManual(
+                            index,
+                            "montoProgramado",
+                            event.target.value,
+                          )
                         }
                       />
                     </label>
@@ -236,13 +271,16 @@ export function CuotasPrestamoPanel({
                 disabled={generandoCuotas}
                 className="boton-principal"
               >
-                {generandoCuotas ? 'Guardando cuotas...' : 'Guardar cuotas manuales'}
+                {generandoCuotas
+                  ? "Guardando cuotas..."
+                  : "Guardar cuotas manuales"}
               </button>
             </div>
           ) : (
             <div className="space-y-3">
               <p className="text-sm text-soft">
-                Este préstamo todavía no tiene cuotas. Generalas para comenzar a operar pagos e imputaciones.
+                Este préstamo todavía no tiene cuotas. Generalas para comenzar a
+                operar pagos e imputaciones.
               </p>
 
               <button
@@ -251,7 +289,7 @@ export function CuotasPrestamoPanel({
                 disabled={generandoCuotas}
                 className="boton-principal"
               >
-                {generandoCuotas ? 'Generando cuotas...' : 'Generar cuotas'}
+                {generandoCuotas ? "Generando cuotas..." : "Generar cuotas"}
               </button>
             </div>
           )}
@@ -261,7 +299,7 @@ export function CuotasPrestamoPanel({
         </section>
       )}
 
-      {seccionActiva === 'listado' && (
+      {seccionActiva === "listado" && (
         <section className="surface-inset">
           <h3 className="mb-3 text-sm font-semibold text-app">
             Listado de cuotas
@@ -270,38 +308,83 @@ export function CuotasPrestamoPanel({
           {cuotasLoading ? (
             <p className="text-sm text-muted">Cargando cuotas...</p>
           ) : cuotasError ? (
-            <p className="mensaje-error">No se pudo cargar las cuotas del préstamo.</p>
+            <p className="mensaje-error">
+              No se pudo cargar las cuotas del préstamo.
+            </p>
           ) : cuotas.length === 0 ? (
-            <p className="text-sm text-muted">Este préstamo todavía no tiene cuotas generadas.</p>
+            <p className="text-sm text-muted">
+              Este préstamo todavía no tiene cuotas generadas.
+            </p>
           ) : (
             <ul className="space-y-2">
-              {cuotas.map((cuota) => (
-                <li key={cuota.id} className="card-interactiva">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-semibold text-app">
-                      Cuota #{cuota.numeroCuota}
-                    </span>
+              {cuotas.map((cuota) => {
+                const saldoCuota = Math.max(
+                  cuota.montoProgramado - cuota.montoPagado,
+                  0,
+                );
+                const estaPagada = cuota.estado === "PAGADA" || saldoCuota <= 0;
+                const estaPagando = pagandoCuotaId === cuota.id;
 
-                    <span className="badge-ui">
-                      {cuota.estado}
-                    </span>
-                  </div>
+                return (
+                  <li key={cuota.id} className="card-interactiva">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <span className="font-semibold text-app">
+                          Cuota #{cuota.numeroCuota}
+                        </span>
 
-                  <p className="mt-1 text-xs text-muted">
-                    Vence: {formatearFecha(cuota.fechaVencimiento)}
-                  </p>
+                        <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted">
+                          <span>
+                            Vence: {formatearFecha(cuota.fechaVencimiento)}
+                          </span>
 
-                  <p className="text-xs text-muted">
-                    Programado: {formatearMoneda(cuota.montoProgramado)} · Pagado: {formatearMoneda(cuota.montoPagado)}
-                  </p>
-                </li>
-              ))}
+                          <span>
+                            Pago:{" "}
+                            {cuota.fechaPago
+                              ? formatearFecha(cuota.fechaPago)
+                              : estaPagada
+                                ? "sin fecha informada"
+                                : "—"}
+                          </span>
+                        </div>
+                      </div>
+
+                      <span className="badge-ui">{cuota.estado}</span>
+                    </div>
+
+                    <p className="mt-2 text-xs text-muted">
+                      Programado: {formatearMoneda(cuota.montoProgramado)} ·
+                      Pagado: {formatearMoneda(cuota.montoPagado)} · Saldo:{" "}
+                      <span className="font-semibold text-app">
+                        {formatearMoneda(saldoCuota)}
+                      </span>
+                    </p>
+
+                    {!estaPagada && (
+                      <button
+                        type="button"
+                        onClick={() => onPagarCuota(cuota)}
+                        disabled={
+                          !puedeRegistrarPago || pagandoCuotaId !== null
+                        }
+                        className="mt-3 rounded-lg border border-subtle px-3 py-1.5 text-xs font-semibold text-app transition hover:bg-surface-raised disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {estaPagando ? "Pagando..." : "Pagar"}
+                      </button>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           )}
+          {errorPagoCuota && (
+            <p className="mensaje-error mt-3">{errorPagoCuota}</p>
+          )}
+          {mensajePagoCuota && <MensajeExito>{mensajePagoCuota}</MensajeExito>}
         </section>
       )}
 
-      {seccionActiva === 'renegociacion' && (
+      {seccionActiva === "renegociacion" && (
         <section className="surface-inset">
           <h3 className="text-sm font-semibold text-app">
             Renegociación manual de cuotas futuras
@@ -334,7 +417,7 @@ export function CuotasPrestamoPanel({
                       onChange={(event) =>
                         onCambiarCuotaAjuste(
                           cuota.cuotaId,
-                          'fechaVencimiento',
+                          "fechaVencimiento",
                           event.target.value,
                         )
                       }
@@ -342,7 +425,9 @@ export function CuotasPrestamoPanel({
                   </label>
 
                   <label className="text-sm">
-                    <span className="label-ui mb-1 block">Monto programado</span>
+                    <span className="label-ui mb-1 block">
+                      Monto programado
+                    </span>
                     <input
                       type="number"
                       min="1"
@@ -351,7 +436,7 @@ export function CuotasPrestamoPanel({
                       onChange={(event) =>
                         onCambiarCuotaAjuste(
                           cuota.cuotaId,
-                          'montoProgramado',
+                          "montoProgramado",
                           event.target.value,
                         )
                       }
@@ -359,7 +444,7 @@ export function CuotasPrestamoPanel({
                   </label>
 
                   <p className="self-end text-xs text-muted">
-                    Pagado actual:{' '}
+                    Pagado actual:{" "}
                     <span className="font-semibold text-app">
                       {formatearMoneda(cuota.montoPagado)}
                     </span>
@@ -373,13 +458,19 @@ export function CuotasPrestamoPanel({
                 disabled={guardandoAjuste}
                 className="boton-principal"
               >
-                {guardandoAjuste ? 'Guardando ajuste...' : 'Guardar ajuste de cuotas'}
+                {guardandoAjuste
+                  ? "Guardando ajuste..."
+                  : "Guardar ajuste de cuotas"}
               </button>
             </div>
           )}
 
-          {errorAjusteCuotas && <p className="mensaje-error mt-3">{errorAjusteCuotas}</p>}
-          {mensajeAjusteCuotas && <MensajeExito>{mensajeAjusteCuotas}</MensajeExito>}
+          {errorAjusteCuotas && (
+            <p className="mensaje-error mt-3">{errorAjusteCuotas}</p>
+          )}
+          {mensajeAjusteCuotas && (
+            <MensajeExito>{mensajeAjusteCuotas}</MensajeExito>
+          )}
         </section>
       )}
     </div>
