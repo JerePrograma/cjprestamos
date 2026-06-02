@@ -227,12 +227,15 @@ public class DashboardService {
     }
 
     private BigDecimal calcularEgresosMesActual(List<Prestamo> prestamosActivos) {
-        YearMonth mesActual = YearMonth.now();
+        LocalDate hoy = LocalDate.now(java.time.ZoneId.of("America/Argentina/Buenos_Aires"));
+        LocalDate inicioMes = hoy.withDayOfMonth(1);
+
         return prestamosActivos.stream()
-            .filter(prestamo -> prestamo.getCreatedAt() != null)
-            .filter(prestamo -> YearMonth.from(prestamo.getCreatedAt()).equals(mesActual))
-            .map(Prestamo::getMontoInicial)
-            .reduce(cero(), this::sumar);
+                .filter(prestamo -> prestamo.getFechaBase() != null)
+                .filter(prestamo -> !prestamo.getFechaBase().isBefore(inicioMes))
+                .filter(prestamo -> !prestamo.getFechaBase().isAfter(hoy))
+                .map(Prestamo::getMontoInicial)
+                .reduce(cero(), this::sumar);
     }
 
     private BigDecimal calcularDeudaPrestamo(
