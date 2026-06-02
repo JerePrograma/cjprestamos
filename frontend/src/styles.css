@@ -15,18 +15,18 @@
     color-scheme: light;
 
     /* Fondos */
-    --app-bg: #f8fafc;
-    --app-bg-strong: #eef2ff;
+    --app-bg: #f6f7f9;
+    --app-bg-strong: #e5e7eb;
     --app-surface: rgba(255, 255, 255, 0.96);
     --app-surface-raised: rgba(255, 255, 255, 0.99);
-    --app-surface-soft: rgba(238, 242, 255, 0.74);
+    --app-surface-soft: rgba(241, 245, 249, 0.86);
     --app-surface-muted: rgba(241, 245, 249, 0.92);
     --app-surface-inset: rgba(248, 250, 252, 0.92);
 
     /* Bordes */
     --app-border-subtle: rgba(148, 163, 184, 0.34);
-    --app-border: rgba(125, 211, 252, 0.55);
-    --app-border-strong: rgba(79, 70, 229, 0.42);
+    --app-border: rgba(148, 163, 184, 0.5);
+    --app-border-strong: rgba(37, 99, 235, 0.42);
 
     /* Texto */
     --app-text: #0f172a;
@@ -36,12 +36,12 @@
     --app-text-inverse: #ffffff;
 
     /* Marca / acción */
-    --app-accent: #4f46e5;
-    --app-accent-hover: #4338ca;
-    --app-accent-active: #3730a3;
-    --app-accent-soft: #e0e7ff;
-    --app-accent-soft-hover: #c7d2fe;
-    --app-accent-text: #312e81;
+    --app-accent: #2563eb;
+    --app-accent-hover: #1d4ed8;
+    --app-accent-active: #1e40af;
+    --app-accent-soft: #eff6ff;
+    --app-accent-soft-hover: #dbeafe;
+    --app-accent-text: #1e3a8a;
 
     /* Info */
     --app-info: #0284c7;
@@ -83,10 +83,10 @@
     --app-shadow-lg: 0 28px 80px rgba(15, 23, 42, 0.16);
 
     /* Radios */
-    --app-radius-sm: 0.75rem;
-    --app-radius-md: 1rem;
-    --app-radius-lg: 1.25rem;
-    --app-radius-xl: 1.5rem;
+    --app-radius-sm: 0.5rem;
+    --app-radius-md: 0.625rem;
+    --app-radius-lg: 0.75rem;
+    --app-radius-xl: 0.875rem;
   }
 
   :root.dark {
@@ -185,21 +185,13 @@
     @apply min-h-screen antialiased transition-colors duration-300;
     color: var(--app-text);
     background-color: var(--app-bg);
-    background-image:
-      radial-gradient(circle at top left, rgba(190, 242, 255, 0.66), transparent 38%),
-      radial-gradient(circle at 88% 10%, rgba(224, 231, 255, 0.9), transparent 35%),
-      radial-gradient(circle at 50% 100%, rgba(236, 253, 245, 0.58), transparent 42%),
-      linear-gradient(to bottom, #fdfcff, #f8fafc 52%, #eef2ff);
+    background-image: linear-gradient(to bottom, #f8fafc, #f1f5f9);
   }
 
   :root.dark body {
     color: var(--app-text);
     background-color: var(--app-bg);
-    background-image:
-      radial-gradient(circle at top left, rgba(56, 189, 248, 0.24), transparent 34%),
-      radial-gradient(circle at 84% 8%, rgba(129, 140, 248, 0.2), transparent 32%),
-      radial-gradient(circle at 50% 100%, rgba(16, 185, 129, 0.1), transparent 36%),
-      linear-gradient(to bottom, #020617, #07111f 48%, #0f172a);
+    background-image: linear-gradient(to bottom, #020617, #0f172a);
   }
 
   ::selection {
@@ -235,7 +227,7 @@
   input:not([type='checkbox']):not([type='radio']),
   select,
   textarea {
-    @apply w-full rounded-xl px-3 py-2.5 text-sm transition duration-150;
+    @apply w-full rounded-md px-3 py-2.5 text-sm transition duration-150;
     color: var(--app-text);
     background-color: var(--app-input-bg);
     border: 1px solid var(--app-input-border);
@@ -351,7 +343,7 @@
 
 @layer components {
   .panel {
-    @apply rounded-2xl border p-4 transition-colors duration-300 md:p-5;
+    @apply rounded-lg border p-4 transition-colors duration-300 md:p-5;
     color: var(--app-text);
     background: var(--app-surface);
     border-color: var(--app-border-subtle);
@@ -365,7 +357,7 @@
   }
 
   .panel-elevado {
-    @apply rounded-2xl border p-4 transition duration-300 md:p-5;
+    @apply rounded-lg border p-4 transition duration-300 md:p-5;
     color: var(--app-text);
     background: var(--app-surface-raised);
     border-color: var(--app-border);
@@ -379,7 +371,7 @@
   }
 
   .panel-soft {
-    @apply rounded-2xl border p-4 transition-colors duration-300 md:p-5;
+    @apply rounded-lg border p-4 transition-colors duration-300 md:p-5;
     color: var(--app-text);
     background: var(--app-surface-soft);
     border-color: var(--app-border-subtle);
@@ -391,18 +383,17 @@
   }
 
   .panel-muted {
-    @apply rounded-2xl border p-4 transition-colors duration-300 md:p-5;
+    @apply rounded-lg border p-4 transition-colors duration-300 md:p-5;
     color: var(--app-text-soft);
     background: var(--app-surface-muted);
     border-color: var(--app-border-subtle);
   }
 
   .panel-accent {
-    @apply rounded-2xl border p-3.5 shadow-sm transition-colors duration-300;
+    @apply rounded-lg border p-3.5 shadow-sm transition-colors duration-300;
     color: var(--app-text);
     border-color: rgba(125, 211, 252, 0.7);
-    background:
-      linear-gradient(135deg, rgba(240, 249, 255, 0.94), rgba(238, 242, 255, 0.78));
+    background: #f8fafc;
     box-shadow:
       0 10px 28px rgba(15, 23, 42, 0.08),
       inset 0 1px 0 rgba(255, 255, 255, 0.7);
@@ -410,15 +401,14 @@
 
   :root.dark .panel-accent {
     border-color: rgba(56, 189, 248, 0.48);
-    background:
-      linear-gradient(135deg, rgba(8, 47, 73, 0.76), rgba(15, 23, 42, 0.88));
+    background: rgba(15, 23, 42, 0.92);
     box-shadow:
       0 18px 48px rgba(0, 0, 0, 0.38),
       inset 0 1px 0 rgba(255, 255, 255, 0.06);
   }
 
   .surface-inset {
-    @apply rounded-xl border p-3;
+    @apply rounded-md border p-3;
     color: var(--app-text-muted);
     background: var(--app-surface-inset);
     border-color: var(--app-border-subtle);
@@ -475,7 +465,7 @@
      ============================================================ */
 
   .boton-principal {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold no-underline transition duration-150 active:translate-y-px;
+    @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-semibold no-underline transition duration-150 active:translate-y-px;
     color: var(--app-text-inverse);
     background-color: var(--app-accent);
     box-shadow: 0 10px 24px rgba(79, 70, 229, 0.28);
@@ -502,7 +492,7 @@
   }
 
   .boton-secundario {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium no-underline transition duration-150 active:translate-y-px;
+    @apply inline-flex items-center justify-center gap-2 rounded-md border px-4 py-2.5 text-sm font-medium no-underline transition duration-150 active:translate-y-px;
     color: var(--app-text-soft);
     background-color: var(--app-accent-soft);
     border-color: var(--app-border);
@@ -527,7 +517,7 @@
   }
 
   .boton-fantasma {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium no-underline transition duration-150 active:translate-y-px;
+    @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium no-underline transition duration-150 active:translate-y-px;
     color: var(--app-text-soft);
     background-color: transparent;
   }
@@ -538,7 +528,7 @@
   }
 
   .boton-danger {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold no-underline transition duration-150 active:translate-y-px;
+    @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-semibold no-underline transition duration-150 active:translate-y-px;
     color: #ffffff;
     background-color: var(--app-error);
     box-shadow: 0 10px 24px rgba(220, 38, 38, 0.22);
@@ -560,7 +550,7 @@
      ============================================================ */
 
   .nav-item {
-    @apply group rounded-2xl border px-3.5 py-3 text-sm no-underline transition duration-150;
+    @apply rounded-lg border px-3.5 py-3 text-sm no-underline transition duration-150;
     color: var(--app-text-soft);
     background: rgba(255, 255, 255, 0.82);
     border-color: var(--app-border-subtle);
@@ -586,22 +576,22 @@
   }
 
   .nav-item-active {
-    color: #020617;
-    background: linear-gradient(135deg, #7dd3fc, #bae6fd);
-    border-color: rgba(14, 165, 233, 0.7);
+    color: #ffffff;
+    background: #1f2937;
+    border-color: #111827;
     box-shadow:
       0 12px 28px rgba(14, 165, 233, 0.24),
       inset 0 1px 0 rgba(255, 255, 255, 0.55);
   }
 
   .nav-item-active:hover {
-    color: #020617;
-    background: linear-gradient(135deg, #7dd3fc, #bae6fd);
+    color: #ffffff;
+    background: #1f2937;
   }
 
   :root.dark .nav-item-active {
     color: #020617;
-    background: linear-gradient(135deg, #38bdf8, #bae6fd);
+    background: #bae6fd;
     border-color: rgba(186, 230, 253, 0.82);
     box-shadow:
       0 18px 42px rgba(14, 165, 233, 0.26),
@@ -610,7 +600,7 @@
 
   :root.dark .nav-item-active:hover {
     color: #020617;
-    background: linear-gradient(135deg, #38bdf8, #bae6fd);
+    background: #bae6fd;
   }
 
   .nav-item-title {
@@ -642,7 +632,7 @@
      ============================================================ */
 
   .quick-link {
-    @apply flex min-h-11 items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-xs font-semibold no-underline shadow-sm transition duration-150;
+    @apply flex min-h-11 items-center justify-between gap-2 rounded-md border px-3 py-2.5 text-xs font-semibold no-underline shadow-sm transition duration-150;
     color: var(--app-text-soft);
     background: var(--app-surface-raised);
     border-color: var(--app-border-subtle);
@@ -682,7 +672,7 @@
   }
 
   .link-action {
-    @apply mt-3 inline-flex min-h-9 items-center rounded-lg border px-2.5 py-1.5 text-xs font-semibold no-underline transition;
+    @apply mt-3 inline-flex min-h-9 items-center rounded-md border px-2.5 py-1.5 text-xs font-semibold no-underline transition;
     color: var(--app-text-soft);
     background: var(--app-surface-raised);
     border-color: var(--app-border-subtle);
@@ -711,7 +701,7 @@
      ============================================================ */
 
   .card-interactiva {
-    @apply rounded-xl border p-3.5 transition duration-150;
+    @apply rounded-md border p-3.5 transition duration-150;
     color: var(--app-text);
     background: var(--app-surface-raised);
     border-color: var(--app-border-subtle);
@@ -736,7 +726,7 @@
   }
 
   .card-activa {
-    @apply rounded-xl border p-3.5 transition duration-150;
+    @apply rounded-md border p-3.5 transition duration-150;
     color: var(--app-text);
     background: var(--app-accent-soft);
     border-color: var(--app-border-strong);
@@ -750,7 +740,7 @@
   }
 
   .metric-card {
-    @apply relative overflow-hidden rounded-2xl border p-4 shadow-sm transition duration-200;
+    @apply relative overflow-hidden rounded-lg border p-4 shadow-sm transition duration-200;
     color: var(--app-text);
     background: var(--app-surface-raised);
     border-color: var(--app-border-subtle);
@@ -762,70 +752,57 @@
   }
 
   .metric-card::after {
-    content: '';
-    position: absolute;
-    right: -2rem;
-    top: -2.5rem;
-    height: 6rem;
-    width: 6rem;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.45);
-    filter: blur(26px);
-    pointer-events: none;
-  }
-
-  :root.dark .metric-card::after {
-    background: rgba(255, 255, 255, 0.055);
+    display: none;
   }
 
   .metric-card[data-tone='info'] {
     border-color: rgba(125, 211, 252, 0.8);
-    background: linear-gradient(135deg, #eff6ff, #e0f2fe);
+    background: #eff6ff;
   }
 
   .metric-card[data-tone='success'] {
     border-color: rgba(110, 231, 183, 0.85);
-    background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+    background: #ecfdf5;
   }
 
   .metric-card[data-tone='warning'] {
     border-color: rgba(251, 191, 36, 0.78);
-    background: linear-gradient(135deg, #fffbeb, #fef3c7);
+    background: #fffbeb;
   }
 
   .metric-card[data-tone='danger'] {
     border-color: rgba(252, 165, 165, 0.85);
-    background: linear-gradient(135deg, #fff1f2, #fee2e2);
+    background: #fff1f2;
   }
 
   .metric-card[data-tone='neutral'] {
     border-color: rgba(203, 213, 225, 0.88);
-    background: linear-gradient(135deg, #ffffff, #f8fafc);
+    background: #ffffff;
   }
 
   :root.dark .metric-card[data-tone='info'] {
     border-color: rgba(56, 189, 248, 0.58);
-    background: linear-gradient(135deg, rgba(8, 47, 73, 0.78), rgba(15, 23, 42, 0.94));
+    background: rgba(8, 47, 73, 0.78);
   }
 
   :root.dark .metric-card[data-tone='success'] {
     border-color: rgba(52, 211, 153, 0.55);
-    background: linear-gradient(135deg, rgba(6, 78, 59, 0.68), rgba(15, 23, 42, 0.94));
+    background: rgba(6, 78, 59, 0.68);
   }
 
   :root.dark .metric-card[data-tone='warning'] {
     border-color: rgba(251, 191, 36, 0.56);
-    background: linear-gradient(135deg, rgba(69, 26, 3, 0.7), rgba(15, 23, 42, 0.94));
+    background: rgba(69, 26, 3, 0.7);
   }
 
   :root.dark .metric-card[data-tone='danger'] {
     border-color: rgba(248, 113, 113, 0.58);
-    background: linear-gradient(135deg, rgba(69, 10, 10, 0.68), rgba(15, 23, 42, 0.94));
+    background: rgba(69, 10, 10, 0.68);
   }
 
   :root.dark .metric-card[data-tone='neutral'] {
     border-color: rgba(148, 163, 184, 0.36);
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.96), rgba(15, 23, 42, 0.94));
+    background: rgba(30, 41, 59, 0.96);
   }
 
   .metric-dot {
@@ -931,28 +908,28 @@
   }
 
   .mensaje-error {
-    @apply rounded-xl border px-3 py-2 text-sm font-medium;
+    @apply rounded-md border px-3 py-2 text-sm font-medium;
     color: var(--app-error-text);
     background-color: var(--app-error-soft);
     border-color: var(--app-error-border);
   }
 
   .mensaje-exito {
-    @apply rounded-xl border px-3 py-2 text-sm font-medium;
+    @apply rounded-md border px-3 py-2 text-sm font-medium;
     color: var(--app-success-text);
     background-color: var(--app-success-soft);
     border-color: var(--app-success-border);
   }
 
   .mensaje-info {
-    @apply rounded-xl border px-3 py-2 text-sm font-medium;
+    @apply rounded-md border px-3 py-2 text-sm font-medium;
     color: var(--app-info-text);
     background-color: var(--app-info-soft);
     border-color: var(--app-info-border);
   }
 
   .mensaje-warning {
-    @apply rounded-xl border px-3 py-2 text-sm font-medium;
+    @apply rounded-md border px-3 py-2 text-sm font-medium;
     color: var(--app-warning-text);
     background-color: var(--app-warning-soft);
     border-color: var(--app-warning-border);
@@ -967,7 +944,7 @@
   }
 
   .tabla-ui {
-    @apply overflow-hidden rounded-2xl border;
+    @apply overflow-hidden rounded-lg border;
     background: var(--app-surface);
     border-color: var(--app-border-subtle);
     box-shadow: var(--app-shadow-xs);
@@ -1001,7 +978,7 @@
   }
 
   .input-ui {
-    @apply w-full rounded-xl px-3 py-2.5 text-sm transition duration-150;
+    @apply w-full rounded-md px-3 py-2.5 text-sm transition duration-150;
     color: var(--app-text);
     background-color: var(--app-input-bg);
     border: 1px solid var(--app-input-border);
@@ -1033,7 +1010,7 @@
   }
 
   .glass-ui {
-    @apply rounded-2xl border;
+    @apply rounded-lg border;
     color: var(--app-text);
     background:
       linear-gradient(

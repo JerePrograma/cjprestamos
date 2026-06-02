@@ -116,7 +116,7 @@ export function PersonaFormulario({
               onChange={(event) =>
                 onChange({ ...valor, colorReferencia: event.target.value })
               }
-              className="h-11 w-14 shrink-0 cursor-pointer rounded-xl border border-subtle bg-surface-raised p-1"
+              className="h-11 w-14 shrink-0 cursor-pointer rounded-md border border-subtle bg-surface-raised p-1"
               aria-label="Selector de color de referencia"
             />
 

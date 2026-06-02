@@ -1,6 +1,8 @@
-import { StatusPill } from '../../../components/ui/StatusPill';
-import { PersonaLegajoPanel } from './PersonaLegajoPanel';
+import { LegajoPersonaPanel } from '../../legajos/components/LegajoPersonaPanel';
+import { mostrarTextoONulo } from '../../../shared/lib/formatters';
+import { StatusPill } from '../../../shared/ui/StatusPill';
 import type { Persona } from '../types/persona';
+import { estiloColorReferencia } from '../utils/personaUi';
 
 type Props = {
   persona: Persona | null;
@@ -10,18 +12,6 @@ type Props = {
   onDarDeBaja: () => void;
   deshabilitarBaja: boolean;
 };
-
-function valorTexto(valor: string | null | undefined) {
-  return valor && valor.trim() ? valor : '—';
-}
-
-function estiloColor(colorReferencia: string | null) {
-  if (!colorReferencia || !colorReferencia.trim()) {
-    return { backgroundColor: '#cbd5e1' };
-  }
-
-  return { backgroundColor: colorReferencia };
-}
 
 export function PersonaDetalle({
   persona,
@@ -76,14 +66,14 @@ export function PersonaDetalle({
             <div className="card-interactiva">
               <dt className="label-ui">Alias</dt>
               <dd className="mt-1 font-semibold text-app">
-                {valorTexto(persona.alias)}
+                {mostrarTextoONulo(persona.alias)}
               </dd>
             </div>
 
             <div className="card-interactiva">
               <dt className="label-ui">Teléfono</dt>
               <dd className="mt-1 font-semibold text-app">
-                {valorTexto(persona.telefono)}
+                {mostrarTextoONulo(persona.telefono)}
               </dd>
             </div>
 
@@ -93,9 +83,9 @@ export function PersonaDetalle({
                 <span
                   aria-hidden="true"
                   className="inline-block h-3 w-3 rounded-full border border-subtle"
-                  style={estiloColor(persona.colorReferencia)}
+                  style={estiloColorReferencia(persona.colorReferencia)}
                 />
-                {valorTexto(persona.colorReferencia)}
+                {mostrarTextoONulo(persona.colorReferencia)}
               </dd>
             </div>
 
@@ -121,7 +111,7 @@ export function PersonaDetalle({
           </h3>
 
           <p className="surface-inset mt-2 text-sm">
-            {valorTexto(persona.observacionRapida)}
+            {mostrarTextoONulo(persona.observacionRapida)}
           </p>
         </div>
 
@@ -145,7 +135,7 @@ export function PersonaDetalle({
         </div>
       </section>
 
-      <PersonaLegajoPanel personaId={persona.id} />
+      <LegajoPersonaPanel personaId={persona.id} />
     </div>
   );
 }

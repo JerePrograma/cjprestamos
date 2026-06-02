@@ -1,5 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { redondearMontoHaciaArriba } from "../../../utils/moneda";
+import { obtenerFechaHoyLocal } from "../../../shared/lib/dates";
+import { redondearMontoHaciaArriba } from "../../../shared/lib/money";
+import {
+  useAjustarCuotasFuturasPrestamo,
+  useCuotasPrestamo,
+  useGenerarCuotasPrestamo,
+} from "../../cuotas/hooks/useCuotasPrestamo";
+import type {
+  AjustarCuotasFuturasPayload,
+  CuotaPrestamo,
+  GenerarCuotasPayload,
+} from "../../cuotas/types/cuota";
+import {
+  construirFilasCuotasManuales,
+  validarCuotasManuales,
+} from "../../cuotas/utils/cuotasPrestamo";
 import { usePagosPrestamo, useRegistrarPago } from "../../pagos/hooks/usePagos";
 import {
   crearPayloadPago,
@@ -9,46 +24,18 @@ import {
 } from "../../pagos/types/pago";
 import {
   useActualizarReferenciaPrestamo,
-  useAjustarCuotasFuturasPrestamo,
-  useCuotasPrestamo,
   useDetallePrestamo,
-  useGenerarCuotasPrestamo,
   useResumenPrestamo,
 } from "../hooks/usePrestamos";
-import type {
-  AjustarCuotasFuturasPayload,
-  CuotaManualPayload,
-  CuotaPrestamo,
-  GenerarCuotasPayload,
-  ReferenciaPrestamoPayload,
-} from "../types/prestamo";
+import type { ReferenciaPrestamoPayload } from "../types/prestamo";
 import { obtenerMensajeError } from "../utils/prestamoUi";
 import {
   CuotasPrestamoPanel,
   type CuotaAjusteFila,
   type CuotaManualFila,
-} from "./CuotasPrestamoPanel";
-import { PagosPrestamoPanel } from "./PagosPrestamoPanel";
+} from "../../cuotas/components/CuotasPrestamoPanel";
+import { PagosPrestamoPanel } from "../../pagos/components/PagosPrestamoPanel";
 import { PrestamoDetallePanel } from "./PrestamoDetallePanel";
-
-function construirFilasCuotasManuales(
-  cantidadCuotas: number,
-  fechaPrimeraCuota?: string | null,
-): CuotaManualFila[] {
-  return Array.from({ length: cantidadCuotas }, (_, index) => ({
-    numeroCuota: String(index + 1),
-    fechaVencimiento: index === 0 ? (fechaPrimeraCuota ?? "") : "",
-    montoProgramado: "",
-  }));
-}
-
-function obtenerFechaHoyLocal() {
-  const hoy = new Date();
-  const year = hoy.getFullYear();
-  const month = String(hoy.getMonth() + 1).padStart(2, "0");
-  const day = String(hoy.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
 
 type PrestamoWorkspaceProps = {
   prestamoId: number | null;
@@ -476,89 +463,6 @@ export function PrestamoWorkspace({
     setMensajeAjusteCuotas(null);
   };
 
-  const validarCuotasManuales = (
-    filas: CuotaManualFila[],
-    cantidadCuotas: number,
-    totalADevolver: number,
-  ):
-    | { valido: true; payload: GenerarCuotasPayload }
-    | { valido: false; mensaje: string } => {
-    if (filas.length !== cantidadCuotas) {
-      return {
-        valido: false,
-        mensaje:
-          "La cantidad de cuotas cargadas no coincide con la cantidad esperada.",
-      };
-    }
-
-    const numeros = new Set<number>();
-    const cuotasManuales: CuotaManualPayload[] = [];
-
-    for (let index = 0; index < filas.length; index += 1) {
-      const fila = filas[index];
-      const numero = Number(fila.numeroCuota);
-      const monto = redondearMontoHaciaArriba(Number(fila.montoProgramado));
-
-      if (!Number.isInteger(numero)) {
-        return {
-          valido: false,
-          mensaje: `La cuota ${index + 1} debe tener número obligatorio.`,
-        };
-      }
-
-      if (numero < 1 || numero > cantidadCuotas) {
-        return {
-          valido: false,
-          mensaje: `La cuota ${index + 1} debe tener un número entre 1 y ${cantidadCuotas}.`,
-        };
-      }
-
-      if (numeros.has(numero)) {
-        return {
-          valido: false,
-          mensaje: "No puede haber números de cuota repetidos.",
-        };
-      }
-
-      numeros.add(numero);
-
-      if (!fila.fechaVencimiento) {
-        return {
-          valido: false,
-          mensaje: `La cuota ${numero} debe tener fecha de vencimiento.`,
-        };
-      }
-
-      if (!(monto > 0)) {
-        return {
-          valido: false,
-          mensaje: `La cuota ${numero} debe tener un monto mayor a 0.`,
-        };
-      }
-
-      cuotasManuales.push({
-        numeroCuota: numero,
-        fechaVencimiento: fila.fechaVencimiento,
-        montoProgramado: monto,
-      });
-    }
-
-    const totalCargado = cuotasManuales.reduce(
-      (acumulado, cuota) => acumulado + cuota.montoProgramado,
-      0,
-    );
-
-    if (Math.round(totalCargado * 100) !== Math.round(totalADevolver * 100)) {
-      return {
-        valido: false,
-        mensaje:
-          "La suma de las cuotas debe coincidir con el total a devolver.",
-      };
-    }
-
-    return { valido: true, payload: { cuotasManuales } };
-  };
-
   const generarCuotas = async () => {
     if (!detallePrestamo.data) {
       return;
@@ -715,7 +619,7 @@ export function PrestamoWorkspace({
         </p>
       ) : (
         <div className="space-y-4">
-          <nav className="grid grid-cols-3 gap-1 rounded-xl border border-subtle bg-surface-inset p-1">
+          <nav className="grid grid-cols-3 gap-1 rounded-md border border-subtle bg-surface-inset p-1">
             {seccionesWorkspace.map((seccion) => (
               <TabWorkspace
                 key={seccion.id}

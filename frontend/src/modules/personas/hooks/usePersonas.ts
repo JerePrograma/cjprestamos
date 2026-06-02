@@ -5,7 +5,7 @@ import {
   eliminarPersona,
   obtenerPersonaPorId,
   obtenerPersonas,
-} from '../../../services/personas/personasApi';
+} from '../api/personasApi';
 import type { PersonaPayload } from '../types/persona';
 
 const QUERY_KEY_PERSONAS = ['personas'];

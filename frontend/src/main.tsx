@@ -5,7 +5,7 @@ import { RouterProvider } from 'react-router-dom';
 import { AuthProvider, useAuth } from './app/auth';
 import { queryClient } from './app/queryClient';
 import { router } from './app/router';
-import { LoginPage } from './modules/auth/LoginPage';
+import { LoginPage } from './modules/auth/pages/LoginPage';
 import './styles.css';
 
 function aplicarTemaInicial() {

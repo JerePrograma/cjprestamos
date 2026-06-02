@@ -1,5 +1,6 @@
-import { formatearMonedaSinCentavos } from '../../../utils/moneda';
-import { obtenerMensajeErrorApi } from '../../../services/apiError';
+import { obtenerMensajeErrorApi } from '../../../shared/api/apiError';
+import { formatearFechaArgentina } from '../../../shared/lib/dates';
+import { formatearMonedaSinCentavos } from '../../../shared/lib/money';
 import type { FrecuenciaTipo, PrestamoResponse } from '../types/prestamo';
 
 export function formatearMoneda(valor?: number) {
@@ -11,7 +12,7 @@ export function formatearFecha(valor: string | null) {
     return 'Sin fecha';
   }
 
-  return new Date(`${valor}T00:00:00`).toLocaleDateString('es-AR');
+  return formatearFechaArgentina(valor);
 }
 
 export function etiquetaFrecuencia(

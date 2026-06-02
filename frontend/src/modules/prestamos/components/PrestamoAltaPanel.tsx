@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { formatearMonedaSinCentavos } from '../../../utils/moneda';
+import { formatearMonedaSinCentavos } from '../../../shared/lib/money';
 import type { Persona } from '../../personas/types/persona';
 import { useCalcularPrestamo, useCrearPrestamo } from '../hooks/usePrestamos';
 import {

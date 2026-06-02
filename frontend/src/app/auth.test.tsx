@@ -8,12 +8,12 @@ import {
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthProvider, useAuth } from "./auth";
-import { LoginPage } from "../modules/auth/LoginPage";
+import { LoginPage } from "../modules/auth/pages/LoginPage";
 
 const apiGetMock = vi.fn();
 let manejador401: (() => void) | null = null;
 
-vi.mock("../services/api", () => ({
+vi.mock("../shared/api/httpClient", () => ({
   api: {
     get: (...args: unknown[]) => apiGetMock(...args),
   },

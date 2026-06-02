@@ -1,4 +1,5 @@
-import { StatusPill } from '../../../components/ui/StatusPill';
+import { mostrarTextoONulo } from '../../../shared/lib/formatters';
+import { PrestamoEstadoPill } from './PrestamoEstadoPill';
 import type { CalculoPrestamoResultado, PrestamoResponse } from '../types/prestamo';
 import {
   etiquetaFrecuencia,
@@ -25,26 +26,11 @@ type PrestamoDetallePanelProps = {
   resumenError: boolean;
 };
 
-function valorTexto(valor: string | number | null | undefined) {
-  if (valor === null || valor === undefined || String(valor).trim() === '') {
-    return '—';
-  }
-
-  return String(valor);
-}
-
-function tonoEstado(estado: PrestamoResponse['estado']) {
-  if (estado === 'ACTIVO') return 'success';
-  if (estado === 'RENEGOCIADO') return 'warning';
-  if (estado === 'FINALIZADO') return 'neutral';
-  return 'danger';
-}
-
 function DatoDetalle({ etiqueta, valor }: { etiqueta: string; valor: string | number | null | undefined }) {
   return (
     <div className="card-interactiva">
       <dt className="label-ui">{etiqueta}</dt>
-      <dd className="mt-1 font-semibold text-app">{valorTexto(valor)}</dd>
+      <dd className="mt-1 font-semibold text-app">{mostrarTextoONulo(valor)}</dd>
     </div>
   );
 }
@@ -84,7 +70,7 @@ export function PrestamoDetallePanel({
         <div className="card-interactiva">
           <dt className="label-ui">Estado</dt>
           <dd className="mt-2">
-            <StatusPill texto={detalle.estado} tone={tonoEstado(detalle.estado)} />
+            <PrestamoEstadoPill estado={detalle.estado} />
           </dd>
         </div>
 
@@ -105,7 +91,7 @@ export function PrestamoDetallePanel({
 
         <div className="card-interactiva md:col-span-2">
           <dt className="label-ui">Observaciones</dt>
-          <dd className="mt-1 font-medium text-app">{valorTexto(detalle.observaciones)}</dd>
+          <dd className="mt-1 font-medium text-app">{mostrarTextoONulo(detalle.observaciones)}</dd>
         </div>
       </dl>
 

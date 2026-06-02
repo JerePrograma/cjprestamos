@@ -1,4 +1,5 @@
-import { parsearMontoSinCentavos } from '../../../utils/moneda';
+import { parsearMontoSinCentavos } from '../../../shared/lib/money';
+import { obtenerFechaHoyLocal } from '../../../shared/lib/dates';
 
 export type EstadoPago = "REGISTRADO" | "ANULADO";
 
@@ -31,16 +32,8 @@ export type PagoFormulario = {
   cuotasSeleccionadas: number[];
 };
 
-function obtenerFechaHoy() {
-  const hoy = new Date();
-  const year = hoy.getFullYear();
-  const month = String(hoy.getMonth() + 1).padStart(2, "0");
-  const day = String(hoy.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
 export const formularioInicialPago: PagoFormulario = {
-  fechaPago: obtenerFechaHoy(),
+  fechaPago: obtenerFechaHoyLocal(),
   monto: "",
   referencia: "",
   observacion: "",

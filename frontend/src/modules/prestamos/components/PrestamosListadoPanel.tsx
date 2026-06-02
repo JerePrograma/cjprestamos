@@ -1,4 +1,4 @@
-import { StatusPill } from '../../../components/ui/StatusPill';
+import { PrestamoEstadoPill } from './PrestamoEstadoPill';
 import type { PrestamoResponse } from '../types/prestamo';
 import {
   etiquetaFrecuencia,
@@ -14,13 +14,6 @@ type PrestamosListadoPanelProps = {
   seleccionId: number | null;
   onSeleccionar: (prestamoId: number) => void;
 };
-
-function tonoEstado(estado: PrestamoResponse['estado']) {
-  if (estado === 'ACTIVO') return 'success';
-  if (estado === 'RENEGOCIADO') return 'warning';
-  if (estado === 'FINALIZADO') return 'neutral';
-  return 'danger';
-}
 
 export function PrestamosListadoPanel({
   isLoading,
@@ -76,7 +69,7 @@ export function PrestamosListadoPanel({
                       #{prestamo.id}
                     </span>
 
-                    <StatusPill texto={prestamo.estado} tone={tonoEstado(prestamo.estado)} />
+                    <PrestamoEstadoPill estado={prestamo.estado} />
                   </div>
 
                   <p className="mt-1 truncate text-sm font-medium text-app">

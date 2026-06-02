@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { api, configurarSesionApi, limpiarSesionApi, registrarManejadorNoAutorizado } from '../services/api';
-import { guardarSesionOperadora, type SesionOperadora } from '../services/sesionOperadora';
+import { api, configurarSesionApi, limpiarSesionApi, registrarManejadorNoAutorizado } from '../shared/api/httpClient';
+import { guardarSesionOperadora, type SesionOperadora } from '../shared/lib/sesionOperadora';
 import { queryClient } from './queryClient';
 
 type CredencialesOperadora = {

@@ -1,8 +1,7 @@
-import { parsearMontoSinCentavos, redondearMontoHaciaArriba } from '../../../utils/moneda';
+import { parsearMontoSinCentavos, redondearMontoHaciaArriba } from '../../../shared/lib/money';
 
 export type FrecuenciaTipo = 'MENSUAL' | 'CADA_X_DIAS' | 'FECHAS_MANUALES';
 export type EstadoPrestamo = 'ACTIVO' | 'FINALIZADO' | 'RENEGOCIADO' | 'CANCELADO';
-export type EstadoCuota = 'PENDIENTE' | 'PARCIAL' | 'PAGADA' | 'VENCIDA';
 
 export type PrestamoPayload = {
   personaId: number;
@@ -28,39 +27,6 @@ export type PrestamoResponse = PrestamoPayload & {
 export type ReferenciaPrestamoPayload = {
   referenciaCodigo: string | null;
   observaciones: string | null;
-};
-
-export type CuotaPrestamo = {
-  id: number;
-  numeroCuota: number;
-  fechaVencimiento: string | null;
-  fechaPago: string | null;
-  montoProgramado: number;
-  montoPagado: number;
-  estado: EstadoCuota;
-};
-
-export type CuotaManualPayload = {
-  numeroCuota: number;
-  fechaVencimiento: string;
-  montoProgramado: number;
-};
-
-export type GenerarCuotasPayload = {
-  cuotasManuales?: CuotaManualPayload[];
-};
-
-export type AjusteCuotaFuturaPayload = {
-  cuotaId: number;
-  fechaVencimiento: string;
-  montoProgramado: number;
-  observacion?: string | null;
-};
-
-export type AjustarCuotasFuturasPayload = {
-  fechaRenegociacion?: string | null;
-  observacionGeneral?: string | null;
-  cuotas: AjusteCuotaFuturaPayload[];
 };
 
 export type CalculoPrestamoPayload = {
@@ -154,28 +120,3 @@ export function crearPayloadCalculo(formulario: PrestamoFormulario): CalculoPres
   };
 }
 
-
-export type SimulacionPrestamoPayload = {
-  montoInicial: number;
-  porcentajeFijoSugerido: number | null;
-  interesManualOpcional: number | null;
-  cantidadCuotas: number;
-  frecuenciaTipo: FrecuenciaTipo;
-  frecuenciaCadaDias: number | null;
-  fechaPrimerVencimiento: string | null;
-};
-
-export type SimulacionCuota = {
-  numeroCuota: number;
-  fechaVencimiento: string | null;
-  montoProgramado: number;
-};
-
-export type SimulacionPrestamoResponse = {
-  montoInicial: number;
-  interesAplicado: number;
-  totalADevolver: number;
-  montoPorCuotaEstimado: number;
-  cantidadCuotas: number;
-  cuotas: SimulacionCuota[];
-};

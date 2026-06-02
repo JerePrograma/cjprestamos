@@ -1,13 +1,13 @@
 import { createBrowserRouter } from 'react-router-dom';
-import { ErrorRutaPage } from '../components/layout/ErrorRutaPage';
-import { LayoutPrincipal } from '../components/layout/LayoutPrincipal';
-import { NoEncontradoPage } from '../components/layout/NoEncontradoPage';
-import { ControlCajaPage } from '../modules/dashboard/ControlCajaPage';
-import { DashboardPage } from '../modules/dashboard/DashboardPage';
-import { LegajosPage } from '../modules/legajos/LegajosPage';
-import { PersonasPage } from '../modules/personas/PersonasPage';
-import { PrestamosPage } from '../modules/prestamos/PrestamosPage';
-import { SimuladorPrestamosPage } from '../modules/prestamos/SimuladorPrestamosPage';
+import { ErrorRutaPage } from '../shared/layout/ErrorRutaPage';
+import { LayoutPrincipal } from '../shared/layout/LayoutPrincipal';
+import { NoEncontradoPage } from '../shared/layout/NoEncontradoPage';
+import { ControlCajaPage } from '../modules/caja/pages/ControlCajaPage';
+import { DashboardPage } from '../modules/dashboard/pages/DashboardPage';
+import { LegajosPage } from '../modules/legajos/pages/LegajosPage';
+import { PersonasPage } from '../modules/personas/pages/PersonasPage';
+import { PrestamosPage } from '../modules/prestamos/pages/PrestamosPage';
+import { SimuladorPrestamosPage } from '../modules/simulador/pages/SimuladorPrestamosPage';
 
 export const router = createBrowserRouter([
   {

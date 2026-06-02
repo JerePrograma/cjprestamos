@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { obtenerPagosPorPrestamo, registrarPago } from '../../../services/pagos/pagosApi';
+import { obtenerPagosPorPrestamo, registrarPago } from '../api/pagosApi';
 import type { RegistroPagoPayload } from '../types/pago';
 
 const QUERY_KEY_PRESTAMOS = ['prestamos'];
