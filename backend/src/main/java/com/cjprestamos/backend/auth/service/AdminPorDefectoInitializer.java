@@ -18,6 +18,9 @@ public class AdminPorDefectoInitializer implements ApplicationRunner {
     private final UsuarioSistemaRepository usuarioSistemaRepository;
     private final PasswordEncoder passwordEncoder;
     private final boolean habilitado;
+    private final String bootstrapAdminUsername;
+    private final String bootstrapAdminPassword;
+    private final String bootstrapAdminRole;
     private final boolean integrationUserHabilitado;
     private final String integrationUserUsername;
     private final String integrationUserPassword;
@@ -27,6 +30,9 @@ public class AdminPorDefectoInitializer implements ApplicationRunner {
         UsuarioSistemaRepository usuarioSistemaRepository,
         PasswordEncoder passwordEncoder,
         @Value("${app.auth.bootstrap-admin.enabled:true}") boolean habilitado,
+        @Value("${app.auth.bootstrap-admin.username:}") String bootstrapAdminUsername,
+        @Value("${app.auth.bootstrap-admin.password:}") String bootstrapAdminPassword,
+        @Value("${app.auth.bootstrap-admin.role:OPERADORA}") String bootstrapAdminRole,
         @Value("${app.auth.integration-user.enabled:false}") boolean integrationUserHabilitado,
         @Value("${app.auth.integration-user.username:}") String integrationUserUsername,
         @Value("${app.auth.integration-user.password:}") String integrationUserPassword,
@@ -35,6 +41,9 @@ public class AdminPorDefectoInitializer implements ApplicationRunner {
         this.usuarioSistemaRepository = usuarioSistemaRepository;
         this.passwordEncoder = passwordEncoder;
         this.habilitado = habilitado;
+        this.bootstrapAdminUsername = bootstrapAdminUsername;
+        this.bootstrapAdminPassword = bootstrapAdminPassword;
+        this.bootstrapAdminRole = bootstrapAdminRole;
         this.integrationUserHabilitado = integrationUserHabilitado;
         this.integrationUserUsername = integrationUserUsername;
         this.integrationUserPassword = integrationUserPassword;
@@ -48,18 +57,31 @@ public class AdminPorDefectoInitializer implements ApplicationRunner {
             return;
         }
 
-        if (!usuarioSistemaRepository.existsByUsernameIgnoreCase("admin")) {
-            UsuarioSistema admin = new UsuarioSistema();
-            admin.setUsername("admin");
-            admin.setPassword(passwordEncoder.encode("admin"));
-            admin.setRol("OPERADORA");
-            admin.setActivo(true);
+        crearAdminSiCorresponde();
+        crearUsuarioIntegracionSiCorresponde();
+    }
 
-            usuarioSistemaRepository.save(admin);
-            log.info("Usuario admin por defecto creado para ingreso inicial.");
+    private void crearAdminSiCorresponde() {
+        String username = limpiar(bootstrapAdminUsername);
+        String password = limpiar(bootstrapAdminPassword);
+
+        if (username.isBlank() || password.isBlank()) {
+            log.warn("Bootstrap de usuario inicial habilitado pero incompleto: username/password requeridos.");
+            return;
         }
 
-        crearUsuarioIntegracionSiCorresponde();
+        if (usuarioSistemaRepository.existsByUsernameIgnoreCase(username)) {
+            return;
+        }
+
+        UsuarioSistema admin = new UsuarioSistema();
+        admin.setUsername(username);
+        admin.setPassword(passwordEncoder.encode(password));
+        admin.setRol(normalizarRol(bootstrapAdminRole, "OPERADORA"));
+        admin.setActivo(true);
+
+        usuarioSistemaRepository.save(admin);
+        log.info("Usuario inicial creado para ingreso local: {}", username);
     }
 
     private void crearUsuarioIntegracionSiCorresponde() {
@@ -67,8 +89,8 @@ public class AdminPorDefectoInitializer implements ApplicationRunner {
             return;
         }
 
-        String username = integrationUserUsername == null ? "" : integrationUserUsername.trim();
-        String password = integrationUserPassword == null ? "" : integrationUserPassword.trim();
+        String username = limpiar(integrationUserUsername);
+        String password = limpiar(integrationUserPassword);
         if (username.isBlank() || password.isBlank()) {
             log.warn("Usuario técnico de integración habilitado pero incompleto: username/password requeridos.");
             return;
@@ -81,15 +103,19 @@ public class AdminPorDefectoInitializer implements ApplicationRunner {
         UsuarioSistema integrationUser = new UsuarioSistema();
         integrationUser.setUsername(username);
         integrationUser.setPassword(passwordEncoder.encode(password));
-        integrationUser.setRol(normalizarRol(integrationUserRole));
+        integrationUser.setRol(normalizarRol(integrationUserRole, "INTEGRATION"));
         integrationUser.setActivo(true);
 
         usuarioSistemaRepository.save(integrationUser);
         log.info("Usuario técnico de integración creado: {}", username);
     }
 
-    private String normalizarRol(String rol) {
-        String valor = rol == null ? "INTEGRATION" : rol.trim().toUpperCase();
-        return valor.isBlank() ? "INTEGRATION" : valor;
+    private String limpiar(String valor) {
+        return valor == null ? "" : valor.trim();
+    }
+
+    private String normalizarRol(String rol, String predeterminado) {
+        String valor = rol == null ? predeterminado : rol.trim().toUpperCase();
+        return valor.isBlank() ? predeterminado : valor;
     }
 }

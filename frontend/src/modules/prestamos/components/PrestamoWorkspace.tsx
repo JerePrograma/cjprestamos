@@ -1,257 +1,41 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { obtenerFechaHoyLocal } from "../../../shared/lib/dates";
-import { redondearMontoHaciaArriba } from "../../../shared/lib/money";
+import { useMemo } from "react";
+import { useCuotasPrestamo } from "../../cuotas/hooks/useCuotasPrestamo";
+import { usePagosPrestamo } from "../../pagos/hooks/usePagos";
 import {
-  useAjustarCuotasFuturasPrestamo,
-  useCuotasPrestamo,
-  useGenerarCuotasPrestamo,
-} from "../../cuotas/hooks/useCuotasPrestamo";
-import type {
-  AjustarCuotasFuturasPayload,
-  CuotaPrestamo,
-  GenerarCuotasPayload,
-} from "../../cuotas/types/cuota";
-import {
-  construirFilasCuotasManuales,
-  validarCuotasManuales,
-} from "../../cuotas/utils/cuotasPrestamo";
-import { usePagosPrestamo, useRegistrarPago } from "../../pagos/hooks/usePagos";
-import {
-  crearPayloadPago,
-  formularioInicialPago,
-  type PagoFormulario,
-  type RegistroPagoPayload,
-} from "../../pagos/types/pago";
-import {
-  useActualizarReferenciaPrestamo,
   useDetallePrestamo,
   useResumenPrestamo,
 } from "../hooks/usePrestamos";
-import type { ReferenciaPrestamoPayload } from "../types/prestamo";
-import { obtenerMensajeError } from "../utils/prestamoUi";
-import {
-  CuotasPrestamoPanel,
-  type CuotaAjusteFila,
-  type CuotaManualFila,
-} from "../../cuotas/components/CuotasPrestamoPanel";
-import { PagosPrestamoPanel } from "../../pagos/components/PagosPrestamoPanel";
-import { PrestamoDetallePanel } from "./PrestamoDetallePanel";
+import { usePrestamoCuotasOperacion } from "../hooks/usePrestamoCuotasOperacion";
+import { usePrestamoPagosOperacion } from "../hooks/usePrestamoPagosOperacion";
+import { usePrestamoReferenciaForm } from "../hooks/usePrestamoReferenciaForm";
+import { CuotasPrestamoTab } from "./CuotasPrestamoTab";
+import { PagosPrestamoTab } from "./PagosPrestamoTab";
+import { ResumenPrestamoTab } from "./ResumenPrestamoTab";
+import { WorkspaceTabs, type WorkspaceTab } from "./WorkspaceTabs";
 
 type PrestamoWorkspaceProps = {
   prestamoId: number | null;
   personasPorId: Map<number, string>;
+  tabActiva: WorkspaceTab;
+  onCambiarTab: (tab: WorkspaceTab) => void;
 };
-
-type SeccionWorkspace = "resumen" | "cuotas" | "pagos";
-
-const seccionesWorkspace: Array<{ id: SeccionWorkspace; etiqueta: string }> = [
-  { id: "resumen", etiqueta: "Resumen" },
-  { id: "cuotas", etiqueta: "Cuotas" },
-  { id: "pagos", etiqueta: "Pagos" },
-];
-
-function TabWorkspace({
-  activa,
-  children,
-  onClick,
-}: {
-  activa: boolean;
-  children: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={[
-        "rounded-lg px-2 py-1.5 text-xs font-semibold transition sm:text-sm",
-        activa
-          ? "bg-surface-raised text-app shadow-app-xs"
-          : "text-muted hover:bg-surface-raised hover:text-app",
-      ].join(" ")}
-    >
-      {children}
-    </button>
-  );
-}
 
 export function PrestamoWorkspace({
   prestamoId,
   personasPorId,
+  tabActiva,
+  onCambiarTab,
 }: PrestamoWorkspaceProps) {
-  const [seccionActiva, setSeccionActiva] =
-    useState<SeccionWorkspace>("resumen");
-
-  const [pagandoCuotaId, setPagandoCuotaId] = useState<number | null>(null);
-  const [errorPagoCuota, setErrorPagoCuota] = useState<string | null>(null);
-  const [mensajePagoCuota, setMensajePagoCuota] = useState<string | null>(null);
-
-  const [formularioPago, setFormularioPago] = useState<PagoFormulario>(
-    formularioInicialPago,
-  );
-  const [errorPago, setErrorPago] = useState<string | null>(null);
-  const [mensajePago, setMensajePago] = useState<string | null>(null);
-
-  const [formularioReferencia, setFormularioReferencia] = useState({
-    referenciaCodigo: "",
-    observaciones: "",
-  });
-  const [errorReferencia, setErrorReferencia] = useState<string | null>(null);
-  const [mensajeReferencia, setMensajeReferencia] = useState<string | null>(
-    null,
-  );
-
-  const [filasCuotasManuales, setFilasCuotasManuales] = useState<
-    CuotaManualFila[]
-  >([]);
-  const [errorCuotas, setErrorCuotas] = useState<string | null>(null);
-  const [mensajeCuotas, setMensajeCuotas] = useState<string | null>(null);
-
-  const [cuotasAjuste, setCuotasAjuste] = useState<CuotaAjusteFila[]>([]);
-  const [errorAjusteCuotas, setErrorAjusteCuotas] = useState<string | null>(
-    null,
-  );
-  const [mensajeAjusteCuotas, setMensajeAjusteCuotas] = useState<string | null>(
-    null,
-  );
-
   const detallePrestamo = useDetallePrestamo(prestamoId);
   const cuotasPrestamo = useCuotasPrestamo(prestamoId);
   const resumenPrestamo = useResumenPrestamo(detallePrestamo.data ?? null);
   const pagosPrestamo = usePagosPrestamo(prestamoId);
 
-  const generarCuotasPrestamo = useGenerarCuotasPrestamo();
-  const ajustarCuotasFuturas = useAjustarCuotasFuturasPrestamo();
-  const registrarPago = useRegistrarPago();
-  const actualizarReferenciaPrestamo = useActualizarReferenciaPrestamo();
+  const detalle = detallePrestamo.data ?? null;
+  const resumen = resumenPrestamo.data ?? null;
 
   const puedeRegistrarPago =
-    detallePrestamo.data?.estado === "ACTIVO" ||
-    detallePrestamo.data?.estado === "RENEGOCIADO";
-
-  useEffect(() => {
-    setErrorPago(null);
-    setMensajePago(null);
-    setFormularioPago((actual) => ({ ...actual, cuotasSeleccionadas: [] }));
-    setErrorCuotas(null);
-    setMensajeCuotas(null);
-    setErrorAjusteCuotas(null);
-    setMensajeAjusteCuotas(null);
-    setPagandoCuotaId(null);
-    setErrorPagoCuota(null);
-    setMensajePagoCuota(null);
-  }, [prestamoId]);
-
-  useEffect(() => {
-    setSeccionActiva("resumen");
-  }, [prestamoId]);
-
-  const pagarCuotaDirecta = async (cuota: CuotaPrestamo) => {
-    if (!prestamoId) {
-      setErrorPagoCuota("Seleccioná un préstamo antes de registrar un pago.");
-      return;
-    }
-
-    if (!puedeRegistrarPago) {
-      setErrorPagoCuota(
-        "Solo se pueden registrar pagos sobre préstamos activos o renegociados.",
-      );
-      return;
-    }
-
-    const saldoCuota = Math.max(cuota.montoProgramado - cuota.montoPagado, 0);
-
-    if (saldoCuota <= 0) {
-      setErrorPagoCuota(
-        `La cuota #${cuota.numeroCuota} no tiene saldo pendiente.`,
-      );
-      return;
-    }
-
-    const fechaPago = obtenerFechaHoyLocal();
-
-    const confirmado = window.confirm(
-      `¿Está seguro que desea abonar la cuota #${cuota.numeroCuota} por ${saldoCuota}? Se registrará con fecha ${fechaPago}.`,
-    );
-
-    if (!confirmado) {
-      return;
-    }
-
-    const payload: RegistroPagoPayload = {
-      prestamoId,
-      fechaPago,
-      monto: saldoCuota,
-      referencia: null,
-      observacion: `Pago directo de cuota #${cuota.numeroCuota}`,
-      cuotasSeleccionadas: [cuota.id],
-    };
-
-    setPagandoCuotaId(cuota.id);
-    setErrorPagoCuota(null);
-    setMensajePagoCuota(null);
-
-    try {
-      await registrarPago.mutateAsync(payload);
-      setMensajePagoCuota(`Cuota #${cuota.numeroCuota} abonada correctamente.`);
-    } catch (error) {
-      setErrorPagoCuota(
-        obtenerMensajeError(
-          error,
-          `No se pudo abonar la cuota #${cuota.numeroCuota}.`,
-        ),
-      );
-    } finally {
-      setPagandoCuotaId(null);
-    }
-  };
-
-  useEffect(() => {
-    if (!detallePrestamo.data) {
-      return;
-    }
-
-    setFormularioReferencia({
-      referenciaCodigo: detallePrestamo.data.referenciaCodigo ?? "",
-      observaciones: detallePrestamo.data.observaciones ?? "",
-    });
-    setErrorReferencia(null);
-    setMensajeReferencia(null);
-  }, [detallePrestamo.data?.id]);
-
-  useEffect(() => {
-    const detalle = detallePrestamo.data;
-
-    if (!detalle || detalle.frecuenciaTipo !== "FECHAS_MANUALES") {
-      setFilasCuotasManuales([]);
-      return;
-    }
-
-    setFilasCuotasManuales((actual) => {
-      if (actual.length === detalle.cantidadCuotas) {
-        if (!actual[0]?.fechaVencimiento && detalle.fechaBase) {
-          const copia = [...actual];
-          copia[0] = {
-            ...copia[0],
-            fechaVencimiento: detalle.fechaBase,
-          };
-          return copia;
-        }
-
-        return actual;
-      }
-
-      return construirFilasCuotasManuales(
-        detalle.cantidadCuotas,
-        detalle.fechaBase,
-      );
-    });
-  }, [
-    detallePrestamo.data?.id,
-    detallePrestamo.data?.frecuenciaTipo,
-    detallePrestamo.data?.cantidadCuotas,
-    detallePrestamo.data?.fechaBase,
-  ]);
+    detalle?.estado === "ACTIVO" || detalle?.estado === "RENEGOCIADO";
 
   const cuotasActuales = useMemo(
     () => cuotasPrestamo.data ?? [],
@@ -267,15 +51,15 @@ export function PrestamoWorkspace({
   );
 
   const totalProgramado = useMemo(() => {
-    if (resumenPrestamo.data) {
-      return resumenPrestamo.data.totalADevolver;
+    if (resumen) {
+      return resumen.totalADevolver;
     }
 
     return cuotasActuales.reduce(
       (acumulado, cuota) => acumulado + cuota.montoProgramado,
       0,
     );
-  }, [resumenPrestamo.data, cuotasActuales]);
+  }, [resumen, cuotasActuales]);
 
   const totalPagado = useMemo(
     () =>
@@ -287,303 +71,15 @@ export function PrestamoWorkspace({
   );
 
   const saldoPendiente = Math.max(totalProgramado - totalPagado, 0);
-
-  const cuotasAjusteIniciales = useMemo(
-    () =>
-      cuotasActuales
-        .filter((cuota) => cuota.montoPagado <= 0)
-        .map((cuota) => ({
-          cuotaId: cuota.id,
-          numeroCuota: cuota.numeroCuota,
-          fechaVencimiento: cuota.fechaVencimiento ?? "",
-          montoProgramado: String(cuota.montoProgramado),
-          montoPagado: cuota.montoPagado,
-          estado: cuota.estado,
-        })),
-    [cuotasActuales],
-  );
-
-  const firmaCuotasAjuste = useMemo(
-    () =>
-      cuotasAjusteIniciales
-        .map((cuota) =>
-          [
-            cuota.cuotaId,
-            cuota.numeroCuota,
-            cuota.fechaVencimiento,
-            cuota.montoProgramado,
-            cuota.montoPagado,
-            cuota.estado,
-          ].join("|"),
-        )
-        .join(";"),
-    [cuotasAjusteIniciales],
-  );
-
-  const ultimaFirmaCuotasAjusteRef = useRef<string>("");
-
-  useEffect(() => {
-    if (ultimaFirmaCuotasAjusteRef.current === firmaCuotasAjuste) {
-      return;
-    }
-
-    ultimaFirmaCuotasAjusteRef.current = firmaCuotasAjuste;
-    setCuotasAjuste(cuotasAjusteIniciales);
-  }, [firmaCuotasAjuste, cuotasAjusteIniciales]);
-
-  const actualizarCampoPago = <K extends keyof PagoFormulario>(
-    campo: K,
-    valor: PagoFormulario[K],
-  ) => {
-    setFormularioPago((actual) => ({ ...actual, [campo]: valor }));
-    setErrorPago(null);
-    setMensajePago(null);
-  };
-
-  const guardarReferenciaPrestamo = async () => {
-    if (!detallePrestamo.data) {
-      return;
-    }
-
-    if (formularioReferencia.referenciaCodigo.length > 80) {
-      setErrorReferencia("La referencia no puede superar 80 caracteres.");
-      return;
-    }
-
-    if (formularioReferencia.observaciones.length > 600) {
-      setErrorReferencia("Las observaciones no pueden superar 600 caracteres.");
-      return;
-    }
-
-    const payload: ReferenciaPrestamoPayload = {
-      referenciaCodigo: formularioReferencia.referenciaCodigo.trim() || null,
-      observaciones: formularioReferencia.observaciones.trim() || null,
-    };
-
-    setErrorReferencia(null);
-
-    try {
-      await actualizarReferenciaPrestamo.mutateAsync({
-        id: detallePrestamo.data.id,
-        payload,
-      });
-      setMensajeReferencia("Referencia del préstamo actualizada.");
-    } catch {
-      setErrorReferencia("No se pudo actualizar la referencia del préstamo.");
-    }
-  };
-
-  const guardarPago = async () => {
-    if (!prestamoId) {
-      setErrorPago("Seleccioná un préstamo antes de registrar un pago.");
-      return;
-    }
-
-    if (!formularioPago.fechaPago) {
-      setErrorPago("La fecha de pago es obligatoria.");
-      return;
-    }
-
-    let payload;
-
-    try {
-      payload = crearPayloadPago(prestamoId, formularioPago);
-    } catch (error) {
-      setErrorPago(
-        obtenerMensajeError(
-          error,
-          "No se pudo construir el pago. Revisá el monto ingresado.",
-        ),
-      );
-      return;
-    }
-
-    try {
-      await registrarPago.mutateAsync(payload);
-      setMensajePago("Pago registrado correctamente.");
-      setFormularioPago((actual) => ({
-        ...actual,
-        monto: "",
-        referencia: "",
-        observacion: "",
-        cuotasSeleccionadas: [],
-      }));
-    } catch (error) {
-      setErrorPago(
-        obtenerMensajeError(
-          error,
-          "No se pudo registrar el pago. Revisá los datos e intentá nuevamente.",
-        ),
-      );
-    }
-  };
-
-  const actualizarFilaCuotaManual = (
-    index: number,
-    campo: keyof CuotaManualFila,
-    valor: string,
-  ) => {
-    setFilasCuotasManuales((actual) =>
-      actual.map((fila, filaIndex) =>
-        filaIndex === index ? { ...fila, [campo]: valor } : fila,
-      ),
-    );
-    setErrorCuotas(null);
-    setMensajeCuotas(null);
-  };
-
-  const alternarCuotaPago = (cuotaId: number, seleccionada: boolean) => {
-    setFormularioPago((actual) => {
-      const ids = new Set(actual.cuotasSeleccionadas);
-
-      if (seleccionada) {
-        ids.add(cuotaId);
-      } else {
-        ids.delete(cuotaId);
-      }
-
-      return { ...actual, cuotasSeleccionadas: Array.from(ids) };
-    });
-
-    setErrorPago(null);
-    setMensajePago(null);
-  };
-
-  const actualizarCuotaAjuste = (
-    cuotaId: number,
-    campo: "fechaVencimiento" | "montoProgramado",
-    valor: string,
-  ) => {
-    setCuotasAjuste((actual) =>
-      actual.map((cuota) =>
-        cuota.cuotaId === cuotaId ? { ...cuota, [campo]: valor } : cuota,
-      ),
-    );
-    setErrorAjusteCuotas(null);
-    setMensajeAjusteCuotas(null);
-  };
-
-  const generarCuotas = async () => {
-    if (!detallePrestamo.data) {
-      return;
-    }
-
-    if ((cuotasPrestamo.data ?? []).length > 0) {
-      setErrorCuotas(
-        "Este préstamo ya tiene cuotas generadas. No se puede regenerar.",
-      );
-      return;
-    }
-
-    let payload: GenerarCuotasPayload | undefined;
-
-    if (detallePrestamo.data.frecuenciaTipo === "FECHAS_MANUALES") {
-      if (!resumenPrestamo.data) {
-        setErrorCuotas(
-          "No se pudo obtener el total a devolver para validar cuotas manuales.",
-        );
-        return;
-      }
-
-      const validacion = validarCuotasManuales(
-        filasCuotasManuales,
-        detallePrestamo.data.cantidadCuotas,
-        resumenPrestamo.data.totalADevolver,
-      );
-
-      if (!validacion.valido) {
-        setErrorCuotas(validacion.mensaje);
-        return;
-      }
-
-      payload = validacion.payload;
-    }
-
-    try {
-      await generarCuotasPrestamo.mutateAsync({
-        id: detallePrestamo.data.id,
-        payload,
-      });
-
-      setMensajeCuotas(
-        detallePrestamo.data.frecuenciaTipo === "FECHAS_MANUALES"
-          ? "Cuotas manuales guardadas correctamente."
-          : "Cuotas generadas correctamente.",
-      );
-    } catch (error) {
-      setErrorCuotas(
-        obtenerMensajeError(
-          error,
-          "No se pudo generar las cuotas del préstamo. Revisá los datos e intentá nuevamente.",
-        ),
-      );
-    }
-  };
-
-  const guardarAjusteCuotas = async () => {
-    if (!detallePrestamo.data) {
-      return;
-    }
-
-    if (cuotasAjuste.length === 0) {
-      setErrorAjusteCuotas("No hay cuotas futuras disponibles para ajustar.");
-      return;
-    }
-
-    const cuotas = [];
-
-    for (const cuota of cuotasAjuste) {
-      if (!cuota.fechaVencimiento) {
-        setErrorAjusteCuotas(
-          `La cuota #${cuota.numeroCuota} requiere fecha de vencimiento.`,
-        );
-        return;
-      }
-
-      const monto = redondearMontoHaciaArriba(Number(cuota.montoProgramado));
-
-      if (!(monto > 0)) {
-        setErrorAjusteCuotas(
-          `La cuota #${cuota.numeroCuota} requiere monto mayor a 0.`,
-        );
-        return;
-      }
-
-      cuotas.push({
-        cuotaId: cuota.cuotaId,
-        fechaVencimiento: cuota.fechaVencimiento,
-        montoProgramado: monto,
-      });
-    }
-
-    if (
-      !window.confirm(
-        "¿Confirmás la renegociación manual de cuotas futuras? Esta acción no modifica pagos ya registrados.",
-      )
-    ) {
-      return;
-    }
-
-    const payload: AjustarCuotasFuturasPayload = {
-      fechaRenegociacion: new Date().toISOString().slice(0, 10),
-      cuotas,
-    };
-
-    try {
-      await ajustarCuotasFuturas.mutateAsync({
-        id: detallePrestamo.data.id,
-        payload,
-      });
-      setMensajeAjusteCuotas("Renegociación de cuotas guardada correctamente.");
-    } catch (error) {
-      setErrorAjusteCuotas(
-        obtenerMensajeError(
-          error,
-          "No se pudo guardar la renegociación de cuotas.",
-        ),
-      );
-    }
-  };
+  const referencia = usePrestamoReferenciaForm(detalle);
+  const cuotasOperacion = usePrestamoCuotasOperacion({
+    prestamoId,
+    detalle,
+    cuotas: cuotasActuales,
+    resumen,
+    puedeRegistrarPago,
+  });
+  const pagosOperacion = usePrestamoPagosOperacion({ prestamoId });
 
   return (
     <div className="panel space-y-4 p-4 sm:p-5">
@@ -598,11 +94,11 @@ export function PrestamoWorkspace({
           </p>
         </div>
 
-        {detallePrestamo.data && (
+        {detalle && (
           <span className="badge-ui">
-            #{detallePrestamo.data.id} ·{" "}
-            {personasPorId.get(detallePrestamo.data.personaId) ??
-              `Persona ${detallePrestamo.data.personaId}`}
+            #{detalle.id} ·{" "}
+            {personasPorId.get(detalle.personaId) ??
+              `Persona ${detalle.personaId}`}
           </span>
         )}
       </header>
@@ -613,87 +109,70 @@ export function PrestamoWorkspace({
         </p>
       ) : detallePrestamo.isLoading ? (
         <p className="text-sm text-muted">Cargando detalle...</p>
-      ) : detallePrestamo.isError || !detallePrestamo.data ? (
+      ) : detallePrestamo.isError || !detalle ? (
         <p className="mensaje-error">
           No se pudo cargar el detalle del préstamo.
         </p>
       ) : (
         <div className="space-y-4">
-          <nav className="grid grid-cols-3 gap-1 rounded-md border border-subtle bg-surface-inset p-1">
-            {seccionesWorkspace.map((seccion) => (
-              <TabWorkspace
-                key={seccion.id}
-                activa={seccionActiva === seccion.id}
-                onClick={() => setSeccionActiva(seccion.id)}
-              >
-                {seccion.etiqueta}
-              </TabWorkspace>
-            ))}
-          </nav>
+          <WorkspaceTabs tabActiva={tabActiva} onCambiarTab={onCambiarTab} />
 
-          {seccionActiva === "resumen" && (
-            <PrestamoDetallePanel
-              detalle={detallePrestamo.data}
+          {tabActiva === "resumen" && (
+            <ResumenPrestamoTab
+              detalle={detalle}
               personasPorId={personasPorId}
-              formularioReferencia={formularioReferencia}
-              onCambiarReferencia={(campo, valor) => {
-                setFormularioReferencia((actual) => ({
-                  ...actual,
-                  [campo]: valor,
-                }));
-                setErrorReferencia(null);
-                setMensajeReferencia(null);
-              }}
-              onGuardarReferencia={guardarReferenciaPrestamo}
-              guardandoReferencia={actualizarReferenciaPrestamo.isPending}
-              errorReferencia={errorReferencia}
-              mensajeReferencia={mensajeReferencia}
-              resumen={resumenPrestamo.data ?? null}
+              formularioReferencia={referencia.formularioReferencia}
+              onCambiarReferencia={referencia.cambiarReferencia}
+              onGuardarReferencia={referencia.guardarReferenciaPrestamo}
+              guardandoReferencia={referencia.guardandoReferencia}
+              errorReferencia={referencia.errorReferencia}
+              mensajeReferencia={referencia.mensajeReferencia}
+              resumen={resumen}
               resumenLoading={resumenPrestamo.isLoading}
               resumenError={resumenPrestamo.isError}
             />
           )}
 
-          {seccionActiva === "cuotas" && (
-            <CuotasPrestamoPanel
-              detalle={detallePrestamo.data}
+          {tabActiva === "cuotas" && (
+            <CuotasPrestamoTab
+              detalle={detalle}
               cuotas={cuotasActuales}
               cuotasLoading={cuotasPrestamo.isLoading}
               cuotasError={cuotasPrestamo.isError}
               totalProgramado={totalProgramado}
               totalPagado={totalPagado}
               saldoPendiente={saldoPendiente}
-              filasCuotasManuales={filasCuotasManuales}
-              onCambiarFilaManual={actualizarFilaCuotaManual}
-              onGenerarCuotas={generarCuotas}
-              generandoCuotas={generarCuotasPrestamo.isPending}
-              cuotasAjuste={cuotasAjuste}
-              onCambiarCuotaAjuste={actualizarCuotaAjuste}
-              onGuardarAjuste={guardarAjusteCuotas}
-              guardandoAjuste={ajustarCuotasFuturas.isPending}
-              errorCuotas={errorCuotas}
-              mensajeCuotas={mensajeCuotas}
-              errorAjusteCuotas={errorAjusteCuotas}
-              mensajeAjusteCuotas={mensajeAjusteCuotas}
-              onPagarCuota={pagarCuotaDirecta}
-              pagandoCuotaId={pagandoCuotaId}
+              filasCuotasManuales={cuotasOperacion.filasCuotasManuales}
+              onCambiarFilaManual={cuotasOperacion.actualizarFilaCuotaManual}
+              onGenerarCuotas={cuotasOperacion.generarCuotas}
+              generandoCuotas={cuotasOperacion.generandoCuotas}
+              cuotasAjuste={cuotasOperacion.cuotasAjuste}
+              onCambiarCuotaAjuste={cuotasOperacion.actualizarCuotaAjuste}
+              onGuardarAjuste={cuotasOperacion.guardarAjusteCuotas}
+              guardandoAjuste={cuotasOperacion.guardandoAjuste}
+              errorCuotas={cuotasOperacion.errorCuotas}
+              mensajeCuotas={cuotasOperacion.mensajeCuotas}
+              errorAjusteCuotas={cuotasOperacion.errorAjusteCuotas}
+              mensajeAjusteCuotas={cuotasOperacion.mensajeAjusteCuotas}
+              onPagarCuota={cuotasOperacion.pagarCuotaDirecta}
+              pagandoCuotaId={cuotasOperacion.pagandoCuotaId}
               puedeRegistrarPago={puedeRegistrarPago}
-              errorPagoCuota={errorPagoCuota}
-              mensajePagoCuota={mensajePagoCuota}
+              errorPagoCuota={cuotasOperacion.errorPagoCuota}
+              mensajePagoCuota={cuotasOperacion.mensajePagoCuota}
             />
           )}
 
-          {seccionActiva === "pagos" && (
-            <PagosPrestamoPanel
-              formularioPago={formularioPago}
-              onCambiarCampoPago={actualizarCampoPago}
+          {tabActiva === "pagos" && (
+            <PagosPrestamoTab
+              formularioPago={pagosOperacion.formularioPago}
+              onCambiarCampoPago={pagosOperacion.cambiarCampoPago}
               cuotasConSaldo={cuotasConSaldo}
-              onAlternarCuotaPago={alternarCuotaPago}
-              onGuardarPago={guardarPago}
-              guardandoPago={registrarPago.isPending}
+              onAlternarCuotaPago={pagosOperacion.alternarCuotaPago}
+              onGuardarPago={pagosOperacion.guardarPago}
+              guardandoPago={pagosOperacion.guardandoPago}
               puedeRegistrarPago={puedeRegistrarPago}
-              errorPago={errorPago}
-              mensajePago={mensajePago}
+              errorPago={pagosOperacion.errorPago}
+              mensajePago={pagosOperacion.mensajePago}
               pagosLoading={pagosPrestamo.isLoading}
               pagosError={pagosPrestamo.isError}
               pagos={pagosPrestamo.data ?? []}

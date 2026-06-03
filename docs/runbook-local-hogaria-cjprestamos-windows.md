@@ -14,7 +14,7 @@
 
 - HogarIA backend: `8080` (o el configurado en ese repo).
 - cjprestamos backend: **`8081` recomendado para integración local**.
-  - En este repo el default actual es `8080`, por lo que se debe sobrescribir en arranque con `--server.port=8081`.
+  - En este repo el default actual ya es `8081`.
 
 ## 3) PostgreSQL local
 
@@ -30,8 +30,28 @@ Configurar variables de entorno locales (PowerShell), sin hardcodear secretos en
 ```powershell
 # cjprestamos (ejemplo)
 $env:DB_URL = "jdbc:postgresql://localhost:5432/cjprestamos"
-$env:DB_USER = "postgres"
+$env:DB_USER = "<DB_USER_LOCAL>"
 $env:DB_PASSWORD = "<LOCAL_PASSWORD>"
+```
+
+### 3.3 Bootstrap local cjprestamos
+
+Configurar el usuario inicial de operación por entorno. El backend no crea usuario bootstrap si falta usuario o contraseña.
+
+```powershell
+$env:BOOTSTRAP_ADMIN_ENABLED = "true"
+$env:BOOTSTRAP_ADMIN_USERNAME = "<ADMIN_LOCAL_USER>"
+$env:BOOTSTRAP_ADMIN_PASSWORD = "<ADMIN_LOCAL_PASSWORD>"
+$env:BOOTSTRAP_ADMIN_ROLE = "OPERADORA"
+```
+
+Para probar el bridge desde HogarIA, habilitar además un usuario técnico separado:
+
+```powershell
+$env:INTEGRATION_USER_ENABLED = "true"
+$env:INTEGRATION_USER_USERNAME = "<CJP_INTEGRATION_USER>"
+$env:INTEGRATION_USER_PASSWORD = "<CJP_INTEGRATION_PASSWORD>"
+$env:INTEGRATION_USER_ROLE = "INTEGRATION"
 ```
 
 ## 4) Variables de integración en HogarIA
@@ -41,15 +61,15 @@ $env:CJP_INTEGRATION_ENABLED = "true"
 $env:CJP_SYNC_ENABLED = "false"
 $env:CJP_BASE_URL = "http://localhost:8081"
 $env:CJP_API_PREFIX = "/api/v1/integration/hogaria"
-$env:CJP_USERNAME = "<integration_user>"
-$env:CJP_PASSWORD = "<integration_password>"
+$env:CJP_USERNAME = $env:INTEGRATION_USER_USERNAME
+$env:CJP_PASSWORD = $env:INTEGRATION_USER_PASSWORD
 $env:CJP_CONNECT_TIMEOUT_MS = "3000"
 $env:CJP_READ_TIMEOUT_MS = "5000"
 ```
 
 ## 5) Usuario INTEGRATION en cjprestamos
 
-- En `dev`, cjprestamos permite bootstrap de usuario técnico (`app.auth.integration-user.*`).
+- En `dev`, cjprestamos permite bootstrap de usuario técnico por variables `INTEGRATION_USER_*`.
 - Verificar que el usuario exista y tenga rol `INTEGRATION`.
 - Verificar que el usuario de integración **no** tenga `OPERADORA` ni `ADMIN` (salvo usuario separado para pruebas manuales).
 
@@ -71,7 +91,7 @@ npm run test
 
 ```powershell
 cd C:\laburo\cjprestamos\backend
-mvn spring-boot:run "-Dspring-boot.run.arguments=--server.port=8081"
+mvn spring-boot:run
 ```
 
 ### 6.3 Compilar/testear y levantar HogarIA backend

@@ -1,6 +1,14 @@
 # IntelliJ / IDE
 backend/.idea/
 
+# Entornos locales
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example
+
 # Maven
 backend/target/
 
@@ -15,3 +23,9 @@ frontend/build/
 frontend/coverage/
 frontend/*.tsbuildinfo
 *.tsbuildinfo
+frontend/vite.config.js
+frontend/vite.config.d.ts
+
+# Artefactos generados/exportados
+/*.pdf
+/lu.html

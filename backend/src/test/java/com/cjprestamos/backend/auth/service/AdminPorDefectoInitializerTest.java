@@ -28,13 +28,16 @@ class AdminPorDefectoInitializerTest {
 
     @Test
     void run_deberiaCrearAdminSiNoExiste() throws Exception {
-        when(usuarioSistemaRepository.existsByUsernameIgnoreCase("admin")).thenReturn(false);
-        when(passwordEncoder.encode("admin")).thenReturn("{bcrypt}hash");
+        when(usuarioSistemaRepository.existsByUsernameIgnoreCase("operadora-local")).thenReturn(false);
+        when(passwordEncoder.encode("clave-local-test")).thenReturn("{bcrypt}hash");
 
         AdminPorDefectoInitializer initializer = new AdminPorDefectoInitializer(
             usuarioSistemaRepository,
             passwordEncoder,
             true,
+            "operadora-local",
+            "clave-local-test",
+            "OPERADORA",
             false,
             "",
             "",
@@ -45,7 +48,7 @@ class AdminPorDefectoInitializerTest {
 
         ArgumentCaptor<UsuarioSistema> captor = ArgumentCaptor.forClass(UsuarioSistema.class);
         verify(usuarioSistemaRepository).save(captor.capture());
-        assertEquals("admin", captor.getValue().getUsername());
+        assertEquals("operadora-local", captor.getValue().getUsername());
         assertEquals("{bcrypt}hash", captor.getValue().getPassword());
         assertEquals("OPERADORA", captor.getValue().getRol());
         assertTrue(captor.getValue().isActivo());
@@ -53,12 +56,35 @@ class AdminPorDefectoInitializerTest {
 
     @Test
     void run_noDeberiaCrearSiYaExiste() throws Exception {
-        when(usuarioSistemaRepository.existsByUsernameIgnoreCase("admin")).thenReturn(true);
+        when(usuarioSistemaRepository.existsByUsernameIgnoreCase("operadora-local")).thenReturn(true);
 
         AdminPorDefectoInitializer initializer = new AdminPorDefectoInitializer(
             usuarioSistemaRepository,
             passwordEncoder,
             true,
+            "operadora-local",
+            "clave-local-test",
+            "OPERADORA",
+            false,
+            "",
+            "",
+            "INTEGRATION"
+        );
+
+        initializer.run(new DefaultApplicationArguments(new String[0]));
+
+        verify(usuarioSistemaRepository, never()).save(any());
+    }
+
+    @Test
+    void run_noDeberiaCrearAdminSinCredencialesConfiguradas() throws Exception {
+        AdminPorDefectoInitializer initializer = new AdminPorDefectoInitializer(
+            usuarioSistemaRepository,
+            passwordEncoder,
+            true,
+            "",
+            "",
+            "OPERADORA",
             false,
             "",
             "",

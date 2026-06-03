@@ -25,7 +25,7 @@ Una libreta digital operativa para registrar personas, préstamos, cuotas y pago
 
 ## Recorrido rápido (2-3 minutos)
 
-1. Iniciar sesión (`admin/admin` en entorno local inicial).
+1. Iniciar sesión con el usuario inicial configurado por variables de entorno.
 2. Ir a **Personas** y cargar una persona.
 3. Ir a **Préstamos** → **Nuevo préstamo** y registrar operación.
 4. Abrir el **Workspace del préstamo** para:
@@ -174,7 +174,22 @@ Requisitos:
 - Java 21
 - PostgreSQL activo en `localhost:5432`
 - base de datos `cjprestamos`
-- usuario/clave por defecto: `postgres/postgres`
+- variables locales de base de datos y bootstrap configuradas fuera de Git
+
+Variables mínimas para un entorno nuevo en PowerShell:
+
+```powershell
+$env:DB_URL = "jdbc:postgresql://localhost:5432/cjprestamos"
+$env:DB_USER = "<DB_USER_LOCAL>"
+$env:DB_PASSWORD = "<DB_PASSWORD_LOCAL>"
+
+$env:BOOTSTRAP_ADMIN_ENABLED = "true"
+$env:BOOTSTRAP_ADMIN_USERNAME = "<ADMIN_LOCAL_USER>"
+$env:BOOTSTRAP_ADMIN_PASSWORD = "<ADMIN_LOCAL_PASSWORD>"
+$env:BOOTSTRAP_ADMIN_ROLE = "OPERADORA"
+
+$env:CORS_ALLOWED_ORIGINS = "http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174"
+```
 
 Arranque:
 
@@ -186,9 +201,14 @@ mvn spring-boot:run
 API base: `http://localhost:8081/api`
 
 Credenciales iniciales desarrollo:
-- usuario: `admin`
-- contraseña: `admin`
-- rol: `OPERADORA`
+- usuario: valor de `BOOTSTRAP_ADMIN_USERNAME`
+- contraseña: valor de `BOOTSTRAP_ADMIN_PASSWORD`
+- rol: valor de `BOOTSTRAP_ADMIN_ROLE` (`OPERADORA` para operación local)
+
+Notas de seguridad del MVP:
+- Basic Auth sigue siendo válida solo para desarrollo/MVP interno.
+- El bootstrap inicial no crea usuarios si falta usuario o contraseña.
+- No versionar `.env` reales; usar `.env.example` como plantilla.
 
 ## 2) Frontend
 
@@ -210,7 +230,7 @@ Frontend en `http://localhost:5173`.
 
 ## 3) Cómo probar flujo real (manual-first)
 
-1. Login con `admin/admin`.
+1. Login con las credenciales locales configuradas en `BOOTSTRAP_ADMIN_USERNAME` y `BOOTSTRAP_ADMIN_PASSWORD`.
 2. Crear persona en `/personas`.
 3. Crear préstamo en `/prestamos`.
 4. En Workspace del préstamo:
@@ -259,10 +279,10 @@ Configuración recomendada para evitar conflictos entre ambos repositorios en de
 | App | Frontend | Backend | Auth local | Variables requeridas | Comando de arranque |
 |---|---|---|---|---|---|
 | HogarIA | `http://localhost:5174` | `http://localhost:8080` | JWT Bearer (`/api/auth/login`) con fallback `X-User-Id` solo dev | Backend: `DB_URL`, `DB_USER`, `DB_PASSWORD`, `CORS_ALLOWED_ORIGINS`, `ALLOW_X_USER_ID_FALLBACK`; Frontend: `VITE_API_BASE_URL`, `VITE_ALLOW_DEV_X_USER_ID` | `cd backend && mvn spring-boot:run` + `cd frontend && npm run dev -- --port 5174` |
-| cjprestamos | `http://localhost:5173` | `http://localhost:8081` | Basic Auth (`admin/admin` bootstrap local) | Backend: `CORS_ALLOWED_ORIGINS`; Frontend: `VITE_API_BASE_URL=/api` | `cd backend && mvn spring-boot:run` + `cd frontend && npm run dev` |
+| cjprestamos | `http://localhost:5173` | `http://localhost:8081` | Basic Auth con usuario bootstrap local por entorno | Backend: `DB_URL`, `DB_USER`, `DB_PASSWORD`, `BOOTSTRAP_ADMIN_USERNAME`, `BOOTSTRAP_ADMIN_PASSWORD`, `CORS_ALLOWED_ORIGINS`; Frontend: `VITE_API_BASE_URL=/api` | `cd backend && mvn spring-boot:run` + `cd frontend && npm run dev` |
 
 Notas de interoperabilidad:
 - En ambos frontends se recomienda `VITE_API_BASE_URL=/api` y usar proxy de Vite para evitar hardcodear hosts y reducir problemas CORS en desarrollo.
-- `cjprestamos` backend ya incluye CORS para `localhost` y `127.0.0.1` en puertos `5173` y `5174`.
+- `cjprestamos` backend permite configurar CORS con `CORS_ALLOWED_ORIGINS`; para desarrollo local se recomiendan `localhost` y `127.0.0.1` en puertos `5173` y `5174`.
 - Si HogarIA frontend se levanta sin proxy y sin backend activo, aparecerá `ERR_CONNECTION_REFUSED`; esto es esperado hasta iniciar `http://localhost:8080`.
 - El endpoint de legajo puede responder `404` cuando la persona todavía no tenga legajo cargado; tratarlo como estado funcional y no como caída técnica.

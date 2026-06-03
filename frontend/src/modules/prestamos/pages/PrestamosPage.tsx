@@ -7,6 +7,11 @@ import { useListadoPersonas } from '../../personas/hooks/usePersonas';
 import { PrestamoAltaPanel } from '../components/PrestamoAltaPanel';
 import { PrestamosListadoPanel } from '../components/PrestamosListadoPanel';
 import { PrestamoWorkspace } from '../components/PrestamoWorkspace';
+import {
+  DEFAULT_WORKSPACE_TAB,
+  esWorkspaceTab,
+  type WorkspaceTab,
+} from '../components/WorkspaceTabs';
 import { useListadoPrestamos } from '../hooks/usePrestamos';
 
 type VistaMovilPrestamos = 'listado' | 'workspace';
@@ -20,12 +25,22 @@ const vistasMoviles: Array<{
   { id: 'workspace', etiqueta: 'Operar', descripcion: 'Cuotas, pagos y resumen' },
 ];
 
+function obtenerPrestamoIdDesdeParams(searchParams: URLSearchParams) {
+  const prestamoId = searchParams.get('prestamoId');
+
+  if (!prestamoId) {
+    return null;
+  }
+
+  const valor = Number(prestamoId);
+  return Number.isFinite(valor) && valor > 0 ? valor : null;
+}
+
 export function PrestamosPage() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [seleccionId, setSeleccionId] = useState<number | null>(() => {
-    const prestamoId = searchParams.get('prestamoId');
-    return prestamoId ? Number(prestamoId) : null;
+    return obtenerPrestamoIdDesdeParams(searchParams);
   });
 
   const [vistaMovil, setVistaMovil] = useState<VistaMovilPrestamos>(() => {
@@ -36,6 +51,11 @@ export function PrestamosPage() {
   const [mostrarAlta, setMostrarAlta] = useState(
     () => searchParams.get('alta') === '1',
   );
+
+  const [tabWorkspace, setTabWorkspace] = useState<WorkspaceTab>(() => {
+    const tab = searchParams.get('tab');
+    return esWorkspaceTab(tab) ? tab : DEFAULT_WORKSPACE_TAB;
+  });
 
   const personas = useListadoPersonas();
   const prestamos = useListadoPrestamos();
@@ -66,9 +86,11 @@ export function PrestamosPage() {
         siguiente.delete('alta');
       }
 
+      siguiente.set('tab', tabWorkspace);
+
       return siguiente;
     });
-  }, [seleccionId, vistaMovil, mostrarAlta, setSearchParams]);
+  }, [seleccionId, vistaMovil, mostrarAlta, tabWorkspace, setSearchParams]);
 
   const personasPorId = useMemo(() => {
     const mapa = new Map<number, string>();
@@ -84,6 +106,15 @@ export function PrestamosPage() {
     setSeleccionId(prestamoId);
     setMostrarAlta(false);
     setVistaMovil('workspace');
+    setTabWorkspace(DEFAULT_WORKSPACE_TAB);
+  };
+
+  const seleccionarPrestamo = (prestamoId: number) => {
+    if (seleccionId !== prestamoId) {
+      setTabWorkspace(DEFAULT_WORKSPACE_TAB);
+    }
+
+    setSeleccionId(prestamoId);
   };
 
   const prestamosTotal = prestamos.data?.length ?? 0;
@@ -106,6 +137,7 @@ export function PrestamosPage() {
           { etiqueta: 'préstamo(s) total(es)', valor: String(prestamosTotal) },
           { etiqueta: 'selección activa', valor: seleccionId ? `#${seleccionId}` : 'ninguna' },
           { etiqueta: 'vista móvil', valor: vistaMovil },
+          { etiqueta: 'pestaña activa', valor: tabWorkspace },
         ]}
       />
 
@@ -169,14 +201,19 @@ export function PrestamosPage() {
             personasPorId={personasPorId}
             seleccionId={seleccionId}
             onSeleccionar={(prestamoId) => {
-              setSeleccionId(prestamoId);
+              seleccionarPrestamo(prestamoId);
               setVistaMovil('workspace');
             }}
           />
         )}
 
         {vistaMovil === 'workspace' && (
-          <PrestamoWorkspace prestamoId={seleccionId} personasPorId={personasPorId} />
+          <PrestamoWorkspace
+            prestamoId={seleccionId}
+            personasPorId={personasPorId}
+            tabActiva={tabWorkspace}
+            onCambiarTab={setTabWorkspace}
+          />
         )}
       </div>
 
@@ -187,7 +224,7 @@ export function PrestamosPage() {
           prestamos={prestamos.data ?? []}
           personasPorId={personasPorId}
           seleccionId={seleccionId}
-          onSeleccionar={setSeleccionId}
+          onSeleccionar={seleccionarPrestamo}
         />
 
         <div className="space-y-4">
@@ -208,7 +245,12 @@ export function PrestamosPage() {
               />
             </SectionCard>
           ) : (
-            <PrestamoWorkspace prestamoId={seleccionId} personasPorId={personasPorId} />
+            <PrestamoWorkspace
+              prestamoId={seleccionId}
+              personasPorId={personasPorId}
+              tabActiva={tabWorkspace}
+              onCambiarTab={setTabWorkspace}
+            />
           )}
         </div>
       </div>

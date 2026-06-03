@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/cjprestamos
-    username: postgres
-    password: postgres
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/cjprestamos}
+    username: ${DB_USER:}
+    password: ${DB_PASSWORD:}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -32,10 +32,13 @@ app:
       tamano-maximo-bytes: 5242880
   auth:
     bootstrap-admin:
-      enabled: true
+      enabled: ${BOOTSTRAP_ADMIN_ENABLED:true}
+      username: ${BOOTSTRAP_ADMIN_USERNAME:}
+      password: ${BOOTSTRAP_ADMIN_PASSWORD:}
+      role: ${BOOTSTRAP_ADMIN_ROLE:OPERADORA}
 
     integration-user:
-      enabled: true
-      username: hogaria_tech
-      password: cambiar-en-entorno
-      role: INTEGRATION
+      enabled: ${INTEGRATION_USER_ENABLED:false}
+      username: ${INTEGRATION_USER_USERNAME:}
+      password: ${INTEGRATION_USER_PASSWORD:}
+      role: ${INTEGRATION_USER_ROLE:INTEGRATION}

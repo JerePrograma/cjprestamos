@@ -69,7 +69,7 @@ Responder de forma honesta:
 - Basic Auth simple: **HECHO**
 - login frontend mínimo (sin persistir contraseña, logout + manejo 401): **HECHO**
 - módulo de usuarios de sistema + endpoint `/api/auth/me`: **HECHO**
-- bootstrap idempotente de usuario inicial `admin/admin`: **HECHO**
+- bootstrap idempotente de usuario inicial configurado por entorno: **HECHO**
 - sesión backend dedicada (token/cookie): **PENDIENTE**
 
 ### Calidad técnica
