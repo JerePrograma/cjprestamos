@@ -1,5 +1,8 @@
-import { useMemo } from 'react';
+import { type FormEvent, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { obtenerMensajeErrorApi } from '../../../shared/api/apiError';
+import { obtenerFechaHoyLocal, obtenerPrimerDiaMesActualLocal } from '../../../shared/lib/dates';
+import { Button } from '../../../shared/ui/Button';
 import { EmptyState } from '../../../shared/ui/EmptyState';
 import { PageHeader } from '../../../shared/ui/PageHeader';
 import { SectionCard } from '../../../shared/ui/SectionCard';
@@ -11,7 +14,7 @@ import { useListadoPersonas } from '../../personas/hooks/usePersonas';
 import { useListadoPrestamosActivos } from '../../prestamos/hooks/usePrestamos';
 import { PrestamoEstadoPill } from '../../prestamos/components/PrestamoEstadoPill';
 import { formatearFecha } from '../../prestamos/utils/prestamoUi';
-import { useResumenDashboard } from '../hooks/useDashboard';
+import { useExportarDashboardPdf, useResumenDashboard } from '../hooks/useDashboard';
 
 const tarjetas = [
   {
@@ -75,10 +78,29 @@ function LinkSecundario({ to, children }: { to: string; children: string }) {
   );
 }
 
+function nombreArchivoDashboard(desde: string, hasta: string) {
+  return `cjprestamos-dashboard-${desde.replace(/-/g, '')}-${hasta.replace(/-/g, '')}.pdf`;
+}
+
+function descargarBlob(blob: Blob, nombreArchivo: string) {
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = nombreArchivo;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(url);
+}
+
 export function DashboardPage() {
   const resumen = useResumenDashboard();
   const prestamosActivos = useListadoPrestamosActivos();
   const personas = useListadoPersonas();
+  const exportarPdf = useExportarDashboardPdf();
+  const [fechaDesde, setFechaDesde] = useState(() => obtenerPrimerDiaMesActualLocal());
+  const [fechaHasta, setFechaHasta] = useState(() => obtenerFechaHoyLocal());
+  const [errorExportacion, setErrorExportacion] = useState<string | null>(null);
 
   const personasPorId = useMemo(() => {
     const mapa = new Map<number, string>();
@@ -101,6 +123,29 @@ export function DashboardPage() {
   );
 
   const cargandoResumen = resumen.isLoading || resumen.isFetching;
+  const exportandoPdf = exportarPdf.isPending;
+
+  async function manejarExportacionPdf(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setErrorExportacion(null);
+
+    if (!fechaDesde || !fechaHasta) {
+      setErrorExportacion('Completá fecha desde y fecha hasta.');
+      return;
+    }
+
+    if (fechaDesde > fechaHasta) {
+      setErrorExportacion('La fecha desde no puede ser posterior a la fecha hasta.');
+      return;
+    }
+
+    try {
+      const blob = await exportarPdf.mutateAsync({ desde: fechaDesde, hasta: fechaHasta });
+      descargarBlob(blob, nombreArchivoDashboard(fechaDesde, fechaHasta));
+    } catch (error) {
+      setErrorExportacion(obtenerMensajeErrorApi(error, 'No se pudo exportar el PDF del dashboard.'));
+    }
+  }
 
   return (
     <section className="space-y-6">
@@ -141,6 +186,53 @@ export function DashboardPage() {
           );
         })}
       </div>
+
+      <SectionCard
+        titulo="Exportar resumen PDF"
+        descripcion="Resumen ejecutivo y auditoría operativa del dashboard y control de caja."
+      >
+        <form
+          className="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] md:items-end"
+          onSubmit={manejarExportacionPdf}
+        >
+          <label>
+            <span className="label-ui mb-1 block">Fecha desde</span>
+            <input
+              className="input-ui"
+              type="date"
+              value={fechaDesde}
+              onChange={(event) => setFechaDesde(event.target.value)}
+              required
+            />
+          </label>
+
+          <label>
+            <span className="label-ui mb-1 block">Fecha hasta</span>
+            <input
+              className="input-ui"
+              type="date"
+              value={fechaHasta}
+              onChange={(event) => setFechaHasta(event.target.value)}
+              required
+            />
+          </label>
+
+          <Button
+            variante="principal"
+            type="submit"
+            disabled={exportandoPdf}
+            className="w-full md:w-auto"
+          >
+            {exportandoPdf ? 'Exportando...' : 'Exportar PDF'}
+          </Button>
+        </form>
+
+        {errorExportacion && (
+          <p className="mensaje-error mt-3">
+            {errorExportacion}
+          </p>
+        )}
+      </SectionCard>
 
       <div className="grid gap-4 xl:grid-cols-3">
         <SectionCard

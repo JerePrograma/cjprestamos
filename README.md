@@ -200,6 +200,12 @@ mvn spring-boot:run
 
 API base: `http://localhost:8081/api`
 
+Endpoint de reportes PDF:
+- `GET /api/reportes/dashboard/pdf?desde=YYYY-MM-DD&hasta=YYYY-MM-DD`
+- Respuesta: `application/pdf`, descarga `cjprestamos-dashboard-YYYYMMDD-YYYYMMDD.pdf`.
+- El rango es inclusivo. Los pagos del período usan `fechaContable`; si está vacía, usan `fechaPago`.
+- El reporte incluye resumen ejecutivo, snapshot de control de caja, cartera/riesgo, movimientos del período y observaciones automáticas.
+
 Credenciales iniciales desarrollo:
 - usuario: valor de `BOOTSTRAP_ADMIN_USERNAME`
 - contraseña: valor de `BOOTSTRAP_ADMIN_PASSWORD`

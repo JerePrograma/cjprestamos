@@ -1,7 +1,12 @@
-import { useQuery } from '@tanstack/react-query';
-import { obtenerResumenDashboard } from '../api/dashboardApi';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { exportarDashboardPdf, obtenerResumenDashboard } from '../api/dashboardApi';
 
 const QUERY_KEY_DASHBOARD = ['dashboard'];
+
+type ExportarDashboardPdfParams = {
+  desde: string;
+  hasta: string;
+};
 
 export function useResumenDashboard() {
   return useQuery({
@@ -11,3 +16,8 @@ export function useResumenDashboard() {
   });
 }
 
+export function useExportarDashboardPdf() {
+  return useMutation({
+    mutationFn: ({ desde, hasta }: ExportarDashboardPdfParams) => exportarDashboardPdf(desde, hasta),
+  });
+}

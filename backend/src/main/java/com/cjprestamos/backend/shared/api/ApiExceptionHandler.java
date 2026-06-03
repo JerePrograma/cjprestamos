@@ -13,6 +13,7 @@ import org.springframework.web.ErrorResponseException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestControllerAdvice
@@ -31,6 +32,16 @@ public class ApiExceptionHandler {
         Map<String, Object> body = crearBodyBase(HttpStatus.BAD_REQUEST, "Error de validación",
                 errors.isEmpty() ? "Request inválido" : errors.get(0).get("message"));
         body.put("errors", errors);
+
+        return ResponseEntity.badRequest().body(body);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<Map<String, Object>> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        String nombreParametro = ex.getName();
+        Map<String, Object> body = crearBodyBase(HttpStatus.BAD_REQUEST,
+                "Parámetro inválido",
+                "El parámetro " + nombreParametro + " tiene un formato inválido");
 
         return ResponseEntity.badRequest().body(body);
     }

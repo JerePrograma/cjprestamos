@@ -6,6 +6,13 @@ export function obtenerFechaHoyLocal() {
   return `${year}-${month}-${day}`;
 }
 
+export function obtenerPrimerDiaMesActualLocal() {
+  const hoy = new Date();
+  const year = hoy.getFullYear();
+  const month = String(hoy.getMonth() + 1).padStart(2, '0');
+  return `${year}-${month}-01`;
+}
+
 export function formatearFechaArgentina(valor: string | null, fallback = 'Sin fecha') {
   if (!valor) {
     return fallback;

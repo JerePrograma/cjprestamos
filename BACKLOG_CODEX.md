@@ -78,6 +78,7 @@ Backlog técnico priorizado para reflejar el **estado real** del repo.
 - BT-10001 — renegociación manual de cuotas futuras (backend + UI): **HECHA**
 - BT-10002 — pagos con selección opcional de cuotas (manteniendo imputación automática default): **HECHA**
 - BT-10003 — simulador de préstamos con cronograma + exportación PDF (backend/frontend): **HECHA**
+- BT-10004 — reporte PDF del dashboard/control de caja por rango de fechas (backend + UI): **HECHA**
 
 ---
 
