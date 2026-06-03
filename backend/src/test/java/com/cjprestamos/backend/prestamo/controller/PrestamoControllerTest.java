@@ -1,6 +1,8 @@
 package com.cjprestamos.backend.prestamo.controller;
 
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -57,6 +59,7 @@ class PrestamoControllerTest {
                 "REF-7",
                 "obs",
                 EstadoPrestamo.ACTIVO,
+                false,
                 null,
                 null
             )
@@ -147,6 +150,7 @@ class PrestamoControllerTest {
                 "REF-NUEVA",
                 "Obs nueva",
                 EstadoPrestamo.ACTIVO,
+                false,
                 null,
                 null
             )
@@ -184,6 +188,7 @@ class PrestamoControllerTest {
                 null,
                 null,
                 EstadoPrestamo.ACTIVO,
+                false,
                 null,
                 null
             )
@@ -199,7 +204,7 @@ class PrestamoControllerTest {
     void listar_deberiaRetornar200() throws Exception {
         when(prestamoService.listar()).thenReturn(List.of(
             new PrestamoResponse(1L, 2L, new BigDecimal("1000.00"), null, null, 2, FrecuenciaTipo.MENSUAL,
-                null, LocalDate.of(2026, 4, 21), false, null, null, EstadoPrestamo.ACTIVO, null, null)
+                null, LocalDate.of(2026, 4, 21), false, null, null, EstadoPrestamo.ACTIVO, false, null, null)
         ));
 
         mockMvc.perform(get("/api/prestamos"))
@@ -212,11 +217,20 @@ class PrestamoControllerTest {
     void listarActivos_deberiaRetornar200() throws Exception {
         when(prestamoService.listarActivos()).thenReturn(List.of(
             new PrestamoResponse(2L, 3L, new BigDecimal("900.00"), null, null, 3, FrecuenciaTipo.CADA_X_DIAS,
-                7, LocalDate.of(2026, 4, 23), false, null, null, EstadoPrestamo.ACTIVO, null, null)
+                7, LocalDate.of(2026, 4, 23), false, null, null, EstadoPrestamo.ACTIVO, false, null, null)
         ));
 
         mockMvc.perform(get("/api/prestamos/activos"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$[0].estado").value("ACTIVO"));
+    }
+
+    @Test
+    @WithMockUser(roles = "OPERADORA")
+    void eliminar_deberiaRetornar204() throws Exception {
+        mockMvc.perform(delete("/api/prestamos/5"))
+            .andExpect(status().isNoContent());
+
+        verify(prestamoService).eliminar(5L);
     }
 }

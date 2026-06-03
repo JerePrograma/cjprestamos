@@ -20,6 +20,7 @@ public record PrestamoResponse(
     String referenciaCodigo,
     String observaciones,
     EstadoPrestamo estado,
+    boolean eliminado,
     LocalDateTime createdAt,
     LocalDateTime updatedAt
 ) {

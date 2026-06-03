@@ -3,6 +3,7 @@ import {
   actualizarReferenciaPrestamo,
   calcularPrestamo,
   crearPrestamo,
+  eliminarPrestamo,
   obtenerPrestamoPorId,
   obtenerPrestamos,
   obtenerPrestamosActivos,
@@ -15,6 +16,7 @@ import type {
 } from '../types/prestamo';
 
 const QUERY_KEY_PRESTAMOS = ['prestamos'];
+const QUERY_KEY_DASHBOARD = ['dashboard'];
 
 export function useListadoPrestamos() {
   return useQuery({
@@ -84,3 +86,19 @@ export function useCalcularPrestamo() {
   });
 }
 
+export function useEliminarPrestamo() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => eliminarPrestamo(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY_PRESTAMOS });
+      queryClient.invalidateQueries({ queryKey: [...QUERY_KEY_PRESTAMOS, 'activos'] });
+      queryClient.invalidateQueries({ queryKey: [...QUERY_KEY_PRESTAMOS, id] });
+      queryClient.invalidateQueries({ queryKey: [...QUERY_KEY_PRESTAMOS, id, 'cuotas'] });
+      queryClient.invalidateQueries({ queryKey: [...QUERY_KEY_PRESTAMOS, id, 'pagos'] });
+      queryClient.invalidateQueries({ queryKey: [...QUERY_KEY_PRESTAMOS, id, 'resumen'] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY_DASHBOARD });
+    },
+  });
+}

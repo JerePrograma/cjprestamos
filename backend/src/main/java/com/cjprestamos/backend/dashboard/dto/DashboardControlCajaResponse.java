@@ -1,6 +1,7 @@
 package com.cjprestamos.backend.dashboard.dto;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 public record DashboardControlCajaResponse(
     BigDecimal cajaDisponible,
@@ -12,9 +13,7 @@ public record DashboardControlCajaResponse(
     BigDecimal ingresosMesActual,
     BigDecimal egresosMesActual,
     BigDecimal balanceMesActual,
-    BigDecimal proyeccionCobro30Dias,
-    BigDecimal proyeccionCobro60Dias,
-    BigDecimal proyeccionCobro90Dias,
+    List<ProyeccionCobroPeriodoResponse> proyeccionesCobro,
     BigDecimal carteraEnMora,
     long cuotasPendientes,
     long cuotasVencenProximos7Dias,

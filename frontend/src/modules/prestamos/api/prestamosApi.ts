@@ -40,3 +40,6 @@ export async function calcularPrestamo(payload: CalculoPrestamoPayload): Promise
   return response.data;
 }
 
+export async function eliminarPrestamo(id: number): Promise<void> {
+  await api.delete(`/prestamos/${id}`);
+}

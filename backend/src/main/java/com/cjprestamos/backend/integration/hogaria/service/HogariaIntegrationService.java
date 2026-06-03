@@ -1,7 +1,6 @@
 package com.cjprestamos.backend.integration.hogaria.service;
 
 import com.cjprestamos.backend.common.model.MonedaUtils;
-import com.cjprestamos.backend.cuota.dto.CuotaResponse;
 import com.cjprestamos.backend.cuota.service.CuotaService;
 import com.cjprestamos.backend.dashboard.dto.DashboardControlCajaResponse;
 import com.cjprestamos.backend.dashboard.dto.DashboardResumenResponse;
@@ -27,8 +26,10 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @Transactional(readOnly = true)
@@ -58,7 +59,7 @@ public class HogariaIntegrationService {
     }
 
     public List<HogariaLoanActiveResponse> listarPrestamosActivos() {
-        List<Prestamo> activos = prestamoRepository.findByEstadoOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO);
+        List<Prestamo> activos = prestamoRepository.findByEstadoAndEliminadoFalseOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO);
         if (activos.isEmpty()) {
             return List.of();
         }
@@ -118,27 +119,27 @@ public class HogariaIntegrationService {
     public HogariaCashControlResponse obtenerControlCaja() {
         DashboardControlCajaResponse controlCaja = dashboardService.obtenerControlCaja();
         return new HogariaCashControlResponse(
-            controlCaja.cajaDisponible(),
-            controlCaja.inversionActiva(),
-            controlCaja.capitalRecuperado(),
-            controlCaja.capitalPendiente(),
-            controlCaja.gananciaRealizada(),
-            controlCaja.gananciaProyectada(),
-            controlCaja.ingresosMesActual(),
-            controlCaja.egresosMesActual(),
-            controlCaja.balanceMesActual(),
-            controlCaja.proyeccionCobro30Dias(),
-            controlCaja.proyeccionCobro60Dias(),
-            controlCaja.proyeccionCobro90Dias(),
-            controlCaja.carteraEnMora(),
-            controlCaja.cuotasPendientes(),
-            controlCaja.cuotasVencenProximos7Dias(),
-            controlCaja.recuperoCapitalPorcentaje(),
-            controlCaja.rendimientoEsperadoPorcentaje()
+                controlCaja.cajaDisponible(),
+                controlCaja.inversionActiva(),
+                controlCaja.capitalRecuperado(),
+                controlCaja.capitalPendiente(),
+                controlCaja.gananciaRealizada(),
+                controlCaja.gananciaProyectada(),
+                controlCaja.ingresosMesActual(),
+                controlCaja.egresosMesActual(),
+                controlCaja.balanceMesActual(),
+                controlCaja.proyeccionesCobro(),
+                controlCaja.carteraEnMora(),
+                controlCaja.cuotasPendientes(),
+                controlCaja.cuotasVencenProximos7Dias(),
+                controlCaja.recuperoCapitalPorcentaje(),
+                controlCaja.rendimientoEsperadoPorcentaje()
         );
     }
 
     public List<HogariaInstallmentResponse> listarCuotasPorPrestamo(Long prestamoId) {
+        buscarPrestamoVisible(prestamoId);
+
         return cuotaService.listarPorPrestamo(prestamoId).stream()
             .map(cuota -> new HogariaInstallmentResponse(
                 cuota.id(),
@@ -154,6 +155,8 @@ public class HogariaIntegrationService {
     }
 
     public List<HogariaPaymentResponse> listarPagosPorPrestamo(Long prestamoId) {
+        Prestamo prestamoVisible = buscarPrestamoVisible(prestamoId);
+
         List<PagoResponse> pagosOrdenados = pagoService.listarPorPrestamo(prestamoId).stream()
             .sorted(Comparator.comparing(PagoResponse::fechaPago).thenComparing(PagoResponse::id))
             .toList();
@@ -162,10 +165,7 @@ public class HogariaIntegrationService {
             return List.of();
         }
 
-        BigDecimal montoInicial = prestamoRepository.findById(prestamoId)
-            .map(Prestamo::getMontoInicial)
-            .map(MonedaUtils::normalizar)
-            .orElse(MonedaUtils.cero());
+        BigDecimal montoInicial = MonedaUtils.normalizar(prestamoVisible.getMontoInicial());
 
         List<HogariaPaymentResponse> respuesta = new java.util.ArrayList<>();
         BigDecimal acumuladoCobrado = MonedaUtils.cero();
@@ -191,6 +191,12 @@ public class HogariaIntegrationService {
         }
 
         return respuesta;
+    }
+
+    private Prestamo buscarPrestamoVisible(Long prestamoId) {
+        return prestamoRepository.findById(prestamoId)
+            .filter(prestamo -> !prestamo.isEliminado())
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Préstamo no encontrado"));
     }
 
     private BigDecimal valorSeguro(BigDecimal valor) {

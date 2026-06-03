@@ -10,6 +10,7 @@ import com.cjprestamos.backend.persona.dto.PersonaRequest;
 import com.cjprestamos.backend.persona.dto.PersonaResponse;
 import com.cjprestamos.backend.persona.model.Persona;
 import com.cjprestamos.backend.persona.repository.PersonaRepository;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -76,6 +77,50 @@ class PersonaServiceTest {
         );
 
         assertEquals(404, exception.getStatusCode().value());
+    }
+
+    @Test
+    void listar_sinEstado_deberiaRetornarSoloActivas() {
+        Persona activa = new Persona();
+        activa.setNombre("Ana");
+        activa.setActivo(true);
+        when(personaRepository.findByActivoTrueOrderByNombreAsc()).thenReturn(List.of(activa));
+
+        List<PersonaResponse> response = personaService.listar();
+
+        assertEquals(1, response.size());
+        assertEquals(true, response.getFirst().activo());
+        verify(personaRepository).findByActivoTrueOrderByNombreAsc();
+    }
+
+    @Test
+    void listar_conEstadoBajas_deberiaRetornarSoloInactivas() {
+        Persona baja = new Persona();
+        baja.setNombre("Beto");
+        baja.setActivo(false);
+        when(personaRepository.findByActivoFalseOrderByNombreAsc()).thenReturn(List.of(baja));
+
+        List<PersonaResponse> response = personaService.listar("bajas");
+
+        assertEquals(1, response.size());
+        assertEquals(false, response.getFirst().activo());
+        verify(personaRepository).findByActivoFalseOrderByNombreAsc();
+    }
+
+    @Test
+    void listar_conEstadoTodas_deberiaRetornarActivasEInactivas() {
+        Persona activa = new Persona();
+        activa.setNombre("Ana");
+        activa.setActivo(true);
+        Persona baja = new Persona();
+        baja.setNombre("Beto");
+        baja.setActivo(false);
+        when(personaRepository.findAllByOrderByNombreAsc()).thenReturn(List.of(activa, baja));
+
+        List<PersonaResponse> response = personaService.listar("todas");
+
+        assertEquals(2, response.size());
+        verify(personaRepository).findAllByOrderByNombreAsc();
     }
 
     @Test

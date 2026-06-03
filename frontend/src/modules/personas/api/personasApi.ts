@@ -1,8 +1,8 @@
 import { api } from '../../../shared/api/httpClient';
-import type { Persona, PersonaPayload } from '../types/persona';
+import type { EstadoListadoPersonas, Persona, PersonaPayload } from '../types/persona';
 
-export async function obtenerPersonas(): Promise<Persona[]> {
-  const response = await api.get<Persona[]>('/personas');
+export async function obtenerPersonas(estado: EstadoListadoPersonas = 'activas'): Promise<Persona[]> {
+  const response = await api.get<Persona[]>('/personas', { params: { estado } });
   return response.data;
 }
 

@@ -29,7 +29,12 @@ public class PersonaService {
 
     @Transactional(readOnly = true)
     public List<PersonaResponse> listar() {
-        return personaRepository.findAll().stream()
+        return listar("activas");
+    }
+
+    @Transactional(readOnly = true)
+    public List<PersonaResponse> listar(String estado) {
+        return buscarPorEstado(estado).stream()
             .map(this::mapearRespuesta)
             .toList();
     }
@@ -55,6 +60,20 @@ public class PersonaService {
     private Persona buscarPorId(Long id) {
         return personaRepository.findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Persona no encontrada"));
+    }
+
+    private List<Persona> buscarPorEstado(String estado) {
+        String estadoNormalizado = estado == null || estado.isBlank() ? "activas" : estado.trim().toLowerCase();
+
+        return switch (estadoNormalizado) {
+            case "activas" -> personaRepository.findByActivoTrueOrderByNombreAsc();
+            case "bajas" -> personaRepository.findByActivoFalseOrderByNombreAsc();
+            case "todas" -> personaRepository.findAllByOrderByNombreAsc();
+            default -> throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "estado debe ser activas, bajas o todas"
+            );
+        };
     }
 
     private void aplicarCambios(Persona persona, PersonaRequest request) {

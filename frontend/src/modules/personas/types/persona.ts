@@ -12,6 +12,8 @@ export type Persona = {
   updatedAt: string | null;
 };
 
+export type EstadoListadoPersonas = 'activas' | 'bajas' | 'todas';
+
 export type PersonaPayload = {
   nombre: string;
   alias: string;

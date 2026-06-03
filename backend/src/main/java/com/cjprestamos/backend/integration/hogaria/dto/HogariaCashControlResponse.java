@@ -1,6 +1,9 @@
 package com.cjprestamos.backend.integration.hogaria.dto;
 
+import com.cjprestamos.backend.dashboard.dto.ProyeccionCobroPeriodoResponse;
+
 import java.math.BigDecimal;
+import java.util.List;
 
 public record HogariaCashControlResponse(
     BigDecimal cajaDisponible,
@@ -12,9 +15,7 @@ public record HogariaCashControlResponse(
     BigDecimal ingresosMesActual,
     BigDecimal egresosMesActual,
     BigDecimal balanceMesActual,
-    BigDecimal proyeccionCobro30Dias,
-    BigDecimal proyeccionCobro60Dias,
-    BigDecimal proyeccionCobro90Dias,
+    List<ProyeccionCobroPeriodoResponse> proyeccionesCobro,
     BigDecimal carteraEnMora,
     long cuotasPendientes,
     long cuotasVencenProximos7Dias,

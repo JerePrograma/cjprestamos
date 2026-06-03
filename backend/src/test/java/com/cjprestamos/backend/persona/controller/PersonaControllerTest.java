@@ -62,13 +62,25 @@ class PersonaControllerTest {
     @Test
     @WithMockUser(roles = "OPERADORA")
     void listar_deberiaRetornar200() throws Exception {
-        when(personaService.listar()).thenReturn(List.of(
+        when(personaService.listar("activas")).thenReturn(List.of(
             new PersonaResponse(1L, "Ana", "Ani", "123", null, null, true, false, true, null, null)
         ));
 
         mockMvc.perform(get("/api/personas"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$[0].id").value(1L));
+    }
+
+    @Test
+    @WithMockUser(roles = "OPERADORA")
+    void listar_conEstadoBajas_deberiaEnviarFiltroAlService() throws Exception {
+        when(personaService.listar("bajas")).thenReturn(List.of(
+            new PersonaResponse(2L, "Beto", null, null, null, null, false, false, false, null, null)
+        ));
+
+        mockMvc.perform(get("/api/personas").param("estado", "bajas"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].activo").value(false));
     }
 
     @Test

@@ -58,6 +58,17 @@ public class EventoPrestamoService {
         );
     }
 
+    public EventoPrestamo registrarEliminacionOperativa(Prestamo prestamo) {
+        LocalDateTime ahora = fechaOperativaService.ahora();
+        return registrar(
+            prestamo,
+            TipoEventoPrestamo.OBSERVACION,
+            "Préstamo marcado como eliminado operativo. No se borraron cuotas, pagos ni eventos.",
+            ahora,
+            ahora
+        );
+    }
+
     public EventoPrestamo registrar(
         Prestamo prestamo,
         TipoEventoPrestamo tipoEvento,

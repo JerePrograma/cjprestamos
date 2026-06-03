@@ -1,6 +1,7 @@
 package com.cjprestamos.backend.prestamo.service;
 
 import com.cjprestamos.backend.common.model.MonedaUtils;
+import com.cjprestamos.backend.evento.service.EventoPrestamoService;
 import com.cjprestamos.backend.persona.model.Persona;
 import com.cjprestamos.backend.persona.repository.PersonaRepository;
 import com.cjprestamos.backend.prestamo.dto.ActualizacionReferenciaPrestamoRequest;
@@ -25,21 +26,25 @@ public class PrestamoService {
     private final PrestamoRepository prestamoRepository;
     private final PersonaRepository personaRepository;
     private final CalculadoraPrestamoService calculadoraPrestamoService;
+    private final EventoPrestamoService eventoPrestamoService;
 
     public PrestamoService(
         PrestamoRepository prestamoRepository,
         PersonaRepository personaRepository,
-        CalculadoraPrestamoService calculadoraPrestamoService
+        CalculadoraPrestamoService calculadoraPrestamoService,
+        EventoPrestamoService eventoPrestamoService
     ) {
         this.prestamoRepository = prestamoRepository;
         this.personaRepository = personaRepository;
         this.calculadoraPrestamoService = calculadoraPrestamoService;
+        this.eventoPrestamoService = eventoPrestamoService;
     }
 
     public PrestamoResponse crear(PrestamoRequest request) {
         Persona persona = personaRepository.findById(request.personaId())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "La persona indicada no existe"));
 
+        validarPersonaActiva(persona);
         validarReglas(request);
 
         Prestamo prestamo = new Prestamo();
@@ -67,21 +72,41 @@ public class PrestamoService {
 
     @Transactional(readOnly = true)
     public List<PrestamoResponse> listar() {
-        return prestamoRepository.findAllByOrderByCreatedAtDesc().stream()
+        return prestamoRepository.findByEliminadoFalseOrderByCreatedAtDesc().stream()
             .map(this::mapearRespuesta)
             .toList();
     }
 
     @Transactional(readOnly = true)
     public List<PrestamoResponse> listarActivos() {
-        return prestamoRepository.findByEstadoInOrderByCreatedAtDesc(List.of(EstadoPrestamo.ACTIVO, EstadoPrestamo.RENEGOCIADO)).stream()
+        return prestamoRepository.findByEstadoInAndEliminadoFalseOrderByCreatedAtDesc(List.of(EstadoPrestamo.ACTIVO, EstadoPrestamo.RENEGOCIADO)).stream()
             .map(this::mapearRespuesta)
             .toList();
+    }
+
+    public void eliminar(Long id) {
+        Prestamo prestamo = buscarPrestamo(id);
+        if (prestamo.isEliminado()) {
+            return;
+        }
+
+        prestamo.setEliminado(true);
+        prestamoRepository.save(prestamo);
+        eventoPrestamoService.registrarEliminacionOperativa(prestamo);
     }
 
     private Prestamo buscarPrestamo(Long id) {
         return prestamoRepository.findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Préstamo no encontrado"));
+    }
+
+    private void validarPersonaActiva(Persona persona) {
+        if (!persona.isActivo()) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "No se puede crear un préstamo para una persona dada de baja."
+            );
+        }
     }
 
     private void validarReglas(PrestamoRequest request) {
@@ -160,6 +185,7 @@ public class PrestamoService {
             prestamo.getReferenciaCodigo(),
             prestamo.getObservaciones(),
             prestamo.getEstado(),
+            prestamo.isEliminado(),
             prestamo.getCreatedAt(),
             prestamo.getUpdatedAt()
         );

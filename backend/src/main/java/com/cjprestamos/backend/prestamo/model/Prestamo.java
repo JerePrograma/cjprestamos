@@ -72,6 +72,9 @@ public class Prestamo extends EntidadAuditable {
     @Column(name = "estado", nullable = false, length = 30)
     private EstadoPrestamo estado;
 
+    @Column(name = "eliminado", nullable = false)
+    private boolean eliminado;
+
     @OneToMany(mappedBy = "prestamo", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Cuota> cuotas = new ArrayList<>();
 
@@ -179,6 +182,14 @@ public class Prestamo extends EntidadAuditable {
 
     public void setEstado(EstadoPrestamo estado) {
         this.estado = estado;
+    }
+
+    public boolean isEliminado() {
+        return eliminado;
+    }
+
+    public void setEliminado(boolean eliminado) {
+        this.eliminado = eliminado;
     }
 
     public List<Cuota> getCuotas() {

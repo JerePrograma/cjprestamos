@@ -8,6 +8,7 @@ import {
 import { usePrestamoCuotasOperacion } from "../hooks/usePrestamoCuotasOperacion";
 import { usePrestamoPagosOperacion } from "../hooks/usePrestamoPagosOperacion";
 import { usePrestamoReferenciaForm } from "../hooks/usePrestamoReferenciaForm";
+import type { PersonaPrestamoResumen } from "../types/prestamo";
 import { CuotasPrestamoTab } from "./CuotasPrestamoTab";
 import { PagosPrestamoTab } from "./PagosPrestamoTab";
 import { ResumenPrestamoTab } from "./ResumenPrestamoTab";
@@ -15,9 +16,13 @@ import { WorkspaceTabs, type WorkspaceTab } from "./WorkspaceTabs";
 
 type PrestamoWorkspaceProps = {
   prestamoId: number | null;
-  personasPorId: Map<number, string>;
+  personasPorId: Map<number, PersonaPrestamoResumen>;
   tabActiva: WorkspaceTab;
   onCambiarTab: (tab: WorkspaceTab) => void;
+  onEliminarPrestamo: (prestamoId: number) => void;
+  eliminandoPrestamo: boolean;
+  mensajeOperacion: string | null;
+  errorOperacion: string | null;
 };
 
 export function PrestamoWorkspace({
@@ -25,6 +30,10 @@ export function PrestamoWorkspace({
   personasPorId,
   tabActiva,
   onCambiarTab,
+  onEliminarPrestamo,
+  eliminandoPrestamo,
+  mensajeOperacion,
+  errorOperacion,
 }: PrestamoWorkspaceProps) {
   const detallePrestamo = useDetallePrestamo(prestamoId);
   const cuotasPrestamo = useCuotasPrestamo(prestamoId);
@@ -35,7 +44,8 @@ export function PrestamoWorkspace({
   const resumen = resumenPrestamo.data ?? null;
 
   const puedeRegistrarPago =
-    detalle?.estado === "ACTIVO" || detalle?.estado === "RENEGOCIADO";
+    !detalle?.eliminado &&
+    (detalle?.estado === "ACTIVO" || detalle?.estado === "RENEGOCIADO");
 
   const cuotasActuales = useMemo(
     () => cuotasPrestamo.data ?? [],
@@ -80,6 +90,20 @@ export function PrestamoWorkspace({
     puedeRegistrarPago,
   });
   const pagosOperacion = usePrestamoPagosOperacion({ prestamoId });
+  const personaDetalle = detalle ? personasPorId.get(detalle.personaId) : null;
+  const confirmarEliminacion = () => {
+    if (!detalle) {
+      return;
+    }
+
+    const confirmado = window.confirm(
+      "Esto ocultará el préstamo de la operación diaria, dashboard y reportes principales. No se borrarán cuotas, pagos ni historial. ¿Querés continuar?",
+    );
+
+    if (confirmado) {
+      onEliminarPrestamo(detalle.id);
+    }
+  };
 
   return (
     <div className="panel space-y-4 p-4 sm:p-5">
@@ -95,13 +119,27 @@ export function PrestamoWorkspace({
         </div>
 
         {detalle && (
-          <span className="badge-ui">
-            #{detalle.id} ·{" "}
-            {personasPorId.get(detalle.personaId) ??
-              `Persona ${detalle.personaId}`}
-          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="badge-ui">
+              #{detalle.id} · {personaDetalle?.nombre ?? `Persona ${detalle.personaId}`}
+            </span>
+
+            {!detalle.eliminado && (
+              <button
+                type="button"
+                onClick={confirmarEliminacion}
+                disabled={eliminandoPrestamo}
+                className="boton-danger px-3 py-2 text-xs"
+              >
+                {eliminandoPrestamo ? "Eliminando..." : "Eliminar préstamo"}
+              </button>
+            )}
+          </div>
         )}
       </header>
+
+      {mensajeOperacion && <p className="mensaje-exito">{mensajeOperacion}</p>}
+      {errorOperacion && <p className="mensaje-error">{errorOperacion}</p>}
 
       {prestamoId === null ? (
         <p className="text-sm text-muted">
@@ -115,6 +153,12 @@ export function PrestamoWorkspace({
         </p>
       ) : (
         <div className="space-y-4">
+          {detalle.eliminado && (
+            <p className="mensaje-warning">
+              Este préstamo está eliminado de la operación diaria. Se conserva el detalle para auditoría interna.
+            </p>
+          )}
+
           <WorkspaceTabs tabActiva={tabActiva} onCambiarTab={onCambiarTab} />
 
           {tabActiva === "resumen" && (

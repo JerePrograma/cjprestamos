@@ -20,8 +20,14 @@ export type PrestamoPayload = {
 
 export type PrestamoResponse = PrestamoPayload & {
   id: number;
+  eliminado: boolean;
   createdAt: string | null;
   updatedAt: string | null;
+};
+
+export type PersonaPrestamoResumen = {
+  nombre: string;
+  activo: boolean;
 };
 
 export type ReferenciaPrestamoPayload = {

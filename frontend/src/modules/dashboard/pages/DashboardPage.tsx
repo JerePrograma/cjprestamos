@@ -321,8 +321,8 @@ export function DashboardPage() {
         </SectionCard>
 
         <SectionCard
-          titulo="Personas recientes"
-          descripcion="Acceso directo para revisar datos, editar información o abrir legajos."
+          titulo="Personas activas recientes"
+          descripcion="Acceso directo a fichas activas para operación diaria y legajos."
           acciones={
             <Link to="/personas" className="link-action mt-0">
               Ver todas

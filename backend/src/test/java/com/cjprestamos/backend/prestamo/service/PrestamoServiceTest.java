@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.cjprestamos.backend.evento.service.EventoPrestamoService;
 import com.cjprestamos.backend.persona.model.Persona;
 import com.cjprestamos.backend.persona.repository.PersonaRepository;
 import com.cjprestamos.backend.prestamo.dto.ActualizacionReferenciaPrestamoRequest;
@@ -42,11 +43,14 @@ class PrestamoServiceTest {
     @Mock
     private CalculadoraPrestamoService calculadoraPrestamoService;
 
+    @Mock
+    private EventoPrestamoService eventoPrestamoService;
+
     private PrestamoService prestamoService;
 
     @BeforeEach
     void setUp() {
-        prestamoService = new PrestamoService(prestamoRepository, personaRepository, calculadoraPrestamoService);
+        prestamoService = new PrestamoService(prestamoRepository, personaRepository, calculadoraPrestamoService, eventoPrestamoService);
     }
 
     @Test
@@ -113,6 +117,32 @@ class PrestamoServiceTest {
         ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> prestamoService.crear(request));
 
         assertEquals(400, exception.getStatusCode().value());
+    }
+
+    @Test
+    void crear_conPersonaInactiva_deberiaLanzarBadRequest() {
+        PrestamoRequest request = new PrestamoRequest(
+            1L,
+            new BigDecimal("5000.00"),
+            null,
+            null,
+            4,
+            FrecuenciaTipo.MENSUAL,
+            null,
+            FECHA_BASE_TEST,
+            false,
+            null,
+            null
+        );
+
+        Persona persona = new Persona();
+        persona.setActivo(false);
+        when(personaRepository.findById(1L)).thenReturn(Optional.of(persona));
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> prestamoService.crear(request));
+
+        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("No se puede crear un préstamo para una persona dada de baja.", exception.getReason());
     }
 
     @Test
@@ -400,12 +430,12 @@ class PrestamoServiceTest {
         prestamo.setUsarFechasManuales(false);
         prestamo.setEstado(EstadoPrestamo.ACTIVO);
 
-        when(prestamoRepository.findAllByOrderByCreatedAtDesc()).thenReturn(List.of(prestamo));
+        when(prestamoRepository.findByEliminadoFalseOrderByCreatedAtDesc()).thenReturn(List.of(prestamo));
 
         List<PrestamoResponse> response = prestamoService.listar();
 
         assertEquals(1, response.size());
-        verify(prestamoRepository).findAllByOrderByCreatedAtDesc();
+        verify(prestamoRepository).findByEliminadoFalseOrderByCreatedAtDesc();
     }
 
     @Test
@@ -442,12 +472,46 @@ class PrestamoServiceTest {
         prestamo.setUsarFechasManuales(false);
         prestamo.setEstado(EstadoPrestamo.ACTIVO);
 
-        when(prestamoRepository.findByEstadoInOrderByCreatedAtDesc(List.of(EstadoPrestamo.ACTIVO, EstadoPrestamo.RENEGOCIADO)))
+        when(prestamoRepository.findByEstadoInAndEliminadoFalseOrderByCreatedAtDesc(List.of(EstadoPrestamo.ACTIVO, EstadoPrestamo.RENEGOCIADO)))
             .thenReturn(List.of(prestamo));
 
         List<PrestamoResponse> response = prestamoService.listarActivos();
 
         assertEquals(1, response.size());
-        verify(prestamoRepository).findByEstadoInOrderByCreatedAtDesc(List.of(EstadoPrestamo.ACTIVO, EstadoPrestamo.RENEGOCIADO));
+        verify(prestamoRepository).findByEstadoInAndEliminadoFalseOrderByCreatedAtDesc(List.of(EstadoPrestamo.ACTIVO, EstadoPrestamo.RENEGOCIADO));
+    }
+
+    @Test
+    void eliminar_deberiaMarcarPrestamoComoEliminadoSinBorrarHistorial() {
+        Prestamo prestamo = new Prestamo();
+        Persona persona = new Persona();
+        prestamo.setPersona(persona);
+        prestamo.setMontoInicial(new BigDecimal("1200.00"));
+        prestamo.setCantidadCuotas(2);
+        prestamo.setFrecuenciaTipo(FrecuenciaTipo.MENSUAL);
+        prestamo.setUsarFechasManuales(false);
+        prestamo.setEstado(EstadoPrestamo.ACTIVO);
+
+        when(prestamoRepository.findById(15L)).thenReturn(Optional.of(prestamo));
+        when(prestamoRepository.save(prestamo)).thenReturn(prestamo);
+
+        prestamoService.eliminar(15L);
+
+        assertEquals(true, prestamo.isEliminado());
+        verify(prestamoRepository).save(prestamo);
+        verify(eventoPrestamoService).registrarEliminacionOperativa(prestamo);
+    }
+
+    @Test
+    void eliminar_cuandoYaEstaEliminado_deberiaSerIdempotente() {
+        Prestamo prestamo = new Prestamo();
+        prestamo.setEliminado(true);
+
+        when(prestamoRepository.findById(15L)).thenReturn(Optional.of(prestamo));
+
+        prestamoService.eliminar(15L);
+
+        verify(prestamoRepository, org.mockito.Mockito.never()).save(org.mockito.ArgumentMatchers.any());
+        verify(eventoPrestamoService, org.mockito.Mockito.never()).registrarEliminacionOperativa(org.mockito.ArgumentMatchers.any());
     }
 }

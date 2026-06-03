@@ -1,6 +1,7 @@
 package com.cjprestamos.backend.integration.hogaria.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -37,6 +38,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
@@ -58,7 +60,7 @@ class HogariaIntegrationServiceTest {
     @Test
     void listarPrestamosActivos_deberiaMapearCamposDelContrato() {
         Prestamo prestamo = crearPrestamo(5L, 9L, "Ana", "1000.00");
-        when(prestamoRepository.findByEstadoOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO)).thenReturn(List.of(prestamo));
+        when(prestamoRepository.findByEstadoAndEliminadoFalseOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO)).thenReturn(List.of(prestamo));
         Pago pago = new Pago(); pago.setPrestamo(prestamo); pago.setMonto(new BigDecimal("400.00"));
         when(pagoRepository.findByPrestamoIdInAndEstado(List.of(5L), EstadoPago.REGISTRADO)).thenReturn(List.of(pago));
         when(calculadoraPrestamoService.calcular(any())).thenReturn(new CalculoPrestamoResultado(
@@ -101,6 +103,7 @@ class HogariaIntegrationServiceTest {
 
     @Test
     void listarCuotas_deberiaMapearCamposDelContrato() {
+        when(prestamoRepository.findById(7L)).thenReturn(Optional.of(crearPrestamo(7L, 9L, "Ana", "1000.00")));
         when(cuotaService.listarPorPrestamo(7L)).thenReturn(List.of(new CuotaResponse(
             1L, 1, LocalDate.of(2026, 6, 1), new BigDecimal("120.00"), new BigDecimal("20.00"), EstadoCuota.PARCIAL
         )));
@@ -108,6 +111,20 @@ class HogariaIntegrationServiceTest {
         assertEquals(1, cuotas.size());
         assertEquals(7L, cuotas.getFirst().prestamoId());
         assertEquals(new BigDecimal("100.00"), cuotas.getFirst().saldoPendiente());
+    }
+
+    @Test
+    void listarCuotas_conPrestamoEliminado_noDebeExponerHistorialEnHogaria() {
+        Prestamo prestamo = crearPrestamo(7L, 9L, "Ana", "1000.00");
+        prestamo.setEliminado(true);
+        when(prestamoRepository.findById(7L)).thenReturn(Optional.of(prestamo));
+
+        ResponseStatusException exception = assertThrows(
+            ResponseStatusException.class,
+            () -> service.listarCuotasPorPrestamo(7L)
+        );
+
+        assertEquals(404, exception.getStatusCode().value());
     }
 
     @Test

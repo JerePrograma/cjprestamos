@@ -17,6 +17,8 @@ Exponer endpoints de lectura bajo `/api/integration/hogaria` para consumo del ba
 ### 1) `GET /api/integration/hogaria/loans/active`
 Retorna préstamos activos con resumen económico por préstamo.
 
+No expone préstamos eliminados operativamente (`eliminado=true`).
+
 Campos:
 - `id`
 - `personaId`
@@ -71,6 +73,8 @@ Retorna cuotas del préstamo:
 - `saldoPendiente`
 - `estado`
 
+Si el préstamo está eliminado operativamente, responde `404` para no exponer historial fuera del módulo interno.
+
 ### 5) `GET /api/integration/hogaria/loans/{loanId}/payments`
 Retorna pagos del préstamo. La composición contable se calcula por pago en orden cronológico:
 - mientras el cobrado acumulado no supera `montoInicial`, se imputa a `principalRecovered`;
@@ -86,7 +90,9 @@ Retorna pagos del préstamo. La composición contable se calcula por pago en ord
 - `observaciones`
 - `estado`
 
+Si el préstamo está eliminado operativamente, responde `404` para no exponer historial fuera del módulo interno.
+
 ## Notas de integración con HogarIA
-- **Impacto en contratos API**: se agregan contratos nuevos estables bajo `/api/integration/hogaria`; no se alteran contratos existentes.
+- **Impacto en contratos API**: los endpoints excluyen préstamos eliminados por baja lógica; las consultas directas de cuotas/pagos sobre un préstamo eliminado responden `404`.
 - **Impacto en IDs**: se exponen IDs legacy `Long` del módulo actual; no hay UUID ni `profileId/accountId` en esta fase.
-- **Impacto contable**: se mantiene separación explícita entre capital, interés, recupero y caja reutilizando métricas de servicios existentes.
+- **Impacto contable**: se mantiene separación explícita entre capital, interés, recupero y caja reutilizando métricas de servicios existentes, siempre filtrando préstamos eliminados en métricas operativas.

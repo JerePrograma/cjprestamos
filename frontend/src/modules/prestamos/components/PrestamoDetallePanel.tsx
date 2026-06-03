@@ -1,6 +1,7 @@
 import { mostrarTextoONulo } from '../../../shared/lib/formatters';
+import { StatusPill } from '../../../shared/ui/StatusPill';
 import { PrestamoEstadoPill } from './PrestamoEstadoPill';
-import type { CalculoPrestamoResultado, PrestamoResponse } from '../types/prestamo';
+import type { CalculoPrestamoResultado, PersonaPrestamoResumen, PrestamoResponse } from '../types/prestamo';
 import {
   etiquetaFrecuencia,
   formatearFecha,
@@ -14,7 +15,7 @@ type ReferenciaFormulario = {
 
 type PrestamoDetallePanelProps = {
   detalle: PrestamoResponse;
-  personasPorId: Map<number, string>;
+  personasPorId: Map<number, PersonaPrestamoResumen>;
   formularioReferencia: ReferenciaFormulario;
   onCambiarReferencia: (campo: keyof ReferenciaFormulario, valor: string) => void;
   onGuardarReferencia: () => void;
@@ -57,14 +58,23 @@ export function PrestamoDetallePanel({
   resumenLoading,
   resumenError,
 }: PrestamoDetallePanelProps) {
+  const persona = personasPorId.get(detalle.personaId);
+
   return (
     <div className="space-y-4">
       <dl className="grid gap-3 md:grid-cols-2">
         <DatoDetalle etiqueta="Préstamo" valor={`#${detalle.id}`} />
-        <DatoDetalle
-          etiqueta="Persona"
-          valor={personasPorId.get(detalle.personaId) ?? `Persona ${detalle.personaId}`}
-        />
+
+        <div className="card-interactiva">
+          <dt className="label-ui">Persona</dt>
+          <dd className="mt-1 flex flex-wrap items-center gap-2 font-semibold text-app">
+            <span>{persona?.nombre ?? `Persona ${detalle.personaId}`}</span>
+            {persona && !persona.activo && (
+              <StatusPill texto="Persona dada de baja" tone="warning" />
+            )}
+          </dd>
+        </div>
+
         <DatoDetalle etiqueta="Monto inicial" valor={formatearMoneda(detalle.montoInicial)} />
 
         <div className="card-interactiva">

@@ -24,6 +24,7 @@ public interface CuotaRepository extends JpaRepository<Cuota, Long> {
         join fetch cuota.prestamo prestamo
         join fetch prestamo.persona
         where cuota.fechaVencimiento between :desde and :hasta
+          and prestamo.eliminado = false
         order by cuota.fechaVencimiento asc, cuota.id asc
         """)
     List<Cuota> findByFechaVencimientoBetweenConPrestamoYPersona(

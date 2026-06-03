@@ -6,20 +6,20 @@ import {
   obtenerPersonaPorId,
   obtenerPersonas,
 } from '../api/personasApi';
-import type { PersonaPayload } from '../types/persona';
+import type { EstadoListadoPersonas, PersonaPayload } from '../types/persona';
 
 const QUERY_KEY_PERSONAS = ['personas'];
 
-export function useListadoPersonas() {
+export function useListadoPersonas(estado: EstadoListadoPersonas = 'activas') {
   return useQuery({
-    queryKey: QUERY_KEY_PERSONAS,
-    queryFn: obtenerPersonas,
+    queryKey: [...QUERY_KEY_PERSONAS, estado],
+    queryFn: () => obtenerPersonas(estado),
   });
 }
 
 export function useDetallePersona(id: number | null) {
   return useQuery({
-    queryKey: [...QUERY_KEY_PERSONAS, id],
+    queryKey: [...QUERY_KEY_PERSONAS, 'detalle', id],
     queryFn: () => obtenerPersonaPorId(id as number),
     enabled: id !== null,
   });
@@ -43,7 +43,7 @@ export function useActualizarPersona() {
     mutationFn: ({ id, payload }: { id: number; payload: PersonaPayload }) => actualizarPersona(id, payload),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY_PERSONAS });
-      queryClient.invalidateQueries({ queryKey: [...QUERY_KEY_PERSONAS, variables.id] });
+      queryClient.invalidateQueries({ queryKey: [...QUERY_KEY_PERSONAS, 'detalle', variables.id] });
     },
   });
 }
@@ -55,7 +55,7 @@ export function useEliminarPersona() {
     mutationFn: (id: number) => eliminarPersona(id),
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY_PERSONAS });
-      queryClient.removeQueries({ queryKey: [...QUERY_KEY_PERSONAS, id] });
+      queryClient.invalidateQueries({ queryKey: [...QUERY_KEY_PERSONAS, 'detalle', id] });
     },
   });
 }

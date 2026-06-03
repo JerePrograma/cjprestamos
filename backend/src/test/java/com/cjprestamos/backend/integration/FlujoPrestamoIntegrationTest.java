@@ -1,6 +1,7 @@
 package com.cjprestamos.backend.integration;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -99,5 +100,111 @@ class FlujoPrestamoIntegrationTest extends IntegrationTestBase {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$[0].monto").value(450.00))
             .andExpect(jsonPath("$[0].referencia").value("pago parcial"));
+    }
+
+    @Test
+    void eliminarPrestamo_debeOcultarloSinBorrarCuotasPagosNiDetalleAuditable() throws Exception {
+        String personaRequest = """
+            {
+              "nombre": "Persona con prestamo eliminado",
+              "alias": "Elim",
+              "telefono": "333-555",
+              "observacionRapida": "seguimiento",
+              "colorReferencia": "gris",
+              "cobraEnFecha": true,
+              "tieneIngresoExtra": true,
+              "activo": true
+            }
+            """;
+
+        mockMvc.perform(post("/api/personas")
+                .with(authBasica())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(personaRequest))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.id").value(1));
+
+        String prestamoRequest = """
+            {
+              "personaId": 1,
+              "montoInicial": 1000.00,
+              "porcentajeFijoSugerido": 20.00,
+              "interesManualOpcional": null,
+              "cantidadCuotas": 2,
+              "frecuenciaTipo": "MENSUAL",
+              "frecuenciaCadaDias": null,
+              "fechaBase": "2026-04-01",
+              "usarFechasManuales": false,
+              "referenciaCodigo": "REF-ELIM",
+              "observaciones": "baja operativa",
+              "estado": "ACTIVO"
+            }
+            """;
+
+        mockMvc.perform(post("/api/prestamos")
+                .with(authBasica())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(prestamoRequest))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.id").value(1))
+            .andExpect(jsonPath("$.eliminado").value(false));
+
+        mockMvc.perform(post("/api/prestamos/1/cuotas/generar")
+                .with(authBasica())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.length()").value(2));
+
+        String pagoRequest = """
+            {
+              "prestamoId": 1,
+              "fechaPago": "2026-04-10",
+              "monto": 450.00,
+              "referencia": "pago previo",
+              "observacion": "historial conservado"
+            }
+            """;
+
+        mockMvc.perform(post("/api/pagos")
+                .with(authBasica())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(pagoRequest))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.prestamoId").value(1));
+
+        mockMvc.perform(delete("/api/prestamos/1")
+                .with(authBasica()))
+            .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/api/prestamos")
+                .with(authBasica()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(0));
+
+        mockMvc.perform(get("/api/prestamos/activos")
+                .with(authBasica()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(0));
+
+        mockMvc.perform(get("/api/prestamos/1")
+                .with(authBasica()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.eliminado").value(true));
+
+        mockMvc.perform(get("/api/prestamos/1/cuotas")
+                .with(authBasica()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(2));
+
+        mockMvc.perform(get("/api/prestamos/1/pagos")
+                .with(authBasica()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].monto").value(450.00));
+
+        mockMvc.perform(get("/api/dashboard/resumen")
+                .with(authBasica()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.prestamosActivos").value(0));
     }
 }

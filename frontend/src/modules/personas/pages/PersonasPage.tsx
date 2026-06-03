@@ -16,14 +16,27 @@ import {
 } from '../hooks/usePersonas';
 import {
   crearPayloadDesdePersona,
+  type EstadoListadoPersonas,
   payloadInicialPersona,
   type PersonaPayload,
 } from '../types/persona';
 import { coincideBusquedaPersona } from '../utils/personaUi';
 
+const estadosListadoPersonas: EstadoListadoPersonas[] = ['activas', 'bajas', 'todas'];
+
+function obtenerEstadoDesdeParams(searchParams: URLSearchParams): EstadoListadoPersonas {
+  const estado = searchParams.get('estado');
+  return estadosListadoPersonas.includes(estado as EstadoListadoPersonas)
+    ? (estado as EstadoListadoPersonas)
+    : 'activas';
+}
+
 export function PersonasPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [busqueda, setBusqueda] = useState(searchParams.get('q') ?? '');
+  const [estadoPersonas, setEstadoPersonas] = useState<EstadoListadoPersonas>(() =>
+    obtenerEstadoDesdeParams(searchParams),
+  );
   const [seleccionId, setSeleccionId] = useState<number | null>(() => {
     const valor = searchParams.get('personaId');
     return valor ? Number(valor) : null;
@@ -35,7 +48,8 @@ export function PersonasPage() {
   const [edicion, setEdicion] = useState<PersonaPayload>(payloadInicialPersona);
   const [errorEdicion, setErrorEdicion] = useState<string | null>(null);
 
-  const listado = useListadoPersonas();
+  const listado = useListadoPersonas(estadoPersonas);
+  const listadoCompleto = useListadoPersonas('todas');
   const detalle = useDetallePersona(seleccionId);
   const crear = useCrearPersona();
   const actualizar = useActualizarPersona();
@@ -45,6 +59,15 @@ export function PersonasPage() {
     () => (listado.data ?? []).filter((persona) => coincideBusquedaPersona(persona, busqueda)),
     [listado.data, busqueda],
   );
+
+  const contadores = useMemo(() => {
+    const todas = listadoCompleto.data ?? [];
+    return {
+      activas: todas.filter((persona) => persona.activo).length,
+      bajas: todas.filter((persona) => !persona.activo).length,
+      visibles: personasFiltradas.length,
+    };
+  }, [listadoCompleto.data, personasFiltradas.length]);
 
   const iniciarEdicion = () => {
     if (!detalle.data) {
@@ -111,10 +134,37 @@ export function PersonasPage() {
       return;
     }
 
+    setErrorEdicion(null);
+
     try {
       await eliminar.mutateAsync(seleccionId);
+      setErrorEdicion(null);
     } catch (error) {
       setErrorEdicion(obtenerMensajeErrorApi(error, 'No se pudo dar de baja la persona.'));
+    }
+  };
+
+  const reactivarPersona = async () => {
+    if (!seleccionId || !detalle.data) {
+      return;
+    }
+
+    setErrorEdicion(null);
+
+    try {
+      await actualizar.mutateAsync({
+        id: seleccionId,
+        payload: { ...crearPayloadDesdePersona(detalle.data), activo: true },
+      });
+      setErrorEdicion(null);
+      setEstadoPersonas('activas');
+      setSearchParams((actual) => {
+        const siguiente = new URLSearchParams(actual);
+        siguiente.set('estado', 'activas');
+        return siguiente;
+      });
+    } catch (error) {
+      setErrorEdicion(obtenerMensajeErrorApi(error, 'No se pudo reactivar la persona.'));
     }
   };
 
@@ -152,6 +202,19 @@ export function PersonasPage() {
     setModoEdicion(false);
   };
 
+  const actualizarEstado = (estado: EstadoListadoPersonas) => {
+    setEstadoPersonas(estado);
+    setSearchParams((actual) => {
+      const siguiente = new URLSearchParams(actual);
+      if (estado === 'activas') {
+        siguiente.delete('estado');
+      } else {
+        siguiente.set('estado', estado);
+      }
+      return siguiente;
+    });
+  };
+
   return (
     <section className="space-y-6">
       <PageHeader
@@ -167,8 +230,9 @@ export function PersonasPage() {
           { etiqueta: 'Ir a legajos', to: '/legajos', variante: 'secundario' },
         ]}
         estados={[
-          { etiqueta: 'personas registradas', valor: String(listado.data?.length ?? 0) },
-          { etiqueta: 'resultado(s) filtrado(s)', valor: String(personasFiltradas.length) },
+          { etiqueta: 'personas activas', valor: String(contadores.activas) },
+          { etiqueta: 'dadas de baja', valor: String(contadores.bajas) },
+          { etiqueta: 'visible(s)', valor: String(contadores.visibles) },
           { etiqueta: 'persona seleccionada', valor: seleccionId ? `#${seleccionId}` : 'ninguna' },
         ]}
       />
@@ -177,11 +241,14 @@ export function PersonasPage() {
         <aside className="space-y-4">
           <PersonasListadoPanel
             busqueda={busqueda}
+            estado={estadoPersonas}
             personas={personasFiltradas}
+            contadores={contadores}
             isLoading={listado.isLoading}
             isError={listado.isError}
             seleccionId={seleccionId}
             onCambiarBusqueda={actualizarBusqueda}
+            onCambiarEstado={actualizarEstado}
             onSeleccionar={seleccionarPersona}
             onLimpiarFiltro={limpiarFiltro}
           />
@@ -239,8 +306,14 @@ export function PersonasPage() {
                 error={detalle.isError ? 'No se pudo cargar el detalle.' : null}
                 onEditar={iniciarEdicion}
                 onDarDeBaja={darDeBaja}
+                onReactivar={reactivarPersona}
                 deshabilitarBaja={eliminar.isPending}
+                deshabilitarReactivar={actualizar.isPending}
               />
+
+              {errorEdicion && (
+                <p className="mensaje-error">{errorEdicion}</p>
+              )}
 
               {detalle.data && (
                 <div className="panel-accent text-sm text-soft">

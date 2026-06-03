@@ -76,14 +76,14 @@ class ReporteDashboardServiceTest {
         Pago pago = crearPago(prestamo, "500.00", LocalDate.of(2026, 5, 8), LocalDate.of(2026, 5, 9));
         Cuota cuota = crearCuota(prestamo, 1, "1200.00", "500.00", LocalDate.of(2026, 5, 15));
 
-        when(prestamoRepository.findByFechaBaseBetweenOrderByFechaBaseAscIdAsc(desde, hasta)).thenReturn(List.of(prestamo));
+        when(prestamoRepository.findByFechaBaseBetweenAndEliminadoFalseOrderByFechaBaseAscIdAsc(desde, hasta)).thenReturn(List.of(prestamo));
         when(pagoRepository.findRegistradosPorFechaContableOPagoEntre(EstadoPago.REGISTRADO, desde, hasta)).thenReturn(List.of(pago));
         when(cuotaRepository.findByFechaVencimientoBetweenConPrestamoYPersona(desde, hasta)).thenReturn(List.of(cuota));
         when(dashboardService.obtenerControlCaja()).thenReturn(snapshotCero());
-        when(prestamoRepository.findByEstadoOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO)).thenReturn(List.of(prestamo));
+        when(prestamoRepository.findByEstadoAndEliminadoFalseOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO)).thenReturn(List.of(prestamo));
         when(cuotaRepository.findByPrestamoIdIn(List.of(1L))).thenReturn(List.of(cuota));
         when(pagoRepository.findByPrestamoIdInAndEstado(List.of(1L), EstadoPago.REGISTRADO)).thenReturn(List.of(pago));
-        when(prestamoRepository.countByEstadoIn(List.of(EstadoPrestamo.FINALIZADO, EstadoPrestamo.CANCELADO))).thenReturn(2L);
+        when(prestamoRepository.countByEstadoInAndEliminadoFalse(List.of(EstadoPrestamo.FINALIZADO, EstadoPrestamo.CANCELADO))).thenReturn(2L);
 
         ReporteDashboardData reporte = reporteDashboardService.obtenerReporte(desde, hasta, "operadora");
 
@@ -115,12 +115,12 @@ class ReporteDashboardServiceTest {
         LocalDate desde = LocalDate.of(2026, 5, 1);
         LocalDate hasta = LocalDate.of(2026, 5, 31);
 
-        when(prestamoRepository.findByFechaBaseBetweenOrderByFechaBaseAscIdAsc(desde, hasta)).thenReturn(List.of());
+        when(prestamoRepository.findByFechaBaseBetweenAndEliminadoFalseOrderByFechaBaseAscIdAsc(desde, hasta)).thenReturn(List.of());
         when(pagoRepository.findRegistradosPorFechaContableOPagoEntre(EstadoPago.REGISTRADO, desde, hasta)).thenReturn(List.of());
         when(cuotaRepository.findByFechaVencimientoBetweenConPrestamoYPersona(desde, hasta)).thenReturn(List.of());
         when(dashboardService.obtenerControlCaja()).thenReturn(snapshotCero());
-        when(prestamoRepository.findByEstadoOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO)).thenReturn(List.of());
-        when(prestamoRepository.countByEstadoIn(List.of(EstadoPrestamo.FINALIZADO, EstadoPrestamo.CANCELADO))).thenReturn(0L);
+        when(prestamoRepository.findByEstadoAndEliminadoFalseOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO)).thenReturn(List.of());
+        when(prestamoRepository.countByEstadoInAndEliminadoFalse(List.of(EstadoPrestamo.FINALIZADO, EstadoPrestamo.CANCELADO))).thenReturn(0L);
 
         ReporteDashboardData reporte = reporteDashboardService.obtenerReporte(desde, hasta, null);
 
@@ -148,13 +148,13 @@ class ReporteDashboardServiceTest {
         Cuota cuotaParcial = crearCuota(prestamo, 2, "200.00", "50.00", LocalDate.of(2026, 5, 10));
         Cuota cuotaPendiente = crearCuota(prestamo, 3, "50.00", "0.00", LocalDate.of(2026, 5, 11));
 
-        when(prestamoRepository.findByFechaBaseBetweenOrderByFechaBaseAscIdAsc(desde, hasta)).thenReturn(List.of());
+        when(prestamoRepository.findByFechaBaseBetweenAndEliminadoFalseOrderByFechaBaseAscIdAsc(desde, hasta)).thenReturn(List.of());
         when(pagoRepository.findRegistradosPorFechaContableOPagoEntre(EstadoPago.REGISTRADO, desde, hasta)).thenReturn(List.of());
         when(cuotaRepository.findByFechaVencimientoBetweenConPrestamoYPersona(desde, hasta))
             .thenReturn(List.of(cuotaPagada, cuotaParcial, cuotaPendiente));
         when(dashboardService.obtenerControlCaja()).thenReturn(snapshotCero());
-        when(prestamoRepository.findByEstadoOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO)).thenReturn(List.of());
-        when(prestamoRepository.countByEstadoIn(List.of(EstadoPrestamo.FINALIZADO, EstadoPrestamo.CANCELADO))).thenReturn(0L);
+        when(prestamoRepository.findByEstadoAndEliminadoFalseOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO)).thenReturn(List.of());
+        when(prestamoRepository.countByEstadoInAndEliminadoFalse(List.of(EstadoPrestamo.FINALIZADO, EstadoPrestamo.CANCELADO))).thenReturn(0L);
 
         ReporteDashboardData reporte = reporteDashboardService.obtenerReporte(desde, hasta, null);
 
@@ -177,12 +177,12 @@ class ReporteDashboardServiceTest {
         Prestamo prestamo = crearPrestamo(3L, "Ana Perez", "P-003", "1000.00", EstadoPrestamo.ACTIVO);
         Pago pago = crearPago(prestamo, "250.00", LocalDate.of(2026, 5, 14), null);
 
-        when(prestamoRepository.findByFechaBaseBetweenOrderByFechaBaseAscIdAsc(desde, hasta)).thenReturn(List.of());
+        when(prestamoRepository.findByFechaBaseBetweenAndEliminadoFalseOrderByFechaBaseAscIdAsc(desde, hasta)).thenReturn(List.of());
         when(pagoRepository.findRegistradosPorFechaContableOPagoEntre(EstadoPago.REGISTRADO, desde, hasta)).thenReturn(List.of(pago));
         when(cuotaRepository.findByFechaVencimientoBetweenConPrestamoYPersona(desde, hasta)).thenReturn(List.of());
         when(dashboardService.obtenerControlCaja()).thenReturn(snapshotCero());
-        when(prestamoRepository.findByEstadoOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO)).thenReturn(List.of());
-        when(prestamoRepository.countByEstadoIn(List.of(EstadoPrestamo.FINALIZADO, EstadoPrestamo.CANCELADO))).thenReturn(0L);
+        when(prestamoRepository.findByEstadoAndEliminadoFalseOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO)).thenReturn(List.of());
+        when(prestamoRepository.countByEstadoInAndEliminadoFalse(List.of(EstadoPrestamo.FINALIZADO, EstadoPrestamo.CANCELADO))).thenReturn(0L);
 
         ReporteDashboardData reporte = reporteDashboardService.obtenerReporte(desde, hasta, null);
 

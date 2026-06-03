@@ -10,7 +10,9 @@ type Props = {
   error: string | null;
   onEditar: () => void;
   onDarDeBaja: () => void;
+  onReactivar: () => void;
   deshabilitarBaja: boolean;
+  deshabilitarReactivar: boolean;
 };
 
 export function PersonaDetalle({
@@ -19,7 +21,9 @@ export function PersonaDetalle({
   error,
   onEditar,
   onDarDeBaja,
+  onReactivar,
   deshabilitarBaja,
+  deshabilitarReactivar,
 }: Props) {
   if (loading) {
     return <p className="text-sm text-muted">Cargando detalle...</p>;
@@ -52,10 +56,16 @@ export function PersonaDetalle({
           </div>
 
           <StatusPill
-            texto={persona.activo ? 'Activa' : 'Inactiva'}
+            texto={persona.activo ? 'Activa' : 'Baja'}
             tone={persona.activo ? 'success' : 'neutral'}
           />
         </div>
+
+        {!persona.activo && (
+          <div className="mensaje-warning">
+            Esta persona está dada de baja. No debería aparecer en operación diaria ni usarse para nuevos préstamos.
+          </div>
+        )}
 
         <div>
           <p className="label-ui mb-2">
@@ -124,14 +134,25 @@ export function PersonaDetalle({
             Editar
           </button>
 
-          <button
-            type="button"
-            onClick={onDarDeBaja}
-            disabled={!persona.activo || deshabilitarBaja}
-            className="boton-secundario px-3 py-2"
-          >
-            {deshabilitarBaja ? 'Procesando...' : 'Dar de baja'}
-          </button>
+          {persona.activo ? (
+            <button
+              type="button"
+              onClick={onDarDeBaja}
+              disabled={deshabilitarBaja}
+              className="boton-secundario px-3 py-2"
+            >
+              {deshabilitarBaja ? 'Procesando...' : 'Dar de baja'}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={onReactivar}
+              disabled={deshabilitarReactivar}
+              className="boton-secundario px-3 py-2"
+            >
+              {deshabilitarReactivar ? 'Procesando...' : 'Reactivar persona'}
+            </button>
+          )}
         </div>
       </section>
 

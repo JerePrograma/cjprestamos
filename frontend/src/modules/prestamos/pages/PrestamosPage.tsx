@@ -1,18 +1,20 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { obtenerMensajeErrorApi } from '../../../shared/api/apiError';
 import { EmptyState } from '../../../shared/ui/EmptyState';
 import { PageHeader } from '../../../shared/ui/PageHeader';
 import { SectionCard } from '../../../shared/ui/SectionCard';
 import { useListadoPersonas } from '../../personas/hooks/usePersonas';
 import { PrestamoAltaPanel } from '../components/PrestamoAltaPanel';
-import { PrestamosListadoPanel } from '../components/PrestamosListadoPanel';
+import { PrestamosListadoPanel, type FiltroEstadoPrestamos } from '../components/PrestamosListadoPanel';
 import { PrestamoWorkspace } from '../components/PrestamoWorkspace';
 import {
   DEFAULT_WORKSPACE_TAB,
   esWorkspaceTab,
   type WorkspaceTab,
 } from '../components/WorkspaceTabs';
-import { useListadoPrestamos } from '../hooks/usePrestamos';
+import { useEliminarPrestamo, useListadoPrestamos } from '../hooks/usePrestamos';
+import type { PersonaPrestamoResumen, PrestamoResponse } from '../types/prestamo';
 
 type VistaMovilPrestamos = 'listado' | 'workspace';
 
@@ -25,6 +27,9 @@ const vistasMoviles: Array<{
   { id: 'workspace', etiqueta: 'Operar', descripcion: 'Cuotas, pagos y resumen' },
 ];
 
+const estadosCobrables: Array<PrestamoResponse['estado']> = ['ACTIVO', 'RENEGOCIADO'];
+const estadosCerrados: Array<PrestamoResponse['estado']> = ['FINALIZADO', 'CANCELADO'];
+
 function obtenerPrestamoIdDesdeParams(searchParams: URLSearchParams) {
   const prestamoId = searchParams.get('prestamoId');
 
@@ -34,6 +39,41 @@ function obtenerPrestamoIdDesdeParams(searchParams: URLSearchParams) {
 
   const valor = Number(prestamoId);
   return Number.isFinite(valor) && valor > 0 ? valor : null;
+}
+
+function normalizarBusqueda(valor: string) {
+  return valor.trim().toLowerCase();
+}
+
+function cumpleFiltroEstado(prestamo: PrestamoResponse, filtro: FiltroEstadoPrestamos) {
+  if (filtro === 'cobrables') {
+    return estadosCobrables.includes(prestamo.estado);
+  }
+
+  if (filtro === 'cerrados') {
+    return estadosCerrados.includes(prestamo.estado);
+  }
+
+  return true;
+}
+
+function coincideBusquedaPrestamo(
+  prestamo: PrestamoResponse,
+  persona: PersonaPrestamoResumen | undefined,
+  busqueda: string,
+) {
+  const termino = normalizarBusqueda(busqueda);
+  if (!termino) {
+    return true;
+  }
+
+  return [
+    String(prestamo.id),
+    `prestamo ${prestamo.id}`,
+    prestamo.referenciaCodigo ?? '',
+    prestamo.estado,
+    persona?.nombre ?? `Persona ${prestamo.personaId}`,
+  ].some((valor) => valor.toLowerCase().includes(termino));
 }
 
 export function PrestamosPage() {
@@ -51,22 +91,21 @@ export function PrestamosPage() {
   const [mostrarAlta, setMostrarAlta] = useState(
     () => searchParams.get('alta') === '1',
   );
+  const [busquedaPrestamos, setBusquedaPrestamos] = useState('');
+  const [filtroEstadoPrestamos, setFiltroEstadoPrestamos] = useState<FiltroEstadoPrestamos>('todos');
+  const [mensajeOperacion, setMensajeOperacion] = useState<string | null>(null);
+  const [errorOperacion, setErrorOperacion] = useState<string | null>(null);
+  const [prestamosOcultosLocalmente, setPrestamosOcultosLocalmente] = useState<Set<number>>(() => new Set());
 
   const [tabWorkspace, setTabWorkspace] = useState<WorkspaceTab>(() => {
     const tab = searchParams.get('tab');
     return esWorkspaceTab(tab) ? tab : DEFAULT_WORKSPACE_TAB;
   });
 
-  const personas = useListadoPersonas();
+  const personasActivas = useListadoPersonas('activas');
+  const personasTodas = useListadoPersonas('todas');
   const prestamos = useListadoPrestamos();
-
-  useEffect(() => {
-    const primerPrestamo = prestamos.data?.[0];
-
-    if (seleccionId === null && primerPrestamo) {
-      setSeleccionId(primerPrestamo.id);
-    }
-  }, [prestamos.data, seleccionId]);
+  const eliminarPrestamo = useEliminarPrestamo();
 
   useEffect(() => {
     setSearchParams((actual) => {
@@ -93,14 +132,48 @@ export function PrestamosPage() {
   }, [seleccionId, vistaMovil, mostrarAlta, tabWorkspace, setSearchParams]);
 
   const personasPorId = useMemo(() => {
-    const mapa = new Map<number, string>();
+    const mapa = new Map<number, PersonaPrestamoResumen>();
 
-    (personas.data ?? []).forEach((persona) => {
-      mapa.set(persona.id, persona.nombre);
+    (personasTodas.data ?? []).forEach((persona) => {
+      mapa.set(persona.id, {
+        nombre: persona.nombre,
+        activo: persona.activo,
+      });
     });
 
     return mapa;
-  }, [personas.data]);
+  }, [personasTodas.data]);
+
+  const prestamosFiltrados = useMemo(
+    () =>
+      (prestamos.data ?? []).filter((prestamo) => {
+        if (prestamosOcultosLocalmente.has(prestamo.id)) {
+          return false;
+        }
+
+        if (!cumpleFiltroEstado(prestamo, filtroEstadoPrestamos)) {
+          return false;
+        }
+
+        return coincideBusquedaPrestamo(prestamo, personasPorId.get(prestamo.personaId), busquedaPrestamos);
+      }),
+    [busquedaPrestamos, filtroEstadoPrestamos, personasPorId, prestamos.data, prestamosOcultosLocalmente],
+  );
+
+  useEffect(() => {
+    if (prestamosFiltrados.length === 0) {
+      if (seleccionId !== null) {
+        setSeleccionId(null);
+      }
+      return;
+    }
+
+    if (seleccionId !== null && prestamosFiltrados.some((prestamo) => prestamo.id === seleccionId)) {
+      return;
+    }
+
+    setSeleccionId(prestamosFiltrados[0].id);
+  }, [prestamosFiltrados, seleccionId]);
 
   const onCreado = (prestamoId: number) => {
     setSeleccionId(prestamoId);
@@ -110,11 +183,39 @@ export function PrestamosPage() {
   };
 
   const seleccionarPrestamo = (prestamoId: number) => {
+    setMensajeOperacion(null);
+    setErrorOperacion(null);
+
     if (seleccionId !== prestamoId) {
       setTabWorkspace(DEFAULT_WORKSPACE_TAB);
     }
 
     setSeleccionId(prestamoId);
+  };
+
+  const solicitarEliminarPrestamo = async (prestamoId: number) => {
+    const siguientePrestamo = prestamosFiltrados.find((prestamo) => prestamo.id !== prestamoId) ?? null;
+    setMensajeOperacion(null);
+    setErrorOperacion(null);
+    setPrestamosOcultosLocalmente((actual) => new Set(actual).add(prestamoId));
+
+    try {
+      await eliminarPrestamo.mutateAsync(prestamoId);
+      setSeleccionId(siguientePrestamo?.id ?? null);
+      setTabWorkspace(DEFAULT_WORKSPACE_TAB);
+      setMensajeOperacion('Préstamo eliminado de la operación diaria. El historial queda conservado.');
+
+      if (!siguientePrestamo) {
+        setVistaMovil('listado');
+      }
+    } catch (error) {
+      setPrestamosOcultosLocalmente((actual) => {
+        const siguiente = new Set(actual);
+        siguiente.delete(prestamoId);
+        return siguiente;
+      });
+      setErrorOperacion(obtenerMensajeErrorApi(error, 'No se pudo eliminar el préstamo.'));
+    }
   };
 
   const prestamosTotal = prestamos.data?.length ?? 0;
@@ -134,7 +235,8 @@ export function PrestamosPage() {
           { etiqueta: 'Ir a personas', to: '/personas', variante: 'secundario' },
         ]}
         estados={[
-          { etiqueta: 'préstamo(s) total(es)', valor: String(prestamosTotal) },
+          { etiqueta: 'préstamo(s) visible(s)', valor: String(prestamosTotal) },
+          { etiqueta: 'resultado(s) filtrado(s)', valor: String(prestamosFiltrados.length) },
           { etiqueta: 'selección activa', valor: seleccionId ? `#${seleccionId}` : 'ninguna' },
           { etiqueta: 'vista móvil', valor: vistaMovil },
           { etiqueta: 'pestaña activa', valor: tabWorkspace },
@@ -187,8 +289,8 @@ export function PrestamosPage() {
       <div className="space-y-4 xl:hidden">
         {mostrarAlta && (
           <PrestamoAltaPanel
-            personas={personas.data ?? []}
-            personasLoading={personas.isLoading}
+            personas={personasActivas.data ?? []}
+            personasLoading={personasActivas.isLoading}
             onCreado={onCreado}
           />
         )}
@@ -197,9 +299,14 @@ export function PrestamosPage() {
           <PrestamosListadoPanel
             isLoading={prestamos.isLoading}
             isError={prestamos.isError}
-            prestamos={prestamos.data ?? []}
+            busqueda={busquedaPrestamos}
+            filtroEstado={filtroEstadoPrestamos}
+            prestamos={prestamosFiltrados}
+            totalPrestamos={prestamosTotal}
             personasPorId={personasPorId}
             seleccionId={seleccionId}
+            onCambiarBusqueda={setBusquedaPrestamos}
+            onCambiarFiltroEstado={setFiltroEstadoPrestamos}
             onSeleccionar={(prestamoId) => {
               seleccionarPrestamo(prestamoId);
               setVistaMovil('workspace');
@@ -213,6 +320,10 @@ export function PrestamosPage() {
             personasPorId={personasPorId}
             tabActiva={tabWorkspace}
             onCambiarTab={setTabWorkspace}
+            onEliminarPrestamo={solicitarEliminarPrestamo}
+            eliminandoPrestamo={eliminarPrestamo.isPending}
+            mensajeOperacion={mensajeOperacion}
+            errorOperacion={errorOperacion}
           />
         )}
       </div>
@@ -221,23 +332,28 @@ export function PrestamosPage() {
         <PrestamosListadoPanel
           isLoading={prestamos.isLoading}
           isError={prestamos.isError}
-          prestamos={prestamos.data ?? []}
+          busqueda={busquedaPrestamos}
+          filtroEstado={filtroEstadoPrestamos}
+          prestamos={prestamosFiltrados}
+          totalPrestamos={prestamosTotal}
           personasPorId={personasPorId}
           seleccionId={seleccionId}
+          onCambiarBusqueda={setBusquedaPrestamos}
+          onCambiarFiltroEstado={setFiltroEstadoPrestamos}
           onSeleccionar={seleccionarPrestamo}
         />
 
         <div className="space-y-4">
           {mostrarAlta && (
             <PrestamoAltaPanel
-              personas={personas.data ?? []}
-              personasLoading={personas.isLoading}
+              personas={personasActivas.data ?? []}
+              personasLoading={personasActivas.isLoading}
               onCreado={onCreado}
             />
           )}
 
           {prestamosTotal === 0 && !mostrarAlta ? (
-            <SectionCard titulo="Workspace" descripcion="No hay préstamos activos para operar todavía.">
+            <SectionCard titulo="Workspace" descripcion="No hay préstamos visibles para operar todavía.">
               <EmptyState
                 titulo="Empezá cargando un préstamo"
                 descripcion="El workspace se habilita automáticamente cuando exista un préstamo en el listado."
@@ -250,6 +366,10 @@ export function PrestamosPage() {
               personasPorId={personasPorId}
               tabActiva={tabWorkspace}
               onCambiarTab={setTabWorkspace}
+              onEliminarPrestamo={solicitarEliminarPrestamo}
+              eliminandoPrestamo={eliminarPrestamo.isPending}
+              mensajeOperacion={mensajeOperacion}
+              errorOperacion={errorOperacion}
             />
           )}
         </div>

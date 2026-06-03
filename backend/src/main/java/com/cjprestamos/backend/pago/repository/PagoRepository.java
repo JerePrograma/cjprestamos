@@ -24,6 +24,7 @@ public interface PagoRepository extends JpaRepository<Pago, Long> {
         join fetch pago.prestamo prestamo
         join fetch prestamo.persona
         where pago.estado = :estado
+          and prestamo.eliminado = false
           and coalesce(pago.fechaContable, pago.fechaPago) between :desde and :hasta
         order by coalesce(pago.fechaContable, pago.fechaPago) asc, pago.id asc
         """)

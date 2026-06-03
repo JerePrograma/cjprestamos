@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { obtenerMensajeErrorApi } from '../../../shared/api/apiError';
 import { formatearMonedaSinCentavos } from '../../../shared/lib/money';
 import type { Persona } from '../../personas/types/persona';
 import { useCalcularPrestamo, useCrearPrestamo } from '../hooks/usePrestamos';
@@ -133,8 +134,10 @@ export function PrestamoAltaPanel({
       onCreado(prestamo.id);
       setFormulario(formularioInicialPrestamo);
       setMensajeExito('Préstamo creado correctamente.');
-    } catch {
-      setErrorFormulario('No se pudo crear el préstamo. Revisá los datos e intentá nuevamente.');
+    } catch (error) {
+      setErrorFormulario(
+        obtenerMensajeErrorApi(error, 'No se pudo crear el préstamo. Revisá los datos e intentá nuevamente.'),
+      );
     }
   };
 

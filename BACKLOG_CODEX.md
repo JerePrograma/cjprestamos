@@ -51,6 +51,7 @@ Backlog técnico priorizado para reflejar el **estado real** del repo.
 - BT-7010 — capa de UX/UI consistente (headers, estados, quick actions, patrones reutilizables): **HECHA**
 - BT-7011 — eliminación de centavos con redondeo hacia arriba en cálculos, cuotas, pagos y UI: **HECHA**
 - BT-7012 — rediseño visual integral frontend (tokens, layout, navegación, formularios y estados light/dark): **HECHA**
+- BT-7013 — visualización operativa con bajas de personas y eliminación lógica de préstamos: **HECHA**
 
 ### PARCIAL
 - (sin parciales activos en el núcleo)

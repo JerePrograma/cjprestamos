@@ -47,19 +47,23 @@ Una libreta digital operativa para registrar personas, préstamos, cuotas y pago
 ## 1) Dashboard
 Punto de control de la jornada.
 - KPIs económicos principales.
-- Listados recientes de préstamos y personas.
+- Listados recientes de préstamos y personas activas.
 - Acciones rápidas para continuar flujo sin fricción.
 
 ## 2) Personas
 Libreta de personas conocidas.
 - CRUD operativo.
 - Búsqueda por nombre/alias/teléfono.
+- Baja lógica con `activo=false`; el listado operativo muestra activas por defecto.
+- Filtros para ver activas, dadas de baja o todas.
 - Detalle editable y acceso al legajo relacionado.
 
 ## 3) Préstamos
 Flujo económico principal.
 - Alta de préstamo.
 - Listado + selección.
+- Eliminación operativa con `eliminado=true`; no se borran cuotas, pagos ni eventos.
+- Los listados principales excluyen préstamos eliminados por defecto.
 - Workspace por préstamo:
   - Resumen,
   - Cuotas,
@@ -69,6 +73,16 @@ Flujo económico principal.
 Contexto separado de la operación económica.
 - Legajo por persona.
 - Adjuntos (alta/listado/descarga/eliminación).
+
+---
+
+## Reglas operativas de baja lógica
+
+- `Persona.activo=false` representa una persona dada de baja. No aparece en Dashboard ni en listados operativos por defecto, pero puede consultarse desde Personas con filtro **Dadas de baja** o **Todas**.
+- No se pueden crear préstamos nuevos para personas dadas de baja.
+- Los préstamos existentes de una persona dada de baja siguen visibles si no están eliminados, porque pueden conservar deuda o historial pendiente.
+- `Prestamo.eliminado=true` representa eliminación operativa. El préstamo se oculta de listados, Dashboard, control de caja, reportes principales e integración HogarIA.
+- La eliminación operativa de un préstamo no borra cuotas, pagos, imputaciones ni eventos asociados; el detalle directo por id conserva `eliminado=true` para auditoría interna.
 
 ---
 

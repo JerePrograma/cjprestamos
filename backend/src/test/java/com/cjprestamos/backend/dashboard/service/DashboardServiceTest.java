@@ -68,7 +68,7 @@ class DashboardServiceTest {
         Prestamo prestamoActivoConCuotas = crearPrestamo(1L, "1000.00", EstadoPrestamo.ACTIVO);
         Prestamo prestamoActivoSinCuotas = crearPrestamo(2L, "500.00", EstadoPrestamo.ACTIVO);
 
-        when(prestamoRepository.findByEstadoOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO))
+        when(prestamoRepository.findByEstadoAndEliminadoFalseOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO))
             .thenReturn(List.of(prestamoActivoConCuotas, prestamoActivoSinCuotas));
 
         Cuota cuota1 = crearCuota(prestamoActivoConCuotas, 1, "600.00", "300.00", LocalDate.of(2026, 4, 10));
@@ -114,7 +114,7 @@ class DashboardServiceTest {
 
     @Test
     void obtenerResumen_sinActivos_deberiaRetornarTodoEnCero() {
-        when(prestamoRepository.findByEstadoOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO)).thenReturn(List.of());
+        when(prestamoRepository.findByEstadoAndEliminadoFalseOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO)).thenReturn(List.of());
 
         DashboardResumenResponse resumen = dashboardService.obtenerResumen();
 
@@ -128,7 +128,7 @@ class DashboardServiceTest {
     @Test
     void obtenerResumen_deberiaCapearGanadoAlInteresTotal() {
         Prestamo prestamo = crearPrestamo(5L, "1000.00", EstadoPrestamo.ACTIVO);
-        when(prestamoRepository.findByEstadoOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO)).thenReturn(List.of(prestamo));
+        when(prestamoRepository.findByEstadoAndEliminadoFalseOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO)).thenReturn(List.of(prestamo));
         when(cuotaRepository.findByPrestamoIdIn(List.of(5L))).thenReturn(List.of());
         when(pagoRepository.findByPrestamoIdInAndEstado(List.of(5L), EstadoPago.REGISTRADO))
             .thenReturn(List.of(crearPago(prestamo, "1800.00", EstadoPago.REGISTRADO, LocalDate.of(2026, 4, 10))));
@@ -154,7 +154,7 @@ class DashboardServiceTest {
     @Test
     void obtenerResumen_activoSinPagos_deberiaReflejarDeudaYPorGanarCompletos() {
         Prestamo prestamo = crearPrestamo(6L, "1000.00", EstadoPrestamo.ACTIVO);
-        when(prestamoRepository.findByEstadoOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO)).thenReturn(List.of(prestamo));
+        when(prestamoRepository.findByEstadoAndEliminadoFalseOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO)).thenReturn(List.of(prestamo));
         when(cuotaRepository.findByPrestamoIdIn(List.of(6L))).thenReturn(List.of());
         when(pagoRepository.findByPrestamoIdInAndEstado(List.of(6L), EstadoPago.REGISTRADO)).thenReturn(List.of());
 
@@ -181,7 +181,7 @@ class DashboardServiceTest {
     @Test
     void obtenerResumen_conPagosParciales_deberiaMantenerGanadoYPorGanarConsistentes() {
         Prestamo prestamo = crearPrestamo(7L, "1000.00", EstadoPrestamo.ACTIVO);
-        when(prestamoRepository.findByEstadoOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO)).thenReturn(List.of(prestamo));
+        when(prestamoRepository.findByEstadoAndEliminadoFalseOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO)).thenReturn(List.of(prestamo));
         when(cuotaRepository.findByPrestamoIdIn(List.of(7L))).thenReturn(List.of());
         when(pagoRepository.findByPrestamoIdInAndEstado(List.of(7L), EstadoPago.REGISTRADO))
             .thenReturn(List.of(crearPago(prestamo, "1100.00", EstadoPago.REGISTRADO, LocalDate.of(2026, 4, 10))));
@@ -207,7 +207,7 @@ class DashboardServiceTest {
     @Test
     void obtenerResumen_conCuotas_deberiaCalcularDeudaDesdeCuotasYPriorizarSaldoReal() {
         Prestamo prestamo = crearPrestamo(8L, "1000.00", EstadoPrestamo.ACTIVO);
-        when(prestamoRepository.findByEstadoOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO)).thenReturn(List.of(prestamo));
+        when(prestamoRepository.findByEstadoAndEliminadoFalseOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO)).thenReturn(List.of(prestamo));
         when(cuotaRepository.findByPrestamoIdIn(List.of(8L))).thenReturn(List.of(
             crearCuota(prestamo, 1, "600.00", "600.00", LocalDate.of(2026, 4, 10)),
             crearCuota(prestamo, 2, "600.00", "500.00", LocalDate.of(2026, 5, 10))
@@ -237,7 +237,7 @@ class DashboardServiceTest {
         prestamo.setFechaBase(LocalDate.of(2026, 4, 3));
         setCreatedAt(prestamo, LocalDateTime.of(2026, 4, 3, 9, 0));
 
-        when(prestamoRepository.findByEstadoOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO)).thenReturn(List.of(prestamo));
+        when(prestamoRepository.findByEstadoAndEliminadoFalseOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO)).thenReturn(List.of(prestamo));
         when(cuotaRepository.findByPrestamoIdIn(List.of(11L))).thenReturn(List.of(
             crearCuota(prestamo, 1, "600.00", "300.00", LocalDate.of(2026, 4, 21)),
             crearCuota(prestamo, 2, "600.00", "0.00", LocalDate.of(2026, 5, 26)),
@@ -276,7 +276,7 @@ class DashboardServiceTest {
 
     @Test
     void obtenerControlCaja_sinActivos_deberiaRetornarTodoEnCero() {
-        when(prestamoRepository.findByEstadoOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO)).thenReturn(List.of());
+        when(prestamoRepository.findByEstadoAndEliminadoFalseOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO)).thenReturn(List.of());
 
         DashboardControlCajaResponse controlCaja = dashboardService.obtenerControlCaja();
 
@@ -290,7 +290,7 @@ class DashboardServiceTest {
         Prestamo prestamo = crearPrestamo(12L, "1000.00", EstadoPrestamo.ACTIVO);
         prestamo.setFechaBase(LocalDate.of(2026, 4, 1));
 
-        when(prestamoRepository.findByEstadoOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO)).thenReturn(List.of(prestamo));
+        when(prestamoRepository.findByEstadoAndEliminadoFalseOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO)).thenReturn(List.of(prestamo));
         when(cuotaRepository.findByPrestamoIdIn(List.of(12L))).thenReturn(List.of());
         when(pagoRepository.findByPrestamoIdInAndEstado(List.of(12L), EstadoPago.REGISTRADO)).thenReturn(List.of(
             crearPago(prestamo, "200.00", EstadoPago.REGISTRADO, LocalDate.of(2026, 3, 31)),

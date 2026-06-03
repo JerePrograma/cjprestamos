@@ -10,14 +10,14 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface PrestamoRepository extends JpaRepository<Prestamo, Long> {
 
-    List<Prestamo> findAllByOrderByCreatedAtDesc();
+    List<Prestamo> findByEliminadoFalseOrderByCreatedAtDesc();
 
-    List<Prestamo> findByEstadoOrderByCreatedAtDesc(EstadoPrestamo estado);
+    List<Prestamo> findByEstadoAndEliminadoFalseOrderByCreatedAtDesc(EstadoPrestamo estado);
 
-    List<Prestamo> findByEstadoInOrderByCreatedAtDesc(List<EstadoPrestamo> estados);
+    List<Prestamo> findByEstadoInAndEliminadoFalseOrderByCreatedAtDesc(Collection<EstadoPrestamo> estados);
 
     @EntityGraph(attributePaths = "persona")
-    List<Prestamo> findByFechaBaseBetweenOrderByFechaBaseAscIdAsc(LocalDate desde, LocalDate hasta);
+    List<Prestamo> findByFechaBaseBetweenAndEliminadoFalseOrderByFechaBaseAscIdAsc(LocalDate desde, LocalDate hasta);
 
-    long countByEstadoIn(Collection<EstadoPrestamo> estados);
+    long countByEstadoInAndEliminadoFalse(Collection<EstadoPrestamo> estados);
 }

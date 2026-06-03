@@ -77,7 +77,7 @@ public class ReporteDashboardService {
     public ReporteDashboardData obtenerReporte(LocalDate desde, LocalDate hasta, String usuarioAutenticado) {
         validarRango(desde, hasta);
 
-        List<Prestamo> prestamosPeriodo = prestamoRepository.findByFechaBaseBetweenOrderByFechaBaseAscIdAsc(desde, hasta);
+        List<Prestamo> prestamosPeriodo = prestamoRepository.findByFechaBaseBetweenAndEliminadoFalseOrderByFechaBaseAscIdAsc(desde, hasta);
         List<Pago> pagosPeriodo = pagoRepository.findRegistradosPorFechaContableOPagoEntre(EstadoPago.REGISTRADO, desde, hasta);
         List<Cuota> cuotasConVencimientoPeriodo = cuotaRepository.findByFechaVencimientoBetweenConPrestamoYPersona(desde, hasta);
         DashboardControlCajaResponse snapshotControlCaja = dashboardService.obtenerControlCaja();
@@ -199,7 +199,7 @@ public class ReporteDashboardService {
     }
 
     private ReporteCarteraRiesgo calcularCarteraRiesgo(LocalDate hasta) {
-        List<Prestamo> prestamosActivos = prestamoRepository.findByEstadoOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO);
+        List<Prestamo> prestamosActivos = prestamoRepository.findByEstadoAndEliminadoFalseOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO);
         List<Long> prestamosActivosIds = prestamosActivos.stream()
             .map(Prestamo::getId)
             .toList();
@@ -255,7 +255,7 @@ public class ReporteDashboardService {
             .limit(LIMITE_RIESGO)
             .toList();
 
-        long prestamosFinalizadosCancelados = prestamoRepository.countByEstadoIn(List.of(
+        long prestamosFinalizadosCancelados = prestamoRepository.countByEstadoInAndEliminadoFalse(List.of(
             EstadoPrestamo.FINALIZADO,
             EstadoPrestamo.CANCELADO
         ));
