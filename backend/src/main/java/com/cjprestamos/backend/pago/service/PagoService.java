@@ -1,12 +1,11 @@
 package com.cjprestamos.backend.pago.service;
 
 import com.cjprestamos.backend.common.model.MonedaUtils;
+import com.cjprestamos.backend.common.time.FechaOperativaService;
 import com.cjprestamos.backend.cuota.model.Cuota;
 import com.cjprestamos.backend.cuota.model.enums.EstadoCuota;
 import com.cjprestamos.backend.cuota.repository.CuotaRepository;
-import com.cjprestamos.backend.evento.model.EventoPrestamo;
-import com.cjprestamos.backend.evento.model.enums.TipoEventoPrestamo;
-import com.cjprestamos.backend.evento.repository.EventoPrestamoRepository;
+import com.cjprestamos.backend.evento.service.EventoPrestamoService;
 import com.cjprestamos.backend.pago.dto.PagoResponse;
 import com.cjprestamos.backend.pago.dto.RegistroPagoRequest;
 import com.cjprestamos.backend.pago.model.ImputacionPago;
@@ -36,20 +35,23 @@ public class PagoService {
     private final PrestamoRepository prestamoRepository;
     private final CuotaRepository cuotaRepository;
     private final ImputacionPagoRepository imputacionPagoRepository;
-    private final EventoPrestamoRepository eventoPrestamoRepository;
+    private final EventoPrestamoService eventoPrestamoService;
+    private final FechaOperativaService fechaOperativaService;
 
     public PagoService(
             PagoRepository pagoRepository,
             PrestamoRepository prestamoRepository,
             CuotaRepository cuotaRepository,
             ImputacionPagoRepository imputacionPagoRepository,
-            EventoPrestamoRepository eventoPrestamoRepository
+            EventoPrestamoService eventoPrestamoService,
+            FechaOperativaService fechaOperativaService
     ) {
         this.pagoRepository = pagoRepository;
         this.prestamoRepository = prestamoRepository;
         this.cuotaRepository = cuotaRepository;
         this.imputacionPagoRepository = imputacionPagoRepository;
-        this.eventoPrestamoRepository = eventoPrestamoRepository;
+        this.eventoPrestamoService = eventoPrestamoService;
+        this.fechaOperativaService = fechaOperativaService;
     }
 
     public PagoResponse registrar(RegistroPagoRequest request, String idempotencyKeyHeader) {
@@ -108,8 +110,12 @@ public class PagoService {
         cuotaRepository.saveAll(imputaciones.stream().map(ImputacionPago::getCuota).toList());
         imputacionPagoRepository.deleteAll(imputaciones);
         pago.setEstado(EstadoPago.ANULADO);
+        pago.setAnuladoEn(fechaOperativaService.ahora());
+        if (pago.getMotivoAnulacion() == null || pago.getMotivoAnulacion().isBlank()) {
+            pago.setMotivoAnulacion("Sin motivo informado");
+        }
         actualizarEstadoPrestamoPostAnulacion(prestamoId, prestamo);
-        registrarEventoAnulacion(prestamo, pago);
+        eventoPrestamoService.registrarAnulacionPago(prestamo, pago);
         return mapearRespuesta(pago);
     }
 
@@ -209,6 +215,9 @@ public class PagoService {
         Pago pago = new Pago();
         pago.setPrestamo(prestamo);
         pago.setFechaPago(request.fechaPago());
+        pago.setFechaEfectivaCobro(request.fechaPago());
+        pago.setFechaContable(request.fechaPago());
+        pago.setRegistradoEn(fechaOperativaService.ahora());
         pago.setMonto(montoPago);
         pago.setReferenciaManual(request.referencia());
         pago.setObservaciones(request.observacion());
@@ -256,6 +265,7 @@ public class PagoService {
             imputacionPago.setCuota(cuota);
             imputacionPago.setMontoImputado(normalizarMoneda(montoImputado));
             imputacionPago.setFechaImputacion(pagoGuardado.getFechaPago());
+            imputacionPago.setRegistradoEn(fechaOperativaService.ahora());
 
             imputaciones.add(imputacionPago);
 
@@ -325,23 +335,7 @@ public class PagoService {
     }
 
     private void registrarEvento(Prestamo prestamo, Pago pago) {
-        EventoPrestamo eventoPrestamo = new EventoPrestamo();
-        eventoPrestamo.setPrestamo(prestamo);
-        eventoPrestamo.setTipoEvento(TipoEventoPrestamo.REGISTRO_PAGO);
-        eventoPrestamo.setDescripcion(
-                "Se registró pago de " + normalizarMoneda(pago.getMonto()) + " con fecha " + pago.getFechaPago()
-        );
-        eventoPrestamo.setFechaEvento(pago.getFechaPago().atStartOfDay());
-        eventoPrestamoRepository.save(eventoPrestamo);
-    }
-
-    private void registrarEventoAnulacion(Prestamo prestamo, Pago pago) {
-        EventoPrestamo eventoPrestamo = new EventoPrestamo();
-        eventoPrestamo.setPrestamo(prestamo);
-        eventoPrestamo.setTipoEvento(TipoEventoPrestamo.OBSERVACION);
-        eventoPrestamo.setDescripcion("Se anuló el pago #" + pago.getId() + " del " + pago.getFechaPago());
-        eventoPrestamo.setFechaEvento(java.time.LocalDateTime.now());
-        eventoPrestamoRepository.save(eventoPrestamo);
+        eventoPrestamoService.registrarPago(prestamo, pago, normalizarMoneda(pago.getMonto()));
     }
 
     private String normalizarIdempotencyKey(String value) {
@@ -360,7 +354,12 @@ public class PagoService {
                 pago.getObservaciones(),
                 pago.getEstado(),
                 pago.getCreatedAt(),
-                pago.getUpdatedAt()
+                pago.getUpdatedAt(),
+                pago.getRegistradoEn(),
+                pago.getAnuladoEn(),
+                pago.getMotivoAnulacion(),
+                pago.getFechaEfectivaCobro(),
+                pago.getFechaContable()
         );
     }
 

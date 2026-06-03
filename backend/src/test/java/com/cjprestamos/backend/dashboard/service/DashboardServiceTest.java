@@ -3,6 +3,8 @@ package com.cjprestamos.backend.dashboard.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
+import com.cjprestamos.backend.common.time.FechaOperativaService;
+import com.cjprestamos.backend.common.time.RelojSistema;
 import com.cjprestamos.backend.cuota.model.Cuota;
 import com.cjprestamos.backend.cuota.repository.CuotaRepository;
 import com.cjprestamos.backend.dashboard.dto.DashboardControlCajaResponse;
@@ -18,6 +20,7 @@ import com.cjprestamos.backend.prestamo.model.enums.FrecuenciaTipo;
 import com.cjprestamos.backend.prestamo.repository.PrestamoRepository;
 import com.cjprestamos.backend.prestamo.service.CalculadoraPrestamoService;
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -29,6 +32,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class DashboardServiceTest {
+
+    private static final LocalDateTime AHORA_OPERATIVO = LocalDateTime.of(2026, 4, 16, 10, 30);
 
     @Mock
     private PrestamoRepository prestamoRepository;
@@ -43,10 +48,19 @@ class DashboardServiceTest {
     private CalculadoraPrestamoService calculadoraPrestamoService;
 
     private DashboardService dashboardService;
+    private FechaOperativaService fechaOperativaService;
 
     @BeforeEach
     void setUp() {
-        dashboardService = new DashboardService(prestamoRepository, cuotaRepository, pagoRepository, calculadoraPrestamoService);
+        Clock clock = Clock.fixed(AHORA_OPERATIVO.atZone(RelojSistema.ZONA_OPERATIVA).toInstant(), RelojSistema.ZONA_OPERATIVA);
+        fechaOperativaService = new FechaOperativaService(clock);
+        dashboardService = new DashboardService(
+            prestamoRepository,
+            cuotaRepository,
+            pagoRepository,
+            calculadoraPrestamoService,
+            fechaOperativaService
+        );
     }
 
     @Test
@@ -220,17 +234,18 @@ class DashboardServiceTest {
     @Test
     void obtenerControlCaja_deberiaCalcularIndicadoresContablesYProyecciones() {
         Prestamo prestamo = crearPrestamo(11L, "1000.00", EstadoPrestamo.ACTIVO);
-        setCreatedAt(prestamo, LocalDateTime.now().withDayOfMonth(3));
+        prestamo.setFechaBase(LocalDate.of(2026, 4, 3));
+        setCreatedAt(prestamo, LocalDateTime.of(2026, 4, 3, 9, 0));
 
         when(prestamoRepository.findByEstadoOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO)).thenReturn(List.of(prestamo));
         when(cuotaRepository.findByPrestamoIdIn(List.of(11L))).thenReturn(List.of(
-            crearCuota(prestamo, 1, "600.00", "300.00", LocalDate.now().plusDays(5)),
-            crearCuota(prestamo, 2, "600.00", "0.00", LocalDate.now().plusDays(40)),
-            crearCuota(prestamo, 3, "200.00", "0.00", LocalDate.now().minusDays(2))
+            crearCuota(prestamo, 1, "600.00", "300.00", LocalDate.of(2026, 4, 21)),
+            crearCuota(prestamo, 2, "600.00", "0.00", LocalDate.of(2026, 5, 26)),
+            crearCuota(prestamo, 3, "200.00", "0.00", LocalDate.of(2026, 4, 14))
         ));
 
         when(pagoRepository.findByPrestamoIdInAndEstado(List.of(11L), EstadoPago.REGISTRADO)).thenReturn(List.of(
-            crearPago(prestamo, "900.00", EstadoPago.REGISTRADO, LocalDate.now().minusDays(1))
+            crearPago(prestamo, "900.00", EstadoPago.REGISTRADO, LocalDate.of(2026, 4, 15))
         ));
 
         when(calculadoraPrestamoService.calcular(org.mockito.ArgumentMatchers.any())).thenReturn(
@@ -268,6 +283,35 @@ class DashboardServiceTest {
         assertEquals(new BigDecimal("0.00"), controlCaja.cajaDisponible());
         assertEquals(0L, controlCaja.cuotasPendientes());
         assertEquals(new BigDecimal("0.00"), controlCaja.proyeccionCobro90Dias());
+    }
+
+    @Test
+    void obtenerControlCaja_deberiaUsarMesActualDelRelojOperativoParaIngresos() {
+        Prestamo prestamo = crearPrestamo(12L, "1000.00", EstadoPrestamo.ACTIVO);
+        prestamo.setFechaBase(LocalDate.of(2026, 4, 1));
+
+        when(prestamoRepository.findByEstadoOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO)).thenReturn(List.of(prestamo));
+        when(cuotaRepository.findByPrestamoIdIn(List.of(12L))).thenReturn(List.of());
+        when(pagoRepository.findByPrestamoIdInAndEstado(List.of(12L), EstadoPago.REGISTRADO)).thenReturn(List.of(
+            crearPago(prestamo, "200.00", EstadoPago.REGISTRADO, LocalDate.of(2026, 3, 31)),
+            crearPago(prestamo, "300.00", EstadoPago.REGISTRADO, LocalDate.of(2026, 4, 1)),
+            crearPagoConFechaContable(prestamo, "400.00", EstadoPago.REGISTRADO, LocalDate.of(2026, 5, 1), LocalDate.of(2026, 4, 30))
+        ));
+        when(calculadoraPrestamoService.calcular(org.mockito.ArgumentMatchers.any())).thenReturn(
+            new CalculoPrestamoResultado(
+                new BigDecimal("200.00"),
+                new BigDecimal("1200.00"),
+                new BigDecimal("400.00"),
+                new BigDecimal("1000.00"),
+                new BigDecimal("200.00"),
+                new BigDecimal("200.00")
+            )
+        );
+
+        DashboardControlCajaResponse controlCaja = dashboardService.obtenerControlCaja();
+
+        assertEquals(new BigDecimal("700.00"), controlCaja.ingresosMesActual());
+        assertEquals(new BigDecimal("1000.00"), controlCaja.egresosMesActual());
     }
 
     private Prestamo crearPrestamo(Long id, String montoInicial, EstadoPrestamo estado) {
@@ -308,8 +352,21 @@ class DashboardServiceTest {
         Pago pago = new Pago();
         pago.setPrestamo(prestamo);
         pago.setFechaPago(fechaPago);
+        pago.setFechaContable(fechaPago);
         pago.setMonto(new BigDecimal(monto));
         pago.setEstado(estado);
+        return pago;
+    }
+
+    private Pago crearPagoConFechaContable(
+        Prestamo prestamo,
+        String monto,
+        EstadoPago estado,
+        LocalDate fechaPago,
+        LocalDate fechaContable
+    ) {
+        Pago pago = crearPago(prestamo, monto, estado, fechaPago);
+        pago.setFechaContable(fechaContable);
         return pago;
     }
 

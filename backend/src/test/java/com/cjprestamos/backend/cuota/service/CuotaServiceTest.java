@@ -6,6 +6,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.cjprestamos.backend.common.time.FechaOperativaService;
+import com.cjprestamos.backend.common.time.RelojSistema;
 import com.cjprestamos.backend.cuota.dto.AjustarCuotasFuturasRequest;
 import com.cjprestamos.backend.cuota.dto.AjusteCuotaFuturaRequest;
 import com.cjprestamos.backend.cuota.dto.CuotaManualRequest;
@@ -14,7 +16,7 @@ import com.cjprestamos.backend.cuota.dto.GenerarCuotasRequest;
 import com.cjprestamos.backend.cuota.model.Cuota;
 import com.cjprestamos.backend.cuota.model.enums.EstadoCuota;
 import com.cjprestamos.backend.cuota.repository.CuotaRepository;
-import com.cjprestamos.backend.evento.repository.EventoPrestamoRepository;
+import com.cjprestamos.backend.evento.service.EventoPrestamoService;
 import com.cjprestamos.backend.persona.model.Persona;
 import com.cjprestamos.backend.prestamo.dto.CalculoPrestamoResultado;
 import com.cjprestamos.backend.prestamo.model.Prestamo;
@@ -23,7 +25,9 @@ import com.cjprestamos.backend.prestamo.model.enums.FrecuenciaTipo;
 import com.cjprestamos.backend.prestamo.repository.PrestamoRepository;
 import com.cjprestamos.backend.prestamo.service.CalculadoraPrestamoService;
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,6 +41,8 @@ import org.springframework.web.server.ResponseStatusException;
 @ExtendWith(MockitoExtension.class)
 class CuotaServiceTest {
 
+    private static final LocalDateTime AHORA_OPERATIVO = LocalDateTime.of(2026, 4, 16, 10, 30);
+
     @Mock
     private CuotaRepository cuotaRepository;
 
@@ -47,13 +53,22 @@ class CuotaServiceTest {
     private CalculadoraPrestamoService calculadoraPrestamoService;
 
     @Mock
-    private EventoPrestamoRepository eventoPrestamoRepository;
+    private EventoPrestamoService eventoPrestamoService;
 
     private CuotaService cuotaService;
+    private FechaOperativaService fechaOperativaService;
 
     @BeforeEach
     void setUp() {
-        cuotaService = new CuotaService(cuotaRepository, prestamoRepository, calculadoraPrestamoService, eventoPrestamoRepository);
+        Clock clock = Clock.fixed(AHORA_OPERATIVO.atZone(RelojSistema.ZONA_OPERATIVA).toInstant(), RelojSistema.ZONA_OPERATIVA);
+        fechaOperativaService = new FechaOperativaService(clock);
+        cuotaService = new CuotaService(
+            cuotaRepository,
+            prestamoRepository,
+            calculadoraPrestamoService,
+            eventoPrestamoService,
+            fechaOperativaService
+        );
     }
 
     @Test
@@ -306,7 +321,44 @@ class CuotaServiceTest {
 
         assertEquals(new BigDecimal("650.00"), cuota.getMontoProgramado());
         assertEquals(LocalDate.of(2026, 5, 25), cuota.getFechaVencimiento());
-        verify(eventoPrestamoRepository).save(org.mockito.ArgumentMatchers.any());
+        verify(eventoPrestamoService).registrarRenegociacionCuotas(
+            org.mockito.ArgumentMatchers.eq(prestamo),
+            org.mockito.ArgumentMatchers.eq(LocalDate.of(2026, 4, 21)),
+            org.mockito.ArgumentMatchers.contains("Renegociación manual")
+        );
+    }
+
+    @Test
+    void ajustarFuturas_sinFechaRenegociacion_deberiaUsarHoyOperativo() {
+        Prestamo prestamo = crearPrestamoBase(FrecuenciaTipo.MENSUAL, LocalDate.of(2026, 4, 20), null, 2);
+        when(prestamoRepository.findById(32L)).thenReturn(Optional.of(prestamo));
+
+        Cuota cuota = new Cuota();
+        asignarIdCuota(cuota, 2L);
+        cuota.setPrestamo(prestamo);
+        cuota.setNumeroCuota(2);
+        cuota.setFechaVencimiento(LocalDate.of(2026, 6, 20));
+        cuota.setMontoProgramado(new BigDecimal("600.00"));
+        cuota.setMontoPagado(BigDecimal.ZERO.setScale(2));
+        cuota.setEstado(EstadoCuota.PENDIENTE);
+
+        when(cuotaRepository.findByPrestamoIdAndIdIn(org.mockito.ArgumentMatchers.eq(32L), org.mockito.ArgumentMatchers.anyCollection()))
+            .thenReturn(List.of(cuota));
+        when(cuotaRepository.findByPrestamoIdOrderByNumeroCuotaAsc(32L)).thenReturn(List.of(cuota));
+
+        AjustarCuotasFuturasRequest request = new AjustarCuotasFuturasRequest(
+            null,
+            null,
+            List.of(new AjusteCuotaFuturaRequest(2L, LocalDate.of(2026, 6, 25), new BigDecimal("650.00"), null))
+        );
+
+        cuotaService.ajustarFuturas(32L, request);
+
+        verify(eventoPrestamoService).registrarRenegociacionCuotas(
+            org.mockito.ArgumentMatchers.eq(prestamo),
+            org.mockito.ArgumentMatchers.eq(LocalDate.of(2026, 4, 16)),
+            org.mockito.ArgumentMatchers.anyString()
+        );
     }
 
     @Test
@@ -334,7 +386,11 @@ class CuotaServiceTest {
 
         ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> cuotaService.ajustarFuturas(31L, request));
         assertEquals(400, exception.getStatusCode().value());
-        verify(eventoPrestamoRepository, never()).save(org.mockito.ArgumentMatchers.any());
+        verify(eventoPrestamoService, never()).registrarRenegociacionCuotas(
+            org.mockito.ArgumentMatchers.any(),
+            org.mockito.ArgumentMatchers.any(),
+            org.mockito.ArgumentMatchers.anyString()
+        );
     }
 
     private Prestamo crearPrestamoBase(FrecuenciaTipo frecuenciaTipo, LocalDate fechaBase, Integer frecuenciaCadaDias, Integer cantidadCuotas) {

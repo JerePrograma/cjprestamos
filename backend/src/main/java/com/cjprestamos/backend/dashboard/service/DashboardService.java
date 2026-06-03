@@ -1,6 +1,7 @@
 package com.cjprestamos.backend.dashboard.service;
 
 import com.cjprestamos.backend.common.model.MonedaUtils;
+import com.cjprestamos.backend.common.time.FechaOperativaService;
 import com.cjprestamos.backend.cuota.model.Cuota;
 import com.cjprestamos.backend.cuota.repository.CuotaRepository;
 import com.cjprestamos.backend.dashboard.dto.DashboardControlCajaResponse;
@@ -32,17 +33,20 @@ public class DashboardService {
     private final CuotaRepository cuotaRepository;
     private final PagoRepository pagoRepository;
     private final CalculadoraPrestamoService calculadoraPrestamoService;
+    private final FechaOperativaService fechaOperativaService;
 
     public DashboardService(
         PrestamoRepository prestamoRepository,
         CuotaRepository cuotaRepository,
         PagoRepository pagoRepository,
-        CalculadoraPrestamoService calculadoraPrestamoService
+        CalculadoraPrestamoService calculadoraPrestamoService,
+        FechaOperativaService fechaOperativaService
     ) {
         this.prestamoRepository = prestamoRepository;
         this.cuotaRepository = cuotaRepository;
         this.pagoRepository = pagoRepository;
         this.calculadoraPrestamoService = calculadoraPrestamoService;
+        this.fechaOperativaService = fechaOperativaService;
     }
 
     public DashboardResumenResponse obtenerResumen() {
@@ -153,7 +157,7 @@ public class DashboardService {
         BigDecimal egresosMesActual = calcularEgresosMesActual(prestamosActivos);
         BigDecimal balanceMesActual = restar(ingresosMesActual, egresosMesActual);
 
-        LocalDate hoy = LocalDate.now();
+        LocalDate hoy = fechaOperativaService.hoy();
         BigDecimal proyeccionCobro30Dias = cero();
         BigDecimal proyeccionCobro60Dias = cero();
         BigDecimal proyeccionCobro90Dias = cero();
@@ -219,16 +223,16 @@ public class DashboardService {
     }
 
     private BigDecimal calcularIngresosMesActual(List<Pago> pagosRegistrados) {
-        YearMonth mesActual = YearMonth.now();
+        YearMonth mesActual = fechaOperativaService.mesActual();
         return pagosRegistrados.stream()
-            .filter(pago -> YearMonth.from(pago.getFechaPago()).equals(mesActual))
+            .filter(pago -> YearMonth.from(fechaContablePago(pago)).equals(mesActual))
             .map(Pago::getMonto)
             .reduce(cero(), this::sumar);
     }
 
     private BigDecimal calcularEgresosMesActual(List<Prestamo> prestamosActivos) {
-        LocalDate hoy = LocalDate.now(java.time.ZoneId.of("America/Argentina/Buenos_Aires"));
-        LocalDate inicioMes = hoy.withDayOfMonth(1);
+        LocalDate hoy = fechaOperativaService.hoy();
+        LocalDate inicioMes = fechaOperativaService.inicioMesActual();
 
         return prestamosActivos.stream()
                 .filter(prestamo -> prestamo.getFechaBase() != null)
@@ -236,6 +240,10 @@ public class DashboardService {
                 .filter(prestamo -> !prestamo.getFechaBase().isAfter(hoy))
                 .map(Prestamo::getMontoInicial)
                 .reduce(cero(), this::sumar);
+    }
+
+    private LocalDate fechaContablePago(Pago pago) {
+        return pago.getFechaContable() != null ? pago.getFechaContable() : pago.getFechaPago();
     }
 
     private BigDecimal calcularDeudaPrestamo(

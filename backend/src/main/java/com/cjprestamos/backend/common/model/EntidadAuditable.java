@@ -1,5 +1,6 @@
 package com.cjprestamos.backend.common.model;
 
+import com.cjprestamos.backend.common.audit.AuditoriaProvider;
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PrePersist;
@@ -17,14 +18,14 @@ public abstract class EntidadAuditable {
 
     @PrePersist
     protected void prePersist() {
-        LocalDateTime ahora = LocalDateTime.now();
+        LocalDateTime ahora = AuditoriaProvider.ahora();
         this.createdAt = ahora;
         this.updatedAt = ahora;
     }
 
     @PreUpdate
     protected void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = AuditoriaProvider.ahora();
     }
 
     public LocalDateTime getCreatedAt() {

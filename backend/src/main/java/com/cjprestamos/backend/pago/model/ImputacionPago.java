@@ -13,6 +13,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "imputacion_pago")
@@ -35,6 +36,9 @@ public class ImputacionPago extends EntidadAuditable {
 
     @Column(name = "fecha_imputacion", nullable = false)
     private LocalDate fechaImputacion;
+
+    @Column(name = "registrado_en")
+    private LocalDateTime registradoEn;
 
     public Long getId() {
         return id;
@@ -70,5 +74,13 @@ public class ImputacionPago extends EntidadAuditable {
 
     public void setFechaImputacion(LocalDate fechaImputacion) {
         this.fechaImputacion = fechaImputacion;
+    }
+
+    public LocalDateTime getRegistradoEn() {
+        return registradoEn;
+    }
+
+    public void setRegistradoEn(LocalDateTime registradoEn) {
+        this.registradoEn = registradoEn;
     }
 }

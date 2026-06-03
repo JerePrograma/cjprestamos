@@ -1,6 +1,7 @@
 package com.cjprestamos.backend.cuota.service;
 
 import com.cjprestamos.backend.common.model.MonedaUtils;
+import com.cjprestamos.backend.common.time.FechaOperativaService;
 import com.cjprestamos.backend.cuota.dto.AjustarCuotasFuturasRequest;
 import com.cjprestamos.backend.cuota.dto.AjusteCuotaFuturaRequest;
 import com.cjprestamos.backend.cuota.dto.CuotaManualRequest;
@@ -9,9 +10,7 @@ import com.cjprestamos.backend.cuota.dto.GenerarCuotasRequest;
 import com.cjprestamos.backend.cuota.model.Cuota;
 import com.cjprestamos.backend.cuota.model.enums.EstadoCuota;
 import com.cjprestamos.backend.cuota.repository.CuotaRepository;
-import com.cjprestamos.backend.evento.model.EventoPrestamo;
-import com.cjprestamos.backend.evento.model.enums.TipoEventoPrestamo;
-import com.cjprestamos.backend.evento.repository.EventoPrestamoRepository;
+import com.cjprestamos.backend.evento.service.EventoPrestamoService;
 import com.cjprestamos.backend.prestamo.dto.CalculoPrestamoEntrada;
 import com.cjprestamos.backend.prestamo.dto.CalculoPrestamoResultado;
 import com.cjprestamos.backend.prestamo.model.Prestamo;
@@ -20,7 +19,6 @@ import com.cjprestamos.backend.prestamo.repository.PrestamoRepository;
 import com.cjprestamos.backend.prestamo.service.CalculadoraPrestamoService;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -40,18 +38,21 @@ public class CuotaService {
     private final CuotaRepository cuotaRepository;
     private final PrestamoRepository prestamoRepository;
     private final CalculadoraPrestamoService calculadoraPrestamoService;
-    private final EventoPrestamoRepository eventoPrestamoRepository;
+    private final EventoPrestamoService eventoPrestamoService;
+    private final FechaOperativaService fechaOperativaService;
 
     public CuotaService(
         CuotaRepository cuotaRepository,
         PrestamoRepository prestamoRepository,
         CalculadoraPrestamoService calculadoraPrestamoService,
-        EventoPrestamoRepository eventoPrestamoRepository
+        EventoPrestamoService eventoPrestamoService,
+        FechaOperativaService fechaOperativaService
     ) {
         this.cuotaRepository = cuotaRepository;
         this.prestamoRepository = prestamoRepository;
         this.calculadoraPrestamoService = calculadoraPrestamoService;
-        this.eventoPrestamoRepository = eventoPrestamoRepository;
+        this.eventoPrestamoService = eventoPrestamoService;
+        this.fechaOperativaService = fechaOperativaService;
     }
 
     public List<CuotaResponse> generar(Long prestamoId, GenerarCuotasRequest request) {
@@ -318,17 +319,13 @@ public class CuotaService {
         BigDecimal totalProgramadoAnterior,
         BigDecimal totalProgramadoNuevo
     ) {
-        LocalDate fechaRenegociacion = request.fechaRenegociacion() != null ? request.fechaRenegociacion() : LocalDate.now();
+        LocalDate fechaRenegociacion = request.fechaRenegociacion() != null ? request.fechaRenegociacion() : fechaOperativaService.hoy();
         String observacionGeneral = request.observacionGeneral() == null ? "" : ". Nota: " + request.observacionGeneral();
-        EventoPrestamo eventoPrestamo = new EventoPrestamo();
-        eventoPrestamo.setPrestamo(prestamo);
-        eventoPrestamo.setTipoEvento(TipoEventoPrestamo.REPROGRAMACION_CUOTAS);
-        eventoPrestamo.setDescripcion(
+        String descripcion =
             "Renegociación manual de " + request.cuotas().size() + " cuota(s). Total previo "
-                + MonedaUtils.normalizar(totalProgramadoAnterior) + ", total nuevo " + MonedaUtils.normalizar(totalProgramadoNuevo) + observacionGeneral
-        );
-        eventoPrestamo.setFechaEvento(LocalDateTime.of(fechaRenegociacion, java.time.LocalTime.MIDNIGHT));
-        eventoPrestamoRepository.save(eventoPrestamo);
+                + MonedaUtils.normalizar(totalProgramadoAnterior) + ", total nuevo "
+                + MonedaUtils.normalizar(totalProgramadoNuevo) + observacionGeneral;
+        eventoPrestamoService.registrarRenegociacionCuotas(prestamo, fechaRenegociacion, descripcion);
     }
 
     private LocalDate obtenerFechaPagoCuota(Cuota cuota) {

@@ -4,11 +4,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.cjprestamos.backend.common.time.FechaOperativaService;
+import com.cjprestamos.backend.common.time.RelojSistema;
 import com.cjprestamos.backend.prestamo.dto.SimulacionPrestamoRequest;
 import com.cjprestamos.backend.prestamo.dto.SimulacionPrestamoResponse;
 import com.cjprestamos.backend.prestamo.model.enums.FrecuenciaTipo;
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.server.ResponseStatusException;
@@ -19,7 +23,14 @@ class SimuladorPrestamoServiceTest {
 
     @BeforeEach
     void setUp() {
-        simuladorPrestamoService = new SimuladorPrestamoService(new CalculadoraPrestamoService());
+        Clock clock = Clock.fixed(
+            LocalDateTime.of(2026, 4, 16, 10, 30).atZone(RelojSistema.ZONA_OPERATIVA).toInstant(),
+            RelojSistema.ZONA_OPERATIVA
+        );
+        simuladorPrestamoService = new SimuladorPrestamoService(
+            new CalculadoraPrestamoService(),
+            new FechaOperativaService(clock)
+        );
     }
 
     @Test

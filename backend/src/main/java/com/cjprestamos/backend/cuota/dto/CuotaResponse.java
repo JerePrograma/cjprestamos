@@ -13,4 +13,14 @@ public record CuotaResponse(
         BigDecimal montoPagado,
         EstadoCuota estado
 ) {
+        public CuotaResponse(
+                Long id,
+                Integer numeroCuota,
+                LocalDate fechaVencimiento,
+                BigDecimal montoProgramado,
+                BigDecimal montoPagado,
+                EstadoCuota estado
+        ) {
+                this(id, numeroCuota, fechaVencimiento, null, montoProgramado, montoPagado, estado);
+        }
 }

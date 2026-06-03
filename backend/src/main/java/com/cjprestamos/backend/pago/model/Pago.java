@@ -18,6 +18,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,6 +36,21 @@ public class Pago extends EntidadAuditable {
 
     @Column(name = "fecha_pago", nullable = false)
     private LocalDate fechaPago;
+
+    @Column(name = "fecha_efectiva_cobro")
+    private LocalDate fechaEfectivaCobro;
+
+    @Column(name = "fecha_contable")
+    private LocalDate fechaContable;
+
+    @Column(name = "registrado_en")
+    private LocalDateTime registradoEn;
+
+    @Column(name = "anulado_en")
+    private LocalDateTime anuladoEn;
+
+    @Column(name = "motivo_anulacion", length = 600)
+    private String motivoAnulacion;
 
     @Column(name = "monto", nullable = false, precision = 15, scale = 2)
     private BigDecimal monto;
@@ -73,6 +89,46 @@ public class Pago extends EntidadAuditable {
 
     public void setFechaPago(LocalDate fechaPago) {
         this.fechaPago = fechaPago;
+    }
+
+    public LocalDate getFechaEfectivaCobro() {
+        return fechaEfectivaCobro;
+    }
+
+    public void setFechaEfectivaCobro(LocalDate fechaEfectivaCobro) {
+        this.fechaEfectivaCobro = fechaEfectivaCobro;
+    }
+
+    public LocalDate getFechaContable() {
+        return fechaContable;
+    }
+
+    public void setFechaContable(LocalDate fechaContable) {
+        this.fechaContable = fechaContable;
+    }
+
+    public LocalDateTime getRegistradoEn() {
+        return registradoEn;
+    }
+
+    public void setRegistradoEn(LocalDateTime registradoEn) {
+        this.registradoEn = registradoEn;
+    }
+
+    public LocalDateTime getAnuladoEn() {
+        return anuladoEn;
+    }
+
+    public void setAnuladoEn(LocalDateTime anuladoEn) {
+        this.anuladoEn = anuladoEn;
+    }
+
+    public String getMotivoAnulacion() {
+        return motivoAnulacion;
+    }
+
+    public void setMotivoAnulacion(String motivoAnulacion) {
+        this.motivoAnulacion = motivoAnulacion;
     }
 
     public BigDecimal getMonto() {

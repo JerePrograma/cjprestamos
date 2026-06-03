@@ -1,6 +1,6 @@
 package com.cjprestamos.backend.shared.api;
 
-import java.time.LocalDateTime;
+import com.cjprestamos.backend.common.audit.AuditoriaProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.LinkedHashMap;
@@ -62,7 +62,7 @@ public class ApiExceptionHandler {
 
     private Map<String, Object> crearBodyBase(HttpStatus status, String message, String detail) {
         Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now());
+        body.put("timestamp", AuditoriaProvider.ahora());
         body.put("status", status.value());
         body.put("error", status.toString());
         body.put("message", message);

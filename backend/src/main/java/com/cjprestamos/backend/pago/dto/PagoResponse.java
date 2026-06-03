@@ -14,6 +14,24 @@ public record PagoResponse(
     String observacion,
     EstadoPago estado,
     LocalDateTime createdAt,
-    LocalDateTime updatedAt
+    LocalDateTime updatedAt,
+    LocalDateTime registradoEn,
+    LocalDateTime anuladoEn,
+    String motivoAnulacion,
+    LocalDate fechaEfectivaCobro,
+    LocalDate fechaContable
 ) {
+    public PagoResponse(
+        Long id,
+        Long prestamoId,
+        LocalDate fechaPago,
+        BigDecimal monto,
+        String referencia,
+        String observacion,
+        EstadoPago estado,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt
+    ) {
+        this(id, prestamoId, fechaPago, monto, referencia, observacion, estado, createdAt, updatedAt, null, null, null, null, null);
+    }
 }

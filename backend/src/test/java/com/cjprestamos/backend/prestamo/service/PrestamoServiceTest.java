@@ -31,6 +31,8 @@ import org.springframework.web.server.ResponseStatusException;
 @ExtendWith(MockitoExtension.class)
 class PrestamoServiceTest {
 
+    private static final LocalDate FECHA_BASE_TEST = LocalDate.of(2026, 4, 20);
+
     @Mock
     private PrestamoRepository prestamoRepository;
 
@@ -100,7 +102,7 @@ class PrestamoServiceTest {
             3,
             FrecuenciaTipo.MENSUAL,
             null,
-            LocalDate.now(),
+            FECHA_BASE_TEST,
             false,
             null,
             null
@@ -123,7 +125,7 @@ class PrestamoServiceTest {
             4,
             FrecuenciaTipo.CADA_X_DIAS,
             null,
-            LocalDate.now(),
+            FECHA_BASE_TEST,
             false,
             null,
             null
@@ -147,7 +149,7 @@ class PrestamoServiceTest {
             4,
             FrecuenciaTipo.MENSUAL,
             null,
-            LocalDate.now(),
+            FECHA_BASE_TEST,
             false,
             null,
             null
@@ -172,7 +174,7 @@ class PrestamoServiceTest {
             4,
             FrecuenciaTipo.MENSUAL,
             null,
-            LocalDate.now(),
+            FECHA_BASE_TEST,
             false,
             null,
             null
@@ -197,7 +199,7 @@ class PrestamoServiceTest {
             4,
             FrecuenciaTipo.MENSUAL,
             7,
-            LocalDate.now(),
+            FECHA_BASE_TEST,
             false,
             null,
             null
@@ -221,7 +223,7 @@ class PrestamoServiceTest {
             4,
             FrecuenciaTipo.MENSUAL,
             null,
-            LocalDate.now(),
+            FECHA_BASE_TEST,
             true,
             null,
             null

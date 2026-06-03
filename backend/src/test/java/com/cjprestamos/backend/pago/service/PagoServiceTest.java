@@ -7,11 +7,12 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.cjprestamos.backend.common.time.FechaOperativaService;
+import com.cjprestamos.backend.common.time.RelojSistema;
 import com.cjprestamos.backend.cuota.model.Cuota;
 import com.cjprestamos.backend.cuota.model.enums.EstadoCuota;
 import com.cjprestamos.backend.cuota.repository.CuotaRepository;
-import com.cjprestamos.backend.evento.model.EventoPrestamo;
-import com.cjprestamos.backend.evento.repository.EventoPrestamoRepository;
+import com.cjprestamos.backend.evento.service.EventoPrestamoService;
 import com.cjprestamos.backend.pago.dto.PagoResponse;
 import com.cjprestamos.backend.pago.dto.RegistroPagoRequest;
 import com.cjprestamos.backend.pago.model.ImputacionPago;
@@ -25,7 +26,9 @@ import com.cjprestamos.backend.prestamo.model.enums.EstadoPrestamo;
 import com.cjprestamos.backend.prestamo.repository.PrestamoRepository;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,6 +41,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 @ExtendWith(MockitoExtension.class)
 class PagoServiceTest {
+
+    private static final LocalDateTime AHORA_OPERATIVO = LocalDateTime.of(2026, 4, 16, 10, 30);
 
     @Mock
     private PagoRepository pagoRepository;
@@ -52,18 +57,22 @@ class PagoServiceTest {
     private ImputacionPagoRepository imputacionPagoRepository;
 
     @Mock
-    private EventoPrestamoRepository eventoPrestamoRepository;
+    private EventoPrestamoService eventoPrestamoService;
 
     private PagoService pagoService;
+    private FechaOperativaService fechaOperativaService;
 
     @BeforeEach
     void setUp() {
+        Clock clock = Clock.fixed(AHORA_OPERATIVO.atZone(RelojSistema.ZONA_OPERATIVA).toInstant(), RelojSistema.ZONA_OPERATIVA);
+        fechaOperativaService = new FechaOperativaService(clock);
         pagoService = new PagoService(
                 pagoRepository,
                 prestamoRepository,
                 cuotaRepository,
                 imputacionPagoRepository,
-                eventoPrestamoRepository
+                eventoPrestamoService,
+                fechaOperativaService
         );
     }
 
@@ -101,7 +110,11 @@ class PagoServiceTest {
         assertEquals(new BigDecimal("100.00"), captorImputaciones.getValue().get(0).getMontoImputado());
 
         verify(cuotaRepository).saveAll(List.of(cuota1));
-        verify(eventoPrestamoRepository).save(org.mockito.ArgumentMatchers.any(EventoPrestamo.class));
+        verify(eventoPrestamoService).registrarPago(
+                org.mockito.ArgumentMatchers.eq(prestamo),
+                org.mockito.ArgumentMatchers.any(Pago.class),
+                org.mockito.ArgumentMatchers.eq(new BigDecimal("100.00"))
+        );
     }
 
     @Test
@@ -362,7 +375,11 @@ class PagoServiceTest {
         verify(cuotaRepository, never()).findByPrestamoIdOrderByNumeroCuotaAsc(18L);
         verify(cuotaRepository, never()).saveAll(org.mockito.ArgumentMatchers.anyList());
         verify(imputacionPagoRepository, never()).saveAll(org.mockito.ArgumentMatchers.anyList());
-        verify(eventoPrestamoRepository, never()).save(org.mockito.ArgumentMatchers.any(EventoPrestamo.class));
+        verify(eventoPrestamoService, never()).registrarPago(
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any()
+        );
     }
 
     @Test
@@ -555,6 +572,100 @@ class PagoServiceTest {
         verify(imputacionPagoRepository, times(1)).saveAll(org.mockito.ArgumentMatchers.anyList());
     }
 
+    @Test
+    void registrar_pagoConFechaPasada_deberiaSepararFechaDeNegocioYRegistroSistema() {
+        Prestamo prestamo = crearPrestamo(25L);
+        Cuota cuota = crearCuota(prestamo, 1, "100.00", "0.00", EstadoCuota.PENDIENTE);
+
+        when(prestamoRepository.findById(25L)).thenReturn(Optional.of(prestamo));
+        when(cuotaRepository.findByPrestamoIdOrderByNumeroCuotaAsc(25L)).thenReturn(List.of(cuota));
+        when(pagoRepository.save(org.mockito.ArgumentMatchers.any(Pago.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        RegistroPagoRequest request = new RegistroPagoRequest(
+                25L,
+                LocalDate.of(2026, 4, 10),
+                new BigDecimal("100.00"),
+                null,
+                null,
+                null
+        );
+
+        PagoResponse response = pagoService.registrar(request, null);
+
+        ArgumentCaptor<Pago> captorPago = ArgumentCaptor.forClass(Pago.class);
+        verify(pagoRepository).save(captorPago.capture());
+
+        Pago pagoGuardado = captorPago.getValue();
+        assertEquals(LocalDate.of(2026, 4, 10), pagoGuardado.getFechaPago());
+        assertEquals(LocalDate.of(2026, 4, 10), pagoGuardado.getFechaEfectivaCobro());
+        assertEquals(LocalDate.of(2026, 4, 10), pagoGuardado.getFechaContable());
+        assertEquals(AHORA_OPERATIVO, pagoGuardado.getRegistradoEn());
+        assertEquals(AHORA_OPERATIVO, response.registradoEn());
+
+        ArgumentCaptor<List<ImputacionPago>> captorImputaciones = ArgumentCaptor.forClass(List.class);
+        verify(imputacionPagoRepository).saveAll(captorImputaciones.capture());
+        ImputacionPago imputacion = captorImputaciones.getValue().getFirst();
+        assertEquals(LocalDate.of(2026, 4, 10), imputacion.getFechaImputacion());
+        assertEquals(AHORA_OPERATIVO, imputacion.getRegistradoEn());
+    }
+
+    @Test
+    void registrar_pagoConFechaActual_deberiaUsarHoyOperativoComoFechaContable() {
+        Prestamo prestamo = crearPrestamo(27L);
+        Cuota cuota = crearCuota(prestamo, 1, "100.00", "0.00", EstadoCuota.PENDIENTE);
+
+        when(prestamoRepository.findById(27L)).thenReturn(Optional.of(prestamo));
+        when(cuotaRepository.findByPrestamoIdOrderByNumeroCuotaAsc(27L)).thenReturn(List.of(cuota));
+        when(pagoRepository.save(org.mockito.ArgumentMatchers.any(Pago.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        RegistroPagoRequest request = new RegistroPagoRequest(
+                27L,
+                fechaOperativaService.hoy(),
+                new BigDecimal("100.00"),
+                null,
+                null,
+                null
+        );
+
+        PagoResponse response = pagoService.registrar(request, null);
+
+        assertEquals(LocalDate.of(2026, 4, 16), response.fechaPago());
+        assertEquals(LocalDate.of(2026, 4, 16), response.fechaEfectivaCobro());
+        assertEquals(LocalDate.of(2026, 4, 16), response.fechaContable());
+        assertEquals(AHORA_OPERATIVO, response.registradoEn());
+    }
+
+    @Test
+    void anular_pagoRegistrado_deberiaRevertirCuotaYRegistrarFechaDeAnulacion() {
+        Prestamo prestamo = crearPrestamo(26L);
+        Cuota cuota = crearCuota(prestamo, 1, "100.00", "100.00", EstadoCuota.PAGADA);
+        Pago pago = crearPago(prestamo, 501L, LocalDate.of(2026, 4, 10), "100.00", EstadoPago.REGISTRADO);
+        ImputacionPago imputacion = new ImputacionPago();
+        imputacion.setPago(pago);
+        imputacion.setCuota(cuota);
+        imputacion.setMontoImputado(new BigDecimal("100.00"));
+        imputacion.setFechaImputacion(LocalDate.of(2026, 4, 10));
+
+        when(prestamoRepository.findById(26L)).thenReturn(Optional.of(prestamo));
+        when(pagoRepository.findByIdAndPrestamoId(501L, 26L)).thenReturn(Optional.of(pago));
+        when(imputacionPagoRepository.findByPagoId(501L)).thenReturn(List.of(imputacion));
+        when(cuotaRepository.findByPrestamoIdOrderByNumeroCuotaAsc(26L)).thenReturn(List.of(cuota));
+
+        PagoResponse response = pagoService.anular(26L, 501L);
+
+        assertEquals(EstadoPago.ANULADO, pago.getEstado());
+        assertEquals(AHORA_OPERATIVO, pago.getAnuladoEn());
+        assertEquals("Sin motivo informado", pago.getMotivoAnulacion());
+        assertEquals(AHORA_OPERATIVO, response.anuladoEn());
+        assertEquals(new BigDecimal("0.00"), cuota.getMontoPagado());
+        assertEquals(EstadoCuota.PENDIENTE, cuota.getEstado());
+
+        verify(imputacionPagoRepository).deleteAll(List.of(imputacion));
+        verify(eventoPrestamoService).registrarAnulacionPago(prestamo, pago);
+    }
+
     private Prestamo crearPrestamo(Long id) {
         Prestamo prestamo = new Prestamo();
 
@@ -586,6 +697,16 @@ class PagoServiceTest {
         return cuota;
     }
 
+    private Pago crearPago(Prestamo prestamo, Long id, LocalDate fechaPago, String monto, EstadoPago estado) {
+        Pago pago = new Pago();
+        setId(pago, id);
+        pago.setPrestamo(prestamo);
+        pago.setFechaPago(fechaPago);
+        pago.setMonto(new BigDecimal(monto));
+        pago.setEstado(estado);
+        return pago;
+    }
+
     private void setId(Prestamo prestamo, Long id) {
         try {
             Field field = Prestamo.class.getDeclaredField("id");
@@ -593,6 +714,16 @@ class PagoServiceTest {
             field.set(prestamo, id);
         } catch (ReflectiveOperationException e) {
             throw new IllegalStateException("No se pudo setear el id del préstamo en el test", e);
+        }
+    }
+
+    private void setId(Pago pago, Long id) {
+        try {
+            Field field = Pago.class.getDeclaredField("id");
+            field.setAccessible(true);
+            field.set(pago, id);
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException("No se pudo setear el id del pago en el test", e);
         }
     }
 }

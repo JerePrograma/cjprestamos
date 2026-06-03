@@ -38,6 +38,12 @@ public class EventoPrestamo extends EntidadAuditable {
     @Column(name = "fecha_evento", nullable = false)
     private LocalDateTime fechaEvento;
 
+    @Column(name = "ocurrido_en")
+    private LocalDateTime ocurridoEn;
+
+    @Column(name = "registrado_en")
+    private LocalDateTime registradoEn;
+
     public Long getId() {
         return id;
     }
@@ -72,5 +78,21 @@ public class EventoPrestamo extends EntidadAuditable {
 
     public void setFechaEvento(LocalDateTime fechaEvento) {
         this.fechaEvento = fechaEvento;
+    }
+
+    public LocalDateTime getOcurridoEn() {
+        return ocurridoEn;
+    }
+
+    public void setOcurridoEn(LocalDateTime ocurridoEn) {
+        this.ocurridoEn = ocurridoEn;
+    }
+
+    public LocalDateTime getRegistradoEn() {
+        return registradoEn;
+    }
+
+    public void setRegistradoEn(LocalDateTime registradoEn) {
+        this.registradoEn = registradoEn;
     }
 }

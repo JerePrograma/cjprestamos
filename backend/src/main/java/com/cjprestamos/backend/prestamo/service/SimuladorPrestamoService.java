@@ -1,6 +1,7 @@
 package com.cjprestamos.backend.prestamo.service;
 
 import com.cjprestamos.backend.common.model.MonedaUtils;
+import com.cjprestamos.backend.common.time.FechaOperativaService;
 import com.cjprestamos.backend.prestamo.dto.CalculoPrestamoEntrada;
 import com.cjprestamos.backend.prestamo.dto.CalculoPrestamoResultado;
 import com.cjprestamos.backend.prestamo.dto.SimulacionCuotaResponse;
@@ -33,9 +34,14 @@ public class SimuladorPrestamoService {
     private static final DateTimeFormatter FECHA_FORMATO = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private final CalculadoraPrestamoService calculadoraPrestamoService;
+    private final FechaOperativaService fechaOperativaService;
 
-    public SimuladorPrestamoService(CalculadoraPrestamoService calculadoraPrestamoService) {
+    public SimuladorPrestamoService(
+        CalculadoraPrestamoService calculadoraPrestamoService,
+        FechaOperativaService fechaOperativaService
+    ) {
         this.calculadoraPrestamoService = calculadoraPrestamoService;
+        this.fechaOperativaService = fechaOperativaService;
     }
 
     public SimulacionPrestamoResponse simular(SimulacionPrestamoRequest request) {
@@ -82,7 +88,7 @@ public class SimuladorPrestamoService {
 
             document.add(new Paragraph("CJPrestamos", marca));
             document.add(new Paragraph("Simulación de préstamo", titulo));
-            document.add(new Paragraph("Generado: " + LocalDate.now().format(FECHA_FORMATO), subtitulo));
+            document.add(new Paragraph("Generado: " + fechaOperativaService.hoy().format(FECHA_FORMATO), subtitulo));
             document.add(new Paragraph(" "));
             document.add(new Paragraph("Monto inicial: $" + simulacion.montoInicial(), valorResumen));
             document.add(new Paragraph("Interés aplicado: $" + simulacion.interesAplicado(), valorResumen));
