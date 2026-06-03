@@ -188,8 +188,8 @@ export function DashboardPage() {
       </div>
 
       <SectionCard
-        titulo="Exportar resumen PDF"
-        descripcion="Resumen ejecutivo y auditoría operativa del dashboard y control de caja."
+        titulo="Exportar reporte de período"
+        descripcion="Descarga un PDF con dinero cobrado, dinero prestado, cobros esperados, atrasos y movimientos del rango seleccionado."
       >
         <form
           className="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] md:items-end"
@@ -223,7 +223,7 @@ export function DashboardPage() {
             disabled={exportandoPdf}
             className="w-full md:w-auto"
           >
-            {exportandoPdf ? 'Exportando...' : 'Exportar PDF'}
+            {exportandoPdf ? 'Exportando...' : 'Descargar reporte PDF'}
           </Button>
         </form>
 

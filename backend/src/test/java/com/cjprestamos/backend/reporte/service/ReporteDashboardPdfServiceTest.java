@@ -6,7 +6,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.cjprestamos.backend.dashboard.dto.DashboardControlCajaResponse;
 import com.cjprestamos.backend.reporte.dto.ReporteDashboardData;
 import com.cjprestamos.backend.reporte.dto.ReporteDashboardData.ReporteCarteraRiesgo;
+import com.cjprestamos.backend.reporte.dto.ReporteDashboardData.ReporteCobrosEsperadosPeriodo;
 import com.cjprestamos.backend.reporte.dto.ReporteDashboardData.ReporteResumenEjecutivo;
+import com.lowagie.text.pdf.PdfReader;
+import com.lowagie.text.pdf.parser.PdfTextExtractor;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -18,7 +22,7 @@ class ReporteDashboardPdfServiceTest {
     private final ReporteDashboardPdfService reporteDashboardPdfService = new ReporteDashboardPdfService();
 
     @Test
-    void generarPdf_deberiaRetornarBytesPdfNoVacios() {
+    void generarPdf_deberiaRetornarBytesPdfNoVacios() throws IOException {
         ReporteDashboardData reporte = new ReporteDashboardData(
             LocalDate.of(2026, 5, 1),
             LocalDate.of(2026, 5, 31),
@@ -34,6 +38,7 @@ class ReporteDashboardPdfServiceTest {
                 new BigDecimal("1000.00"),
                 new BigDecimal("500.00")
             ),
+            cobrosEsperadosVacios(),
             snapshotCero(),
             new ReporteCarteraRiesgo(
                 1L,
@@ -53,6 +58,28 @@ class ReporteDashboardPdfServiceTest {
 
         assertTrue(pdf.length > 100);
         assertArrayEquals(new byte[]{'%', 'P', 'D', 'F'}, new byte[]{pdf[0], pdf[1], pdf[2], pdf[3]});
+
+        String textoPdf = extraerTexto(pdf);
+        assertTrue(textoPdf.contains("Cómo leer este reporte"));
+        assertTrue(textoPdf.contains("Lectura rápida de caja"));
+        assertTrue(textoPdf.contains("Cobros esperados dentro del período"));
+        assertTrue(textoPdf.contains("No hay cuotas con vencimiento dentro del período seleccionado."));
+        assertTrue(textoPdf.contains("Foto actual del negocio"));
+        assertTrue(textoPdf.contains("Deudas pendientes y atrasos"));
+        assertTrue(textoPdf.contains("Movimientos del período"));
+        assertTrue(textoPdf.contains("Observaciones automáticas"));
+    }
+
+    private ReporteCobrosEsperadosPeriodo cobrosEsperadosVacios() {
+        return new ReporteCobrosEsperadosPeriodo(
+            BigDecimal.ZERO,
+            BigDecimal.ZERO,
+            BigDecimal.ZERO,
+            0L,
+            0L,
+            0L,
+            List.of()
+        );
     }
 
     private DashboardControlCajaResponse snapshotCero() {
@@ -75,5 +102,19 @@ class ReporteDashboardPdfServiceTest {
             BigDecimal.ZERO,
             BigDecimal.ZERO
         );
+    }
+
+    private String extraerTexto(byte[] pdf) throws IOException {
+        PdfReader reader = new PdfReader(pdf);
+        try {
+            PdfTextExtractor extractor = new PdfTextExtractor(reader);
+            StringBuilder texto = new StringBuilder();
+            for (int pagina = 1; pagina <= reader.getNumberOfPages(); pagina++) {
+                texto.append(extractor.getTextFromPage(pagina));
+            }
+            return texto.toString();
+        } finally {
+            reader.close();
+        }
     }
 }

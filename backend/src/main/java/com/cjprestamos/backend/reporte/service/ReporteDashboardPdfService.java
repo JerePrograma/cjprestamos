@@ -3,6 +3,8 @@ package com.cjprestamos.backend.reporte.service;
 import com.cjprestamos.backend.dashboard.dto.DashboardControlCajaResponse;
 import com.cjprestamos.backend.reporte.dto.ReporteDashboardData;
 import com.cjprestamos.backend.reporte.dto.ReporteDashboardData.ReporteCarteraRiesgo;
+import com.cjprestamos.backend.reporte.dto.ReporteDashboardData.ReporteCobrosEsperadosPeriodo;
+import com.cjprestamos.backend.reporte.dto.ReporteDashboardData.ReporteCuotaACobrar;
 import com.cjprestamos.backend.reporte.dto.ReporteDashboardData.ReporteCuotaVencida;
 import com.cjprestamos.backend.reporte.dto.ReporteDashboardData.ReporteMovimientoPago;
 import com.cjprestamos.backend.reporte.dto.ReporteDashboardData.ReporteMovimientoPrestamo;
@@ -60,9 +62,11 @@ public class ReporteDashboardPdfService {
             document.open();
 
             agregarEncabezado(document, reporte);
-            agregarResumenEjecutivo(document, reporte.resumenEjecutivo());
-            agregarSnapshot(document, reporte.snapshotControlCaja());
-            agregarCarteraYRiesgo(document, reporte.carteraRiesgo());
+            agregarComoLeerReporte(document);
+            agregarLecturaRapidaCaja(document, reporte.resumenEjecutivo(), reporte.cobrosEsperadosPeriodo());
+            agregarCobrosEsperadosPeriodo(document, reporte.cobrosEsperadosPeriodo());
+            agregarFotoActualNegocio(document, reporte.snapshotControlCaja());
+            agregarDeudasPendientesYAtrasos(document, reporte.carteraRiesgo());
             agregarMovimientos(document, reporte);
             agregarObservaciones(document, reporte.observaciones());
 
@@ -91,54 +95,113 @@ public class ReporteDashboardPdfService {
         document.add(separador);
     }
 
-    private void agregarResumenEjecutivo(Document document, ReporteResumenEjecutivo resumen) throws DocumentException {
-        agregarTituloSeccion(document, "1. Resumen ejecutivo del período");
+    private void agregarComoLeerReporte(Document document) throws DocumentException {
+        agregarTituloSeccion(document, "1. Cómo leer este reporte");
+        agregarParrafo(document, "- Dinero cobrado: pagos registrados entre las fechas elegidas.");
+        agregarParrafo(document, "- Dinero prestado: préstamos creados entre las fechas elegidas.");
+        agregarParrafo(document, "- Diferencia: cobrado menos prestado. Sirve para mirar movimiento de caja, no ganancia final.");
+        agregarParrafo(document, "- Cobros esperados: cuotas que vencen dentro del período elegido.");
+        agregarParrafo(document, "- Atrasos: cuotas que ya deberían estar pagadas y todavía tienen saldo pendiente.");
+    }
+
+    private void agregarLecturaRapidaCaja(
+        Document document,
+        ReporteResumenEjecutivo resumen,
+        ReporteCobrosEsperadosPeriodo cobrosEsperadosPeriodo
+    ) throws DocumentException {
+        agregarTituloSeccion(document, "2. Lectura rápida de caja");
         PdfPTable tabla = tablaClaveValor();
-        agregarFilaClaveValor(tabla, "Ingresos del período", moneda(resumen.ingresosPeriodo()));
-        agregarFilaClaveValor(tabla, "Egresos del período", moneda(resumen.egresosPeriodo()));
-        agregarFilaClaveValor(tabla, "Balance del período", moneda(resumen.balancePeriodo()));
+        agregarFilaClaveValor(tabla, "Dinero que entró en el período", moneda(resumen.ingresosPeriodo()));
+        agregarFilaClaveValor(tabla, "Dinero que salió en el período", moneda(resumen.egresosPeriodo()));
+        agregarFilaClaveValor(tabla, "Resultado del período", moneda(resumen.balancePeriodo()));
+        agregarFilaClaveValor(tabla, "Cobros esperados del período", moneda(cobrosEsperadosPeriodo.totalEsperado()));
+        agregarFilaClaveValor(tabla, "Cobros pendientes del período", moneda(cobrosEsperadosPeriodo.totalPendiente()));
         agregarFilaClaveValor(tabla, "Pagos registrados", String.valueOf(resumen.cantidadPagosRegistrados()));
         agregarFilaClaveValor(tabla, "Préstamos otorgados", String.valueOf(resumen.cantidadPrestamosOtorgados()));
         agregarFilaClaveValor(tabla, "Monto total prestado", moneda(resumen.montoTotalPrestado()));
         agregarFilaClaveValor(tabla, "Monto promedio prestado", moneda(resumen.montoPromedioPrestado()));
-        agregarFilaClaveValor(tabla, "Ticket promedio de pago", moneda(resumen.ticketPromedioPago()));
+        agregarFilaClaveValor(tabla, "Pago promedio", moneda(resumen.ticketPromedioPago()));
         document.add(tabla);
+
+        if (resumen.balancePeriodo().compareTo(BigDecimal.ZERO) > 0) {
+            agregarParrafo(document, "En este período entró más dinero del que salió.");
+        } else if (resumen.balancePeriodo().compareTo(BigDecimal.ZERO) < 0) {
+            agregarParrafo(document, "En este período salió más dinero del que entró.");
+        } else {
+            agregarParrafo(document, "En este período entró y salió el mismo monto.");
+        }
+
+        agregarParrafo(
+            document,
+            "El resultado del período no es ganancia pura. Es una comparación simple entre cobros registrados y dinero prestado."
+        );
     }
 
-    private void agregarSnapshot(Document document, DashboardControlCajaResponse snapshot) throws DocumentException {
-        agregarTituloSeccion(document, "2. Snapshot económico actual");
+    private void agregarCobrosEsperadosPeriodo(Document document, ReporteCobrosEsperadosPeriodo cobros) throws DocumentException {
+        agregarTituloSeccion(document, "3. Cobros esperados dentro del período");
+        PdfPTable tabla = tablaClaveValor();
+        agregarFilaClaveValor(tabla, "Total esperado a cobrar en el período", moneda(cobros.totalEsperado()));
+        agregarFilaClaveValor(tabla, "Total ya pagado sobre esas cuotas", moneda(cobros.totalPagado()));
+        agregarFilaClaveValor(tabla, "Total pendiente de esas cuotas", moneda(cobros.totalPendiente()));
+        agregarFilaClaveValor(tabla, "Cantidad de cuotas que vencen en el período", String.valueOf(cobros.cantidadCuotas()));
+        agregarFilaClaveValor(tabla, "Cuotas ya pagadas/completas", String.valueOf(cobros.cantidadCuotasCompletas()));
+        agregarFilaClaveValor(tabla, "Cuotas con saldo pendiente", String.valueOf(cobros.cantidadCuotasPendientes()));
+        document.add(tabla);
+
+        agregarSubtitulo(document, "Cuotas a cobrar en el período");
+        PdfPTable tablaCuotas = tabla(new float[]{1.05f, 1.55f, 1.45f, 0.65f, 1.15f, 1.05f, 1.15f, 1.05f},
+            "Vencimiento", "Persona", "Préstamo", "Cuota", "Esperado", "Pagado", "Pendiente", "Estado simple");
+        if (cobros.cuotasACobrar().isEmpty()) {
+            agregarFilaMensaje(tablaCuotas, 8, "No hay cuotas con vencimiento dentro del período seleccionado.");
+        } else {
+            for (ReporteCuotaACobrar cuota : cobros.cuotasACobrar()) {
+                tablaCuotas.addCell(celdaDato(fecha(cuota.fechaVencimiento()), textoChico));
+                tablaCuotas.addCell(celdaDato(cuota.persona(), textoChico));
+                tablaCuotas.addCell(celdaDato(cuota.prestamoReferencia(), textoChico));
+                tablaCuotas.addCell(celdaDato(cuota.numeroCuota() == null ? "-" : cuota.numeroCuota().toString(), textoChico));
+                tablaCuotas.addCell(celdaDato(moneda(cuota.montoEsperado()), textoChico));
+                tablaCuotas.addCell(celdaDato(moneda(cuota.montoPagado()), textoChico));
+                tablaCuotas.addCell(celdaDato(moneda(cuota.montoPendiente()), textoChico));
+                tablaCuotas.addCell(celdaDato(cuota.estadoSimple(), textoChico));
+            }
+        }
+        document.add(tablaCuotas);
+    }
+
+    private void agregarFotoActualNegocio(Document document, DashboardControlCajaResponse snapshot) throws DocumentException {
+        agregarTituloSeccion(document, "4. Foto actual del negocio");
         PdfPTable tabla = tablaClaveValor();
         agregarFilaClaveValor(tabla, "Caja disponible", moneda(snapshot.cajaDisponible()));
         agregarFilaClaveValor(tabla, "Inversión activa", moneda(snapshot.inversionActiva()));
         agregarFilaClaveValor(tabla, "Capital recuperado", moneda(snapshot.capitalRecuperado()));
         agregarFilaClaveValor(tabla, "Capital pendiente", moneda(snapshot.capitalPendiente()));
-        agregarFilaClaveValor(tabla, "Ganancia realizada", moneda(snapshot.gananciaRealizada()));
-        agregarFilaClaveValor(tabla, "Ganancia proyectada", moneda(snapshot.gananciaProyectada()));
-        agregarFilaClaveValor(tabla, "Ingresos mes actual", moneda(snapshot.ingresosMesActual()));
-        agregarFilaClaveValor(tabla, "Egresos mes actual", moneda(snapshot.egresosMesActual()));
-        agregarFilaClaveValor(tabla, "Balance mes actual", moneda(snapshot.balanceMesActual()));
-        agregarFilaClaveValor(tabla, "Proyección de cobro 30 días", moneda(snapshot.proyeccionCobro30Dias()));
-        agregarFilaClaveValor(tabla, "Proyección de cobro 60 días", moneda(snapshot.proyeccionCobro60Dias()));
-        agregarFilaClaveValor(tabla, "Proyección de cobro 90 días", moneda(snapshot.proyeccionCobro90Dias()));
-        agregarFilaClaveValor(tabla, "Cartera en mora", moneda(snapshot.carteraEnMora()));
-        agregarFilaClaveValor(tabla, "Cuotas pendientes", String.valueOf(snapshot.cuotasPendientes()));
+        agregarFilaClaveValor(tabla, "Ganancia ya cobrada", moneda(snapshot.gananciaRealizada()));
+        agregarFilaClaveValor(tabla, "Ganancia estimada pendiente", moneda(snapshot.gananciaProyectada()));
+        agregarFilaClaveValor(tabla, "Dinero cobrado mes actual", moneda(snapshot.ingresosMesActual()));
+        agregarFilaClaveValor(tabla, "Dinero prestado mes actual", moneda(snapshot.egresosMesActual()));
+        agregarFilaClaveValor(tabla, "Diferencia mes actual", moneda(snapshot.balanceMesActual()));
+        agregarFilaClaveValor(tabla, "Cobro estimado próximos 30 días", moneda(snapshot.proyeccionCobro30Dias()));
+        agregarFilaClaveValor(tabla, "Cobro estimado próximos 60 días", moneda(snapshot.proyeccionCobro60Dias()));
+        agregarFilaClaveValor(tabla, "Cobro estimado próximos 90 días", moneda(snapshot.proyeccionCobro90Dias()));
+        agregarFilaClaveValor(tabla, "Total atrasado actual", moneda(snapshot.carteraEnMora()));
+        agregarFilaClaveValor(tabla, "Cuotas todavía pendientes", String.valueOf(snapshot.cuotasPendientes()));
         agregarFilaClaveValor(tabla, "Cuotas que vencen próximos 7 días", String.valueOf(snapshot.cuotasVencenProximos7Dias()));
-        agregarFilaClaveValor(tabla, "% recupero capital", porcentaje(snapshot.recuperoCapitalPorcentaje()));
-        agregarFilaClaveValor(tabla, "% rendimiento esperado", porcentaje(snapshot.rendimientoEsperadoPorcentaje()));
+        agregarFilaClaveValor(tabla, "% de capital recuperado", porcentaje(snapshot.recuperoCapitalPorcentaje()));
+        agregarFilaClaveValor(tabla, "% de rendimiento estimado", porcentaje(snapshot.rendimientoEsperadoPorcentaje()));
         document.add(tabla);
     }
 
-    private void agregarCarteraYRiesgo(Document document, ReporteCarteraRiesgo riesgo) throws DocumentException {
-        agregarTituloSeccion(document, "3. Cartera y riesgo");
+    private void agregarDeudasPendientesYAtrasos(Document document, ReporteCarteraRiesgo riesgo) throws DocumentException {
+        agregarTituloSeccion(document, "5. Deudas pendientes y atrasos");
         PdfPTable tabla = tablaClaveValor();
-        agregarFilaClaveValor(tabla, "Cuotas pendientes al cierre", String.valueOf(riesgo.cuotasPendientesAlCierre()));
-        agregarFilaClaveValor(tabla, "Cuotas vencidas al hasta", String.valueOf(riesgo.cuotasVencidasAlHasta()));
-        agregarFilaClaveValor(tabla, "Monto total en mora al hasta", moneda(riesgo.montoTotalMoraAlHasta()));
+        agregarFilaClaveValor(tabla, "Cuotas todavía pendientes al cierre", String.valueOf(riesgo.cuotasPendientesAlCierre()));
+        agregarFilaClaveValor(tabla, "Cuotas atrasadas al cierre del período", String.valueOf(riesgo.cuotasVencidasAlHasta()));
+        agregarFilaClaveValor(tabla, "Total atrasado al cierre del período", moneda(riesgo.montoTotalMoraAlHasta()));
         agregarFilaClaveValor(tabla, "Préstamos activos", String.valueOf(riesgo.prestamosActivos()));
         agregarFilaClaveValor(tabla, "Préstamos finalizados/cancelados", String.valueOf(riesgo.prestamosFinalizadosCancelados()));
         document.add(tabla);
 
-        agregarSubtitulo(document, "Préstamos con mayor saldo pendiente (top 10)");
+        agregarSubtitulo(document, "Préstamos con mayor saldo pendiente (hasta 10)");
         PdfPTable tablaSaldos = tabla(new float[]{2.1f, 2.3f, 1.3f, 1.6f}, "Préstamo", "Persona", "Estado", "Saldo pendiente");
         if (riesgo.prestamosMayorSaldoPendiente().isEmpty()) {
             agregarFilaSinDatos(tablaSaldos, 4);
@@ -152,7 +215,7 @@ public class ReporteDashboardPdfService {
         }
         document.add(tablaSaldos);
 
-        agregarSubtitulo(document, "Cuotas vencidas más relevantes (top 10 por monto pendiente)");
+        agregarSubtitulo(document, "Cuotas atrasadas más relevantes (hasta 10 por monto pendiente)");
         PdfPTable tablaCuotas = tabla(new float[]{1.3f, 1.8f, 2.0f, 0.9f, 1.6f}, "Vencimiento", "Préstamo", "Persona", "Cuota", "Pendiente");
         if (riesgo.cuotasVencidasRelevantes().isEmpty()) {
             agregarFilaSinDatos(tablaCuotas, 5);
@@ -169,8 +232,8 @@ public class ReporteDashboardPdfService {
     }
 
     private void agregarMovimientos(Document document, ReporteDashboardData reporte) throws DocumentException {
-        agregarTituloSeccion(document, "4. Movimientos del período");
-        agregarSubtitulo(document, "Préstamos otorgados en el período (hasta 20 registros)");
+        agregarTituloSeccion(document, "6. Movimientos del período");
+        agregarSubtitulo(document, "Dinero prestado en el período (hasta 20 registros)");
         PdfPTable tablaPrestamos = tabla(new float[]{1.2f, 1.8f, 2.1f, 1.4f, 0.8f, 1.2f},
             "Fecha base", "Referencia", "Persona", "Monto inicial", "Cuotas", "Estado");
         if (reporte.prestamosOtorgados().isEmpty()) {
@@ -187,7 +250,7 @@ public class ReporteDashboardPdfService {
         }
         document.add(tablaPrestamos);
 
-        agregarSubtitulo(document, "Pagos registrados en el período (hasta 20 registros)");
+        agregarSubtitulo(document, "Dinero cobrado en el período (hasta 20 registros)");
         PdfPTable tablaPagos = tabla(new float[]{1.2f, 2.3f, 2.0f, 1.3f, 1.1f},
             "Fecha", "Persona", "Préstamo", "Monto", "Estado");
         if (reporte.pagosRegistrados().isEmpty()) {
@@ -205,7 +268,7 @@ public class ReporteDashboardPdfService {
     }
 
     private void agregarObservaciones(Document document, List<String> observaciones) throws DocumentException {
-        agregarTituloSeccion(document, "5. Observaciones automáticas");
+        agregarTituloSeccion(document, "7. Observaciones automáticas");
         if (observaciones == null || observaciones.isEmpty()) {
             document.add(new Paragraph("Sin observaciones automáticas relevantes para el período.", texto));
             return;
@@ -222,6 +285,12 @@ public class ReporteDashboardPdfService {
         Paragraph paragraph = new Paragraph(textoSeccion, seccion);
         paragraph.setSpacingBefore(10f);
         paragraph.setSpacingAfter(6f);
+        document.add(paragraph);
+    }
+
+    private void agregarParrafo(Document document, String valor) throws DocumentException {
+        Paragraph paragraph = new Paragraph(textoSeguro(valor), texto);
+        paragraph.setSpacingAfter(3f);
         document.add(paragraph);
     }
 
@@ -277,7 +346,11 @@ public class ReporteDashboardPdfService {
     }
 
     private void agregarFilaSinDatos(PdfPTable tabla, int columnas) {
-        PdfPCell cell = celdaDato("Sin datos para el período", texto);
+        agregarFilaMensaje(tabla, columnas, "Sin datos para el período");
+    }
+
+    private void agregarFilaMensaje(PdfPTable tabla, int columnas, String mensaje) {
+        PdfPCell cell = celdaDato(mensaje, texto);
         cell.setColspan(columnas);
         tabla.addCell(cell);
     }

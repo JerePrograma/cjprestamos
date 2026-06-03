@@ -78,6 +78,7 @@ class ReporteDashboardServiceTest {
 
         when(prestamoRepository.findByFechaBaseBetweenOrderByFechaBaseAscIdAsc(desde, hasta)).thenReturn(List.of(prestamo));
         when(pagoRepository.findRegistradosPorFechaContableOPagoEntre(EstadoPago.REGISTRADO, desde, hasta)).thenReturn(List.of(pago));
+        when(cuotaRepository.findByFechaVencimientoBetweenConPrestamoYPersona(desde, hasta)).thenReturn(List.of(cuota));
         when(dashboardService.obtenerControlCaja()).thenReturn(snapshotCero());
         when(prestamoRepository.findByEstadoOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO)).thenReturn(List.of(prestamo));
         when(cuotaRepository.findByPrestamoIdIn(List.of(1L))).thenReturn(List.of(cuota));
@@ -97,6 +98,14 @@ class ReporteDashboardServiceTest {
         assertEquals(1L, reporte.carteraRiesgo().cuotasVencidasAlHasta());
         assertEquals(new BigDecimal("700.00"), reporte.carteraRiesgo().montoTotalMoraAlHasta());
         assertEquals(2L, reporte.carteraRiesgo().prestamosFinalizadosCancelados());
+        assertEquals(new BigDecimal("1200.00"), reporte.cobrosEsperadosPeriodo().totalEsperado());
+        assertEquals(new BigDecimal("500.00"), reporte.cobrosEsperadosPeriodo().totalPagado());
+        assertEquals(new BigDecimal("700.00"), reporte.cobrosEsperadosPeriodo().totalPendiente());
+        assertEquals(1L, reporte.cobrosEsperadosPeriodo().cantidadCuotas());
+        assertEquals(0L, reporte.cobrosEsperadosPeriodo().cantidadCuotasCompletas());
+        assertEquals(1L, reporte.cobrosEsperadosPeriodo().cantidadCuotasPendientes());
+        assertEquals("Ana Perez", reporte.cobrosEsperadosPeriodo().cuotasACobrar().get(0).persona());
+        assertEquals("P-001", reporte.cobrosEsperadosPeriodo().cuotasACobrar().get(0).prestamoReferencia());
         assertEquals("operadora", reporte.usuarioAutenticado());
         assertEquals(AHORA_OPERATIVO, reporte.generadoEn());
     }
@@ -108,6 +117,7 @@ class ReporteDashboardServiceTest {
 
         when(prestamoRepository.findByFechaBaseBetweenOrderByFechaBaseAscIdAsc(desde, hasta)).thenReturn(List.of());
         when(pagoRepository.findRegistradosPorFechaContableOPagoEntre(EstadoPago.REGISTRADO, desde, hasta)).thenReturn(List.of());
+        when(cuotaRepository.findByFechaVencimientoBetweenConPrestamoYPersona(desde, hasta)).thenReturn(List.of());
         when(dashboardService.obtenerControlCaja()).thenReturn(snapshotCero());
         when(prestamoRepository.findByEstadoOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO)).thenReturn(List.of());
         when(prestamoRepository.countByEstadoIn(List.of(EstadoPrestamo.FINALIZADO, EstadoPrestamo.CANCELADO))).thenReturn(0L);
@@ -121,7 +131,43 @@ class ReporteDashboardServiceTest {
         assertEquals(0L, reporte.resumenEjecutivo().cantidadPrestamosOtorgados());
         assertEquals(0, reporte.prestamosOtorgados().size());
         assertEquals(0, reporte.pagosRegistrados().size());
-        assertEquals("No se registraron préstamos ni pagos dentro del período seleccionado.", reporte.observaciones().get(0));
+        assertEquals(new BigDecimal("0.00"), reporte.cobrosEsperadosPeriodo().totalEsperado());
+        assertEquals(new BigDecimal("0.00"), reporte.cobrosEsperadosPeriodo().totalPagado());
+        assertEquals(new BigDecimal("0.00"), reporte.cobrosEsperadosPeriodo().totalPendiente());
+        assertEquals(0L, reporte.cobrosEsperadosPeriodo().cantidadCuotas());
+        assertEquals(0, reporte.cobrosEsperadosPeriodo().cuotasACobrar().size());
+        assertEquals("No hubo movimientos ni vencimientos relevantes en el período seleccionado.", reporte.observaciones().get(0));
+    }
+
+    @Test
+    void obtenerReporte_conCuotasDelPeriodo_deberiaCalcularPendientesYOrdenarTabla() {
+        LocalDate desde = LocalDate.of(2026, 5, 1);
+        LocalDate hasta = LocalDate.of(2026, 5, 31);
+        Prestamo prestamo = crearPrestamo(8L, "Luis Gomez", "P-008", "1000.00", EstadoPrestamo.ACTIVO);
+        Cuota cuotaPagada = crearCuota(prestamo, 1, "100.00", "130.00", LocalDate.of(2026, 5, 10));
+        Cuota cuotaParcial = crearCuota(prestamo, 2, "200.00", "50.00", LocalDate.of(2026, 5, 10));
+        Cuota cuotaPendiente = crearCuota(prestamo, 3, "50.00", "0.00", LocalDate.of(2026, 5, 11));
+
+        when(prestamoRepository.findByFechaBaseBetweenOrderByFechaBaseAscIdAsc(desde, hasta)).thenReturn(List.of());
+        when(pagoRepository.findRegistradosPorFechaContableOPagoEntre(EstadoPago.REGISTRADO, desde, hasta)).thenReturn(List.of());
+        when(cuotaRepository.findByFechaVencimientoBetweenConPrestamoYPersona(desde, hasta))
+            .thenReturn(List.of(cuotaPagada, cuotaParcial, cuotaPendiente));
+        when(dashboardService.obtenerControlCaja()).thenReturn(snapshotCero());
+        when(prestamoRepository.findByEstadoOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO)).thenReturn(List.of());
+        when(prestamoRepository.countByEstadoIn(List.of(EstadoPrestamo.FINALIZADO, EstadoPrestamo.CANCELADO))).thenReturn(0L);
+
+        ReporteDashboardData reporte = reporteDashboardService.obtenerReporte(desde, hasta, null);
+
+        assertEquals(new BigDecimal("350.00"), reporte.cobrosEsperadosPeriodo().totalEsperado());
+        assertEquals(new BigDecimal("180.00"), reporte.cobrosEsperadosPeriodo().totalPagado());
+        assertEquals(new BigDecimal("200.00"), reporte.cobrosEsperadosPeriodo().totalPendiente());
+        assertEquals(3L, reporte.cobrosEsperadosPeriodo().cantidadCuotas());
+        assertEquals(1L, reporte.cobrosEsperadosPeriodo().cantidadCuotasCompletas());
+        assertEquals(2L, reporte.cobrosEsperadosPeriodo().cantidadCuotasPendientes());
+        assertEquals(2, reporte.cobrosEsperadosPeriodo().cuotasACobrar().get(0).numeroCuota());
+        assertEquals(new BigDecimal("150.00"), reporte.cobrosEsperadosPeriodo().cuotasACobrar().get(0).montoPendiente());
+        assertEquals(1, reporte.cobrosEsperadosPeriodo().cuotasACobrar().get(1).numeroCuota());
+        assertEquals(new BigDecimal("0.00"), reporte.cobrosEsperadosPeriodo().cuotasACobrar().get(1).montoPendiente());
     }
 
     @Test
@@ -133,6 +179,7 @@ class ReporteDashboardServiceTest {
 
         when(prestamoRepository.findByFechaBaseBetweenOrderByFechaBaseAscIdAsc(desde, hasta)).thenReturn(List.of());
         when(pagoRepository.findRegistradosPorFechaContableOPagoEntre(EstadoPago.REGISTRADO, desde, hasta)).thenReturn(List.of(pago));
+        when(cuotaRepository.findByFechaVencimientoBetweenConPrestamoYPersona(desde, hasta)).thenReturn(List.of());
         when(dashboardService.obtenerControlCaja()).thenReturn(snapshotCero());
         when(prestamoRepository.findByEstadoOrderByCreatedAtDesc(EstadoPrestamo.ACTIVO)).thenReturn(List.of());
         when(prestamoRepository.countByEstadoIn(List.of(EstadoPrestamo.FINALIZADO, EstadoPrestamo.CANCELADO))).thenReturn(0L);

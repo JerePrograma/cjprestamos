@@ -12,6 +12,7 @@ public record ReporteDashboardData(
     LocalDateTime generadoEn,
     String usuarioAutenticado,
     ReporteResumenEjecutivo resumenEjecutivo,
+    ReporteCobrosEsperadosPeriodo cobrosEsperadosPeriodo,
     DashboardControlCajaResponse snapshotControlCaja,
     ReporteCarteraRiesgo carteraRiesgo,
     List<ReporteMovimientoPrestamo> prestamosOtorgados,
@@ -28,6 +29,29 @@ public record ReporteDashboardData(
         BigDecimal montoTotalPrestado,
         BigDecimal montoPromedioPrestado,
         BigDecimal ticketPromedioPago
+    ) {
+    }
+
+    public record ReporteCobrosEsperadosPeriodo(
+        BigDecimal totalEsperado,
+        BigDecimal totalPagado,
+        BigDecimal totalPendiente,
+        long cantidadCuotas,
+        long cantidadCuotasCompletas,
+        long cantidadCuotasPendientes,
+        List<ReporteCuotaACobrar> cuotasACobrar
+    ) {
+    }
+
+    public record ReporteCuotaACobrar(
+        LocalDate fechaVencimiento,
+        String persona,
+        String prestamoReferencia,
+        Integer numeroCuota,
+        BigDecimal montoEsperado,
+        BigDecimal montoPagado,
+        BigDecimal montoPendiente,
+        String estadoSimple
     ) {
     }
 

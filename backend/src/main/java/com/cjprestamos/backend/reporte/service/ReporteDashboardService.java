@@ -3,6 +3,7 @@ package com.cjprestamos.backend.reporte.service;
 import com.cjprestamos.backend.common.model.MonedaUtils;
 import com.cjprestamos.backend.common.time.FechaOperativaService;
 import com.cjprestamos.backend.cuota.model.Cuota;
+import com.cjprestamos.backend.cuota.model.enums.EstadoCuota;
 import com.cjprestamos.backend.cuota.repository.CuotaRepository;
 import com.cjprestamos.backend.dashboard.dto.DashboardControlCajaResponse;
 import com.cjprestamos.backend.dashboard.service.DashboardService;
@@ -18,6 +19,8 @@ import com.cjprestamos.backend.prestamo.repository.PrestamoRepository;
 import com.cjprestamos.backend.prestamo.service.CalculadoraPrestamoService;
 import com.cjprestamos.backend.reporte.dto.ReporteDashboardData;
 import com.cjprestamos.backend.reporte.dto.ReporteDashboardData.ReporteCarteraRiesgo;
+import com.cjprestamos.backend.reporte.dto.ReporteDashboardData.ReporteCobrosEsperadosPeriodo;
+import com.cjprestamos.backend.reporte.dto.ReporteDashboardData.ReporteCuotaACobrar;
 import com.cjprestamos.backend.reporte.dto.ReporteDashboardData.ReporteCuotaVencida;
 import com.cjprestamos.backend.reporte.dto.ReporteDashboardData.ReporteMovimientoPago;
 import com.cjprestamos.backend.reporte.dto.ReporteDashboardData.ReporteMovimientoPrestamo;
@@ -25,11 +28,13 @@ import com.cjprestamos.backend.reporte.dto.ReporteDashboardData.ReportePrestamoS
 import com.cjprestamos.backend.reporte.dto.ReporteDashboardData.ReporteResumenEjecutivo;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
@@ -43,6 +48,8 @@ public class ReporteDashboardService {
 
     private static final int LIMITE_MOVIMIENTOS = 20;
     private static final int LIMITE_RIESGO = 10;
+    private static final int LIMITE_CUOTAS_A_COBRAR = 20;
+    private static final Locale ARGENTINA = Locale.forLanguageTag("es-AR");
 
     private final DashboardService dashboardService;
     private final PrestamoRepository prestamoRepository;
@@ -72,14 +79,17 @@ public class ReporteDashboardService {
 
         List<Prestamo> prestamosPeriodo = prestamoRepository.findByFechaBaseBetweenOrderByFechaBaseAscIdAsc(desde, hasta);
         List<Pago> pagosPeriodo = pagoRepository.findRegistradosPorFechaContableOPagoEntre(EstadoPago.REGISTRADO, desde, hasta);
+        List<Cuota> cuotasConVencimientoPeriodo = cuotaRepository.findByFechaVencimientoBetweenConPrestamoYPersona(desde, hasta);
         DashboardControlCajaResponse snapshotControlCaja = dashboardService.obtenerControlCaja();
         ReporteResumenEjecutivo resumenEjecutivo = calcularResumenEjecutivo(prestamosPeriodo, pagosPeriodo);
+        ReporteCobrosEsperadosPeriodo cobrosEsperadosPeriodo = calcularCobrosEsperadosPeriodo(cuotasConVencimientoPeriodo);
         ReporteCarteraRiesgo carteraRiesgo = calcularCarteraRiesgo(hasta);
         List<ReporteMovimientoPrestamo> movimientosPrestamos = mapearPrestamosPeriodo(prestamosPeriodo);
         List<ReporteMovimientoPago> movimientosPagos = mapearPagosPeriodo(pagosPeriodo);
         List<String> observaciones = armarObservaciones(
             resumenEjecutivo,
             carteraRiesgo,
+            cobrosEsperadosPeriodo,
             prestamosPeriodo.isEmpty() && pagosPeriodo.isEmpty()
         );
 
@@ -89,6 +99,7 @@ public class ReporteDashboardService {
             fechaOperativaService.ahora(),
             normalizarTexto(usuarioAutenticado),
             resumenEjecutivo,
+            cobrosEsperadosPeriodo,
             snapshotControlCaja,
             carteraRiesgo,
             movimientosPrestamos,
@@ -130,6 +141,60 @@ public class ReporteDashboardService {
             montoTotalPrestado,
             promedio(montoTotalPrestado, prestamosPeriodo.size()),
             promedio(ingresosPeriodo, pagosPeriodo.size())
+        );
+    }
+
+    private ReporteCobrosEsperadosPeriodo calcularCobrosEsperadosPeriodo(List<Cuota> cuotasConVencimientoPeriodo) {
+        List<ReporteCuotaACobrar> cuotasOrdenadas = cuotasConVencimientoPeriodo.stream()
+            .map(this::mapearCuotaACobrar)
+            .sorted(Comparator
+                .comparing(ReporteCuotaACobrar::fechaVencimiento)
+                .thenComparing(ReporteCuotaACobrar::montoPendiente, Comparator.reverseOrder()))
+            .toList();
+
+        BigDecimal totalEsperado = cuotasOrdenadas.stream()
+            .map(ReporteCuotaACobrar::montoEsperado)
+            .reduce(cero(), this::sumar);
+        BigDecimal totalPagado = cuotasOrdenadas.stream()
+            .map(ReporteCuotaACobrar::montoPagado)
+            .reduce(cero(), this::sumar);
+        BigDecimal totalPendiente = cuotasOrdenadas.stream()
+            .map(ReporteCuotaACobrar::montoPendiente)
+            .reduce(cero(), this::sumar);
+        long cantidadCuotasCompletas = cuotasOrdenadas.stream()
+            .filter(cuota -> cuota.montoPendiente().compareTo(cero()) == 0)
+            .count();
+        long cantidadCuotasPendientes = cuotasOrdenadas.stream()
+            .filter(cuota -> cuota.montoPendiente().compareTo(cero()) > 0)
+            .count();
+
+        return new ReporteCobrosEsperadosPeriodo(
+            totalEsperado,
+            totalPagado,
+            totalPendiente,
+            cuotasOrdenadas.size(),
+            cantidadCuotasCompletas,
+            cantidadCuotasPendientes,
+            cuotasOrdenadas.stream()
+                .limit(LIMITE_CUOTAS_A_COBRAR)
+                .toList()
+        );
+    }
+
+    private ReporteCuotaACobrar mapearCuotaACobrar(Cuota cuota) {
+        BigDecimal montoEsperado = valorSeguro(cuota.getMontoProgramado());
+        BigDecimal montoPagado = valorSeguro(cuota.getMontoPagado());
+        BigDecimal montoPendiente = max(restar(montoEsperado, montoPagado), cero());
+
+        return new ReporteCuotaACobrar(
+            cuota.getFechaVencimiento(),
+            nombrePersona(cuota.getPrestamo().getPersona()),
+            referenciaPrestamo(cuota.getPrestamo()),
+            cuota.getNumeroCuota(),
+            montoEsperado,
+            montoPagado,
+            montoPendiente,
+            estadoSimpleCuota(cuota, montoPendiente, montoPagado)
         );
     }
 
@@ -236,24 +301,47 @@ public class ReporteDashboardService {
     private List<String> armarObservaciones(
         ReporteResumenEjecutivo resumenEjecutivo,
         ReporteCarteraRiesgo carteraRiesgo,
+        ReporteCobrosEsperadosPeriodo cobrosEsperadosPeriodo,
         boolean sinMovimientos
     ) {
         List<String> observaciones = new ArrayList<>();
 
         if (resumenEjecutivo.balancePeriodo().compareTo(cero()) < 0) {
-            observaciones.add("El balance del período fue negativo: hubo más egresos que ingresos registrados.");
+            observaciones.add("En este período salió más dinero del que entró: la diferencia fue de "
+                + moneda(resumenEjecutivo.balancePeriodo().abs()) + ".");
         }
 
         if (carteraRiesgo.montoTotalMoraAlHasta().compareTo(cero()) > 0) {
-            observaciones.add("Hay cartera en mora al cierre por " + carteraRiesgo.montoTotalMoraAlHasta() + ".");
+            observaciones.add("Al cierre del período hay " + moneda(carteraRiesgo.montoTotalMoraAlHasta())
+                + " atrasados para revisar.");
         }
 
         if (carteraRiesgo.cuotasVencidasAlHasta() > 0) {
-            observaciones.add("Hay " + carteraRiesgo.cuotasVencidasAlHasta() + " cuotas vencidas al cierre del período.");
+            observaciones.add("Hay " + carteraRiesgo.cuotasVencidasAlHasta()
+                + " cuotas atrasadas al cierre del período.");
         }
 
-        if (sinMovimientos) {
-            observaciones.add("No se registraron préstamos ni pagos dentro del período seleccionado.");
+        if (cobrosEsperadosPeriodo.totalPendiente().compareTo(cero()) > 0) {
+            observaciones.add("Quedan " + moneda(cobrosEsperadosPeriodo.totalPendiente())
+                + " por cobrar de cuotas que vencen dentro del período seleccionado.");
+        }
+
+        if (
+            cobrosEsperadosPeriodo.totalEsperado().compareTo(cero()) > 0
+                && resumenEjecutivo.ingresosPeriodo().compareTo(cobrosEsperadosPeriodo.totalEsperado()) < 0
+        ) {
+            observaciones.add("Se cobró menos de lo esperado para este período. Revisar cuotas pendientes.");
+        }
+
+        if (
+            cobrosEsperadosPeriodo.cantidadCuotasPendientes() > 0
+                && carteraRiesgo.montoTotalMoraAlHasta().compareTo(cero()) == 0
+        ) {
+            observaciones.add("Hay cuotas por cobrar en el período, pero no se detectan atrasos al cierre.");
+        }
+
+        if (sinMovimientos && cobrosEsperadosPeriodo.cantidadCuotas() == 0) {
+            observaciones.add("No hubo movimientos ni vencimientos relevantes en el período seleccionado.");
         }
 
         if (observaciones.isEmpty()) {
@@ -286,6 +374,22 @@ public class ReporteDashboardService {
 
     private BigDecimal saldoCuota(Cuota cuota) {
         return max(restar(cuota.getMontoProgramado(), valorSeguro(cuota.getMontoPagado())), cero());
+    }
+
+    private String estadoSimpleCuota(Cuota cuota, BigDecimal montoPendiente, BigDecimal montoPagado) {
+        if (montoPendiente.compareTo(cero()) == 0) {
+            return "Pagada";
+        }
+
+        if (cuota.getEstado() == EstadoCuota.VENCIDA) {
+            return "Atrasada";
+        }
+
+        if (montoPagado.compareTo(cero()) > 0) {
+            return "Parcial";
+        }
+
+        return "Pendiente";
     }
 
     private LocalDate fechaContablePago(Pago pago) {
@@ -344,6 +448,14 @@ public class ReporteDashboardService {
 
     private BigDecimal max(BigDecimal a, BigDecimal b) {
         return escalar(a.max(b));
+    }
+
+    private String moneda(BigDecimal valor) {
+        NumberFormat formato = NumberFormat.getCurrencyInstance(ARGENTINA);
+        formato.setMinimumFractionDigits(0);
+        formato.setMaximumFractionDigits(0);
+        BigDecimal seguro = valor == null ? BigDecimal.ZERO : valor;
+        return formato.format(seguro.setScale(0, RoundingMode.CEILING));
     }
 
     private BigDecimal cero() {

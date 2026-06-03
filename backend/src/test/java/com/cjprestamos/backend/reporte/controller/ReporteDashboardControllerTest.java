@@ -13,6 +13,7 @@ import com.cjprestamos.backend.config.SecurityConfig;
 import com.cjprestamos.backend.dashboard.dto.DashboardControlCajaResponse;
 import com.cjprestamos.backend.reporte.dto.ReporteDashboardData;
 import com.cjprestamos.backend.reporte.dto.ReporteDashboardData.ReporteCarteraRiesgo;
+import com.cjprestamos.backend.reporte.dto.ReporteDashboardData.ReporteCobrosEsperadosPeriodo;
 import com.cjprestamos.backend.reporte.dto.ReporteDashboardData.ReporteResumenEjecutivo;
 import com.cjprestamos.backend.reporte.service.ReporteDashboardPdfService;
 import com.cjprestamos.backend.reporte.service.ReporteDashboardService;
@@ -97,11 +98,24 @@ class ReporteDashboardControllerTest {
                 BigDecimal.ZERO,
                 BigDecimal.ZERO
             ),
+            cobrosEsperadosVacios(),
             snapshotCero(),
             new ReporteCarteraRiesgo(0L, 0L, BigDecimal.ZERO, 0L, 0L, List.of(), List.of()),
             List.of(),
             List.of(),
             List.of("Sin observaciones automáticas relevantes para el período.")
+        );
+    }
+
+    private ReporteCobrosEsperadosPeriodo cobrosEsperadosVacios() {
+        return new ReporteCobrosEsperadosPeriodo(
+            BigDecimal.ZERO,
+            BigDecimal.ZERO,
+            BigDecimal.ZERO,
+            0L,
+            0L,
+            0L,
+            List.of()
         );
     }
 
