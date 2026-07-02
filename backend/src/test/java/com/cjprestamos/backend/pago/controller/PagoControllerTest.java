@@ -59,7 +59,7 @@ class PagoControllerTest {
             }
             """;
 
-        mockMvc.perform(post("/api/pagos")
+        mockMvc.perform(post("/api/v1/pagos")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
             .andExpect(status().isCreated())
@@ -76,7 +76,7 @@ class PagoControllerTest {
             }
             """;
 
-        mockMvc.perform(post("/api/pagos")
+        mockMvc.perform(post("/api/v1/pagos")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
             .andExpect(status().isBadRequest());
@@ -99,7 +99,7 @@ class PagoControllerTest {
             )
         ));
 
-        mockMvc.perform(get("/api/prestamos/7/pagos"))
+        mockMvc.perform(get("/api/v1/prestamos/7/pagos"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$[0].monto").value(120.00));
     }

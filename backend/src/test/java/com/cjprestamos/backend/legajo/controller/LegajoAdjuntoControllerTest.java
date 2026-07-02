@@ -40,7 +40,7 @@ class LegajoAdjuntoControllerTest {
             new LegajoAdjuntoResponse(9L, 1L, "dni.pdf", "application/pdf", 123L, null)
         ));
 
-        mockMvc.perform(get("/api/personas/1/legajo/adjuntos"))
+        mockMvc.perform(get("/api/v1/personas/1/legajo/adjuntos"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$[0].id").value(9L))
             .andExpect(jsonPath("$[0].nombreOriginal").value("dni.pdf"));
@@ -52,7 +52,7 @@ class LegajoAdjuntoControllerTest {
         when(legajoAdjuntoService.subir(org.mockito.ArgumentMatchers.eq(1L), org.mockito.ArgumentMatchers.any()))
             .thenReturn(new LegajoAdjuntoResponse(3L, 1L, "recibo.pdf", "application/pdf", 100L, null));
 
-        mockMvc.perform(multipart("/api/personas/1/legajo/adjuntos")
+        mockMvc.perform(multipart("/api/v1/personas/1/legajo/adjuntos")
                 .file("archivo", "contenido".getBytes())
                 .contentType(MediaType.MULTIPART_FORM_DATA))
             .andExpect(status().isCreated())
@@ -66,7 +66,7 @@ class LegajoAdjuntoControllerTest {
             new LegajoAdjuntoDescarga("recibo.pdf", "application/pdf", new ByteArrayResource("hola".getBytes()))
         );
 
-        mockMvc.perform(get("/api/personas/1/legajo/adjuntos/3/descargar"))
+        mockMvc.perform(get("/api/v1/personas/1/legajo/adjuntos/3/descargar"))
             .andExpect(status().isOk())
             .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("recibo.pdf")));
     }
@@ -74,7 +74,7 @@ class LegajoAdjuntoControllerTest {
     @Test
     @WithMockUser(roles = "OPERADORA")
     void eliminar_deberiaRetornar204() throws Exception {
-        mockMvc.perform(delete("/api/personas/1/legajo/adjuntos/3"))
+        mockMvc.perform(delete("/api/v1/personas/1/legajo/adjuntos/3"))
             .andExpect(status().isNoContent());
     }
 }

@@ -55,7 +55,7 @@ class LegajoPersonaControllerTest {
             }
             """;
 
-        mockMvc.perform(post("/api/personas/1/legajo")
+        mockMvc.perform(post("/api/v1/personas/1/legajo")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
             .andExpect(status().isCreated())
@@ -68,7 +68,7 @@ class LegajoPersonaControllerTest {
         when(legajoPersonaService.obtenerPorPersonaId(5L))
             .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Legajo no encontrado para la persona"));
 
-        mockMvc.perform(get("/api/personas/5/legajo"))
+        mockMvc.perform(get("/api/v1/personas/5/legajo"))
             .andExpect(status().isNotFound());
     }
 
@@ -81,7 +81,7 @@ class LegajoPersonaControllerTest {
             }
             """.formatted("x".repeat(301));
 
-        mockMvc.perform(post("/api/personas/1/legajo")
+        mockMvc.perform(post("/api/v1/personas/1/legajo")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(bodyInvalido))
             .andExpect(status().isBadRequest());

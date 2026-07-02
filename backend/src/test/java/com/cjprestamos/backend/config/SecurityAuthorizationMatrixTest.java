@@ -56,7 +56,7 @@ class SecurityAuthorizationMatrixTest {
     @Test
     @WithMockUser(roles = "INTEGRATION")
     void integrationRoleCanReadLegacyBridge() throws Exception {
-        mockMvc.perform(get("/api/integration/hogaria/dashboard")).andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/integration/hogaria/dashboard")).andExpect(status().isOk());
     }
 
     @Test
@@ -68,55 +68,55 @@ class SecurityAuthorizationMatrixTest {
     @Test
     @WithMockUser(roles = "INTEGRATION")
     void integrationRoleCannotAccessPersonas() throws Exception {
-        mockMvc.perform(get("/api/personas")).andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/v1/personas")).andExpect(status().isForbidden());
     }
 
     @Test
     @WithMockUser(roles = "INTEGRATION")
     void integrationRoleCannotAccessPrestamos() throws Exception {
-        mockMvc.perform(get("/api/prestamos")).andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/v1/prestamos")).andExpect(status().isForbidden());
     }
 
     @Test
     @WithMockUser(roles = "INTEGRATION")
     void integrationRoleCannotAccessPagos() throws Exception {
-        mockMvc.perform(post("/api/pagos").contentType("application/json").content("{}")).andExpect(status().isForbidden());
+        mockMvc.perform(post("/api/v1/pagos").contentType("application/json").content("{}")).andExpect(status().isForbidden());
     }
 
     @Test
     @WithMockUser(roles = "INTEGRATION")
     void integrationRoleCannotAccessDashboard() throws Exception {
-        mockMvc.perform(get("/api/dashboard/resumen")).andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/v1/dashboard/resumen")).andExpect(status().isForbidden());
     }
 
     @Test
     @WithMockUser(roles = "INTEGRATION")
     void integrationRoleCannotAccessLegajoAdjuntos() throws Exception {
-        mockMvc.perform(get("/api/personas/1/legajo/adjuntos")).andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/v1/personas/1/legajo/adjuntos")).andExpect(status().isForbidden());
     }
 
     @Test
     @WithMockUser(roles = "INTEGRATION")
     void integrationRoleCannotPostToLegacyBridge() throws Exception {
-        mockMvc.perform(post("/api/integration/hogaria/dashboard")).andExpect(status().isForbidden());
+        mockMvc.perform(post("/api/v1/integration/hogaria/dashboard")).andExpect(status().isForbidden());
     }
 
     @Test
     @WithMockUser(roles = "INTEGRATION")
     void integrationRoleCannotPutToLegacyBridge() throws Exception {
-        mockMvc.perform(put("/api/integration/hogaria/dashboard")).andExpect(status().isForbidden());
+        mockMvc.perform(put("/api/v1/integration/hogaria/dashboard")).andExpect(status().isForbidden());
     }
 
     @Test
     @WithMockUser(roles = "INTEGRATION")
     void integrationRoleCannotPatchToLegacyBridge() throws Exception {
-        mockMvc.perform(patch("/api/integration/hogaria/dashboard")).andExpect(status().isForbidden());
+        mockMvc.perform(patch("/api/v1/integration/hogaria/dashboard")).andExpect(status().isForbidden());
     }
 
     @Test
     @WithMockUser(roles = "INTEGRATION")
     void integrationRoleCannotDeleteToLegacyBridge() throws Exception {
-        mockMvc.perform(delete("/api/integration/hogaria/dashboard")).andExpect(status().isForbidden());
+        mockMvc.perform(delete("/api/v1/integration/hogaria/dashboard")).andExpect(status().isForbidden());
     }
 
     @Test
@@ -128,30 +128,30 @@ class SecurityAuthorizationMatrixTest {
     @Test
     @WithMockUser(roles = "OPERADORA")
     void operadoraKeepsNormalAccess() throws Exception {
-        mockMvc.perform(get("/api/personas")).andExpect(status().isOk());
-        mockMvc.perform(get("/api/prestamos")).andExpect(status().isOk());
-        mockMvc.perform(get("/api/dashboard/resumen")).andExpect(status().isOk());
-        mockMvc.perform(get("/api/integration/hogaria/dashboard")).andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/personas")).andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/prestamos")).andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/dashboard/resumen")).andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/integration/hogaria/dashboard")).andExpect(status().isOk());
     }
 
     @Test
     @WithMockUser(roles = "ADMIN")
     void adminKeepsNormalAccess() throws Exception {
-        mockMvc.perform(get("/api/personas")).andExpect(status().isOk());
-        mockMvc.perform(get("/api/prestamos")).andExpect(status().isOk());
-        mockMvc.perform(get("/api/dashboard/resumen")).andExpect(status().isOk());
-        mockMvc.perform(get("/api/integration/hogaria/dashboard")).andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/personas")).andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/prestamos")).andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/dashboard/resumen")).andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/integration/hogaria/dashboard")).andExpect(status().isOk());
     }
 
     @Test
     void unauthenticatedBridgeReturns401() throws Exception {
-        mockMvc.perform(get("/api/integration/hogaria/dashboard")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/integration/hogaria/dashboard")).andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/v1/integration/hogaria/dashboard")).andExpect(status().isUnauthorized());
     }
 
     @Test
     void bridgeCredencialesInvalidasDevuelve401() throws Exception {
-        mockMvc.perform(get("/api/integration/hogaria/dashboard").with(httpBasic("bad", "creds")))
+        mockMvc.perform(get("/api/v1/integration/hogaria/dashboard").with(httpBasic("bad", "creds")))
             .andExpect(status().isUnauthorized());
     }
 }

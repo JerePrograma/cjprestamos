@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/prestamos/{prestamoId}/cuotas")
+@RequestMapping("/api/v1/prestamos/{prestamoId}/cuotas")
 public class CuotaController {
 
     private final CuotaService cuotaService;

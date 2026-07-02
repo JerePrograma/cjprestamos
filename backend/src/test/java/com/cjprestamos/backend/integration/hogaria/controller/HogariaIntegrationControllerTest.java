@@ -42,7 +42,7 @@ class HogariaIntegrationControllerTest {
 
         @Test
     void loansActivos_sinBasicAuth_deberiaResponder401() throws Exception {
-        mockMvc.perform(get("/api/integration/hogaria/loans/active"))
+        mockMvc.perform(get("/api/v1/integration/hogaria/loans/active"))
             .andExpect(status().isUnauthorized());
     }
 
@@ -50,7 +50,7 @@ class HogariaIntegrationControllerTest {
 
     @Test
     void health_sinBasicAuth_deberiaResponder401() throws Exception {
-        mockMvc.perform(get("/api/integration/hogaria/health"))
+        mockMvc.perform(get("/api/v1/integration/hogaria/health"))
             .andExpect(status().isUnauthorized());
     }
 
@@ -62,7 +62,7 @@ class HogariaIntegrationControllerTest {
 
     @Test
     void loansActivos_credencialesInvalidas_deberiaResponder401() throws Exception {
-        mockMvc.perform(get("/api/integration/hogaria/loans/active").with(httpBasic("bad", "creds")))
+        mockMvc.perform(get("/api/v1/integration/hogaria/loans/active").with(httpBasic("bad", "creds")))
             .andExpect(status().isUnauthorized());
     }
 
@@ -70,7 +70,7 @@ class HogariaIntegrationControllerTest {
     @Test
     @org.springframework.security.test.context.support.WithMockUser(roles = "INTEGRATION")
     void health_deberiaRetornarEstadoOk() throws Exception {
-        mockMvc.perform(get("/api/integration/hogaria/health"))
+        mockMvc.perform(get("/api/v1/integration/hogaria/health"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.status").value("OK"))
             .andExpect(jsonPath("$.detalle").isNotEmpty());
@@ -90,7 +90,7 @@ class HogariaIntegrationControllerTest {
             )
         ));
 
-        mockMvc.perform(get("/api/integration/hogaria/loans/active"))
+        mockMvc.perform(get("/api/v1/integration/hogaria/loans/active"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$").isArray())
             .andExpect(jsonPath("$[0].id").value(7))
@@ -119,7 +119,7 @@ class HogariaIntegrationControllerTest {
             )
         );
 
-        mockMvc.perform(get("/api/integration/hogaria/dashboard"))
+        mockMvc.perform(get("/api/v1/integration/hogaria/dashboard"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.montoInvertido").isNumber())
             .andExpect(jsonPath("$.montoGanado").isNumber())
@@ -143,7 +143,7 @@ class HogariaIntegrationControllerTest {
             )
         );
 
-        mockMvc.perform(get("/api/integration/hogaria/control-caja"))
+        mockMvc.perform(get("/api/v1/integration/hogaria/control-caja"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.cajaDisponible").isNumber())
             .andExpect(jsonPath("$.inversionActiva").isNumber())
@@ -164,7 +164,7 @@ class HogariaIntegrationControllerTest {
             )
         ));
 
-        mockMvc.perform(get("/api/integration/hogaria/loans/7/installments"))
+        mockMvc.perform(get("/api/v1/integration/hogaria/loans/7/installments"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$").isArray())
             .andExpect(jsonPath("$[0].saldoPendiente").value(100.00));
@@ -175,7 +175,7 @@ class HogariaIntegrationControllerTest {
     void listarCuotas_prestamoSinCuotas_deberiaRetornarListaVacia() throws Exception {
         when(hogariaIntegrationService.listarCuotasPorPrestamo(8L)).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/integration/hogaria/loans/8/installments"))
+        mockMvc.perform(get("/api/v1/integration/hogaria/loans/8/installments"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$").isArray())
             .andExpect(jsonPath("$").isEmpty());
@@ -186,7 +186,7 @@ class HogariaIntegrationControllerTest {
     void listarCuotas_prestamoInexistente_deberiaRetornarListaVacia() throws Exception {
         when(hogariaIntegrationService.listarCuotasPorPrestamo(999L)).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/integration/hogaria/loans/999/installments"))
+        mockMvc.perform(get("/api/v1/integration/hogaria/loans/999/installments"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$").isArray())
             .andExpect(jsonPath("$").isEmpty());
@@ -202,7 +202,7 @@ class HogariaIntegrationControllerTest {
             )
         ));
 
-        mockMvc.perform(get("/api/integration/hogaria/loans/7/payments"))
+        mockMvc.perform(get("/api/v1/integration/hogaria/loans/7/payments"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$[0].referenciaManual").value("TRX-1"))
             .andExpect(jsonPath("$[0].principalRecovered").value(300.00))
@@ -216,7 +216,7 @@ class HogariaIntegrationControllerTest {
     void listarPagos_prestamoSinPagos_deberiaRetornarListaVacia() throws Exception {
         when(hogariaIntegrationService.listarPagosPorPrestamo(8L)).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/integration/hogaria/loans/8/payments"))
+        mockMvc.perform(get("/api/v1/integration/hogaria/loans/8/payments"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$").isArray())
             .andExpect(jsonPath("$").isEmpty());
@@ -227,7 +227,7 @@ class HogariaIntegrationControllerTest {
     void listarPagos_prestamoInexistente_deberiaRetornarListaVacia() throws Exception {
         when(hogariaIntegrationService.listarPagosPorPrestamo(999L)).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/integration/hogaria/loans/999/payments"))
+        mockMvc.perform(get("/api/v1/integration/hogaria/loans/999/payments"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$").isArray())
             .andExpect(jsonPath("$").isEmpty());
@@ -284,7 +284,7 @@ class HogariaIntegrationControllerTest {
             )
         );
 
-        MvcResult legacy = mockMvc.perform(get("/api/integration/hogaria/dashboard"))
+        MvcResult legacy = mockMvc.perform(get("/api/v1/integration/hogaria/dashboard"))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -356,7 +356,7 @@ class HogariaIntegrationControllerTest {
             )
         );
 
-        mockMvc.perform(get("/api/integration/hogaria/dashboard")
+        mockMvc.perform(get("/api/v1/integration/hogaria/dashboard")
                 .header("X-Profile-Id", "profile-77")
                 .header("X-User-Id", "user-44"))
             .andExpect(status().isOk())

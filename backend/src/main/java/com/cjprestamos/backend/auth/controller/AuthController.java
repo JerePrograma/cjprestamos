@@ -8,17 +8,23 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/v1/auth")
 public class AuthController {
 
     @GetMapping("/me")
     public AuthMeResponse me(Authentication authentication) {
         String rol = authentication.getAuthorities().stream()
-            .map(GrantedAuthority::getAuthority)
-            .findFirst()
-            .orElse("ROLE_OPERADORA")
-            .replace("ROLE_", "");
+                .map(GrantedAuthority::getAuthority)
+                .filter(authority -> authority.startsWith("ROLE_"))
+                .map(authority -> authority.substring("ROLE_".length()))
+                .findFirst()
+                .orElseThrow(() ->
+                        new IllegalStateException("El usuario autenticado no tiene un rol asignado")
+                );
 
-        return new AuthMeResponse(authentication.getName(), rol);
+        return new AuthMeResponse(
+                authentication.getName(),
+                rol
+        );
     }
 }

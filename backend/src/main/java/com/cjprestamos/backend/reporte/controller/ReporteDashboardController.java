@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/reportes/dashboard")
+@RequestMapping("/api/v1/reportes/dashboard")
 public class ReporteDashboardController {
 
     private static final DateTimeFormatter NOMBRE_ARCHIVO_FECHA = DateTimeFormatter.ofPattern("yyyyMMdd");

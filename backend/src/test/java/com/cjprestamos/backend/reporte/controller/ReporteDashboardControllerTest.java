@@ -57,7 +57,7 @@ class ReporteDashboardControllerTest {
         when(reporteDashboardService.obtenerReporte(eq(desde), eq(hasta), eq("operadora"))).thenReturn(reporte);
         when(reporteDashboardPdfService.generarPdf(reporte)).thenReturn(pdf);
 
-        mockMvc.perform(get("/api/reportes/dashboard/pdf")
+        mockMvc.perform(get("/api/v1/reportes/dashboard/pdf")
                 .param("desde", "2026-05-01")
                 .param("hasta", "2026-05-31"))
             .andExpect(status().isOk())
@@ -75,7 +75,7 @@ class ReporteDashboardControllerTest {
         when(reporteDashboardService.obtenerReporte(eq(desde), eq(hasta), eq("operadora")))
             .thenThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST, "desde no puede ser posterior a hasta"));
 
-        mockMvc.perform(get("/api/reportes/dashboard/pdf")
+        mockMvc.perform(get("/api/v1/reportes/dashboard/pdf")
                 .param("desde", "2026-06-01")
                 .param("hasta", "2026-05-31"))
             .andExpect(status().isBadRequest())

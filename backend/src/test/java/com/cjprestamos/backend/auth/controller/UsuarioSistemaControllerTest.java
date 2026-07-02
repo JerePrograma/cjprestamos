@@ -34,7 +34,7 @@ class UsuarioSistemaControllerTest {
     void listar_devuelveUsuarios() throws Exception {
         when(usuarioService.listar()).thenReturn(List.of(new UsuarioResponse(1L, "operadora", "OPERADORA", true)));
 
-        mockMvc.perform(get("/api/usuarios"))
+        mockMvc.perform(get("/api/v1/usuarios"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$[0].username").value("operadora"));
     }
@@ -44,7 +44,7 @@ class UsuarioSistemaControllerTest {
     void crear_devuelveCreado() throws Exception {
         when(usuarioService.crear(any())).thenReturn(new UsuarioResponse(2L, "ana", "OPERADORA", true));
 
-        mockMvc.perform(post("/api/usuarios")
+        mockMvc.perform(post("/api/v1/usuarios")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                     {

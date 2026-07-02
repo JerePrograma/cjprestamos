@@ -41,7 +41,7 @@ class CuotaControllerTest {
             new CuotaResponse(1L, 1, LocalDate.of(2026, 4, 20), new BigDecimal("600.00"), BigDecimal.ZERO.setScale(2), EstadoCuota.PENDIENTE)
         ));
 
-        mockMvc.perform(post("/api/prestamos/1/cuotas/generar")
+        mockMvc.perform(post("/api/v1/prestamos/1/cuotas/generar")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}"))
             .andExpect(status().isCreated())
@@ -55,7 +55,7 @@ class CuotaControllerTest {
             new CuotaResponse(2L, 1, LocalDate.of(2026, 4, 10), new BigDecimal("400.00"), BigDecimal.ZERO.setScale(2), EstadoCuota.PENDIENTE)
         ));
 
-        mockMvc.perform(get("/api/prestamos/2/cuotas"))
+        mockMvc.perform(get("/api/v1/prestamos/2/cuotas"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$[0].estado").value("PENDIENTE"));
 
@@ -83,7 +83,7 @@ class CuotaControllerTest {
             }
             """;
 
-        mockMvc.perform(put("/api/prestamos/2/cuotas/ajustes-futuros")
+        mockMvc.perform(put("/api/v1/prestamos/2/cuotas/ajustes-futuros")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
             .andExpect(status().isOk())

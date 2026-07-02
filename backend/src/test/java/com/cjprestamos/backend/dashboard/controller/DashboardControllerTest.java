@@ -41,7 +41,7 @@ class DashboardControllerTest {
             )
         );
 
-        mockMvc.perform(get("/api/dashboard/resumen"))
+        mockMvc.perform(get("/api/v1/dashboard/resumen"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.montoInvertido").value(1500.00))
             .andExpect(jsonPath("$.montoGanado").value(50.00))
@@ -75,7 +75,7 @@ class DashboardControllerTest {
             )
         );
 
-        mockMvc.perform(get("/api/dashboard/control-caja"))
+        mockMvc.perform(get("/api/v1/dashboard/control-caja"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.cajaDisponible").value(1300.00))
             .andExpect(jsonPath("$.inversionActiva").value(1500.00))

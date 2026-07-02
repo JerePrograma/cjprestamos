@@ -77,7 +77,7 @@ class PrestamoControllerTest {
             }
             """;
 
-        mockMvc.perform(post("/api/prestamos")
+        mockMvc.perform(post("/api/v1/prestamos")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
             .andExpect(status().isCreated())
@@ -97,7 +97,7 @@ class PrestamoControllerTest {
             }
             """;
 
-        mockMvc.perform(post("/api/prestamos")
+        mockMvc.perform(post("/api/v1/prestamos")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
             .andExpect(status().isBadRequest());
@@ -125,7 +125,7 @@ class PrestamoControllerTest {
             }
             """;
 
-        mockMvc.perform(post("/api/prestamos/calcular")
+        mockMvc.perform(post("/api/v1/prestamos/calcular")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
             .andExpect(status().isOk())
@@ -163,7 +163,7 @@ class PrestamoControllerTest {
             }
             """;
 
-        mockMvc.perform(put("/api/prestamos/4/referencia")
+        mockMvc.perform(put("/api/v1/prestamos/4/referencia")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
             .andExpect(status().isOk())
@@ -194,7 +194,7 @@ class PrestamoControllerTest {
             )
         );
 
-        mockMvc.perform(get("/api/prestamos/5"))
+        mockMvc.perform(get("/api/v1/prestamos/5"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id").value(5L));
     }
@@ -207,7 +207,7 @@ class PrestamoControllerTest {
                 null, LocalDate.of(2026, 4, 21), false, null, null, EstadoPrestamo.ACTIVO, false, null, null)
         ));
 
-        mockMvc.perform(get("/api/prestamos"))
+        mockMvc.perform(get("/api/v1/prestamos"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$[0].id").value(1L));
     }
@@ -220,7 +220,7 @@ class PrestamoControllerTest {
                 7, LocalDate.of(2026, 4, 23), false, null, null, EstadoPrestamo.ACTIVO, false, null, null)
         ));
 
-        mockMvc.perform(get("/api/prestamos/activos"))
+        mockMvc.perform(get("/api/v1/prestamos/activos"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$[0].estado").value("ACTIVO"));
     }
@@ -228,7 +228,7 @@ class PrestamoControllerTest {
     @Test
     @WithMockUser(roles = "OPERADORA")
     void eliminar_deberiaRetornar204() throws Exception {
-        mockMvc.perform(delete("/api/prestamos/5"))
+        mockMvc.perform(delete("/api/v1/prestamos/5"))
             .andExpect(status().isNoContent());
 
         verify(prestamoService).eliminar(5L);

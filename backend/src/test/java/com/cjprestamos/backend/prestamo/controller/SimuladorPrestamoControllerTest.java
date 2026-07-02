@@ -59,7 +59,7 @@ class SimuladorPrestamoControllerTest {
             }
             """;
 
-        mockMvc.perform(post("/api/prestamos/simulador")
+        mockMvc.perform(post("/api/v1/prestamos/simulador")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
             .andExpect(status().isOk())
@@ -81,7 +81,7 @@ class SimuladorPrestamoControllerTest {
             }
             """;
 
-        mockMvc.perform(post("/api/prestamos/simulador/pdf")
+        mockMvc.perform(post("/api/v1/prestamos/simulador/pdf")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
             .andExpect(status().isOk())

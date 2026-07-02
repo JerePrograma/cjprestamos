@@ -21,7 +21,7 @@ class AuthControllerTest {
     @Test
     @WithMockUser(username = "operadora", roles = "OPERADORA")
     void me_devuelveUsuarioYRol() throws Exception {
-        mockMvc.perform(get("/api/auth/me"))
+        mockMvc.perform(get("/api/v1/auth/me"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.username").value("operadora"))
             .andExpect(jsonPath("$.rol").value("OPERADORA"));

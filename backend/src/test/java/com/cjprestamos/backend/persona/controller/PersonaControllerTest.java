@@ -51,7 +51,7 @@ class PersonaControllerTest {
             }
             """;
 
-        mockMvc.perform(post("/api/personas")
+        mockMvc.perform(post("/api/v1/personas")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
             .andExpect(status().isCreated())
@@ -66,7 +66,7 @@ class PersonaControllerTest {
             new PersonaResponse(1L, "Ana", "Ani", "123", null, null, true, false, true, null, null)
         ));
 
-        mockMvc.perform(get("/api/personas"))
+        mockMvc.perform(get("/api/v1/personas"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$[0].id").value(1L));
     }
@@ -78,7 +78,7 @@ class PersonaControllerTest {
             new PersonaResponse(2L, "Beto", null, null, null, null, false, false, false, null, null)
         ));
 
-        mockMvc.perform(get("/api/personas").param("estado", "bajas"))
+        mockMvc.perform(get("/api/v1/personas").param("estado", "bajas"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$[0].activo").value(false));
     }
@@ -90,7 +90,7 @@ class PersonaControllerTest {
             new PersonaResponse(1L, "Ana", "Ani", "123", null, null, true, false, true, null, null)
         );
 
-        mockMvc.perform(get("/api/personas/1"))
+        mockMvc.perform(get("/api/v1/personas/1"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id").value(1L));
     }
@@ -107,7 +107,7 @@ class PersonaControllerTest {
             }
             """;
 
-        mockMvc.perform(put("/api/personas/1")
+        mockMvc.perform(put("/api/v1/personas/1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(bodyInvalido))
             .andExpect(status().isBadRequest());
@@ -116,7 +116,7 @@ class PersonaControllerTest {
     @Test
     @WithMockUser(roles = "OPERADORA")
     void eliminar_deberiaRetornar204() throws Exception {
-        mockMvc.perform(delete("/api/personas/1"))
+        mockMvc.perform(delete("/api/v1/personas/1"))
             .andExpect(status().isNoContent());
 
         verify(personaService).eliminar(1L);

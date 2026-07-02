@@ -26,11 +26,11 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .cors(Customizer.withDefaults())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/health").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/integration/hogaria/**", "/api/v1/integration/hogaria/**").hasAnyRole("INTEGRATION", "OPERADORA", "ADMIN")
-                .requestMatchers("/api/integration/hogaria/**", "/api/v1/integration/hogaria/**").hasAnyRole("OPERADORA", "ADMIN")
-                .requestMatchers("/api/auth/me").authenticated()
-                .requestMatchers("/api/**").hasAnyRole("OPERADORA", "ADMIN")
+                .requestMatchers("/api/v1/health").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/integration/hogaria/**", "/api/v1/integration/hogaria/**").hasAnyRole("INTEGRATION", "OPERADORA", "ADMIN")
+                .requestMatchers("/api/v1/integration/hogaria/**", "/api/v1/integration/hogaria/**").hasAnyRole("OPERADORA", "ADMIN")
+                .requestMatchers("/api/v1/auth/me").authenticated()
+                .requestMatchers("/api/v1/**").hasAnyRole("OPERADORA", "ADMIN")
                 .anyRequest().authenticated()
             )
             .httpBasic(Customizer.withDefaults())
@@ -51,7 +51,7 @@ public class SecurityConfig {
         cors.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/api/**", cors);
+        source.registerCorsConfiguration("/api/v1/**", cors);
         return source;
     }
 }

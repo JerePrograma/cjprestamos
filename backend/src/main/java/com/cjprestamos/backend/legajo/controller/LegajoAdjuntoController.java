@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-@RequestMapping("/api/personas/{personaId}/legajo/adjuntos")
+@RequestMapping("/api/v1/personas/{personaId}/legajo/adjuntos")
 public class LegajoAdjuntoController {
 
     private final LegajoAdjuntoService legajoAdjuntoService;

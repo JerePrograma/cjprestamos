@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/personas/{personaId}/legajo")
+@RequestMapping("/api/v1/personas/{personaId}/legajo")
 public class LegajoPersonaController {
 
     private final LegajoPersonaService legajoPersonaService;

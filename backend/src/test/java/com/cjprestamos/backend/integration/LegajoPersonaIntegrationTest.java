@@ -27,14 +27,14 @@ class LegajoPersonaIntegrationTest extends IntegrationTestBase {
             }
             """;
 
-        mockMvc.perform(post("/api/personas")
+        mockMvc.perform(post("/api/v1/personas")
                 .with(authBasica())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(crearPersona))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.id").value(1));
 
-        mockMvc.perform(get("/api/personas/1/legajo")
+        mockMvc.perform(get("/api/v1/personas/1/legajo")
                 .with(authBasica()))
             .andExpect(status().isNotFound());
 
@@ -50,7 +50,7 @@ class LegajoPersonaIntegrationTest extends IntegrationTestBase {
             }
             """;
 
-        mockMvc.perform(post("/api/personas/1/legajo")
+        mockMvc.perform(post("/api/v1/personas/1/legajo")
                 .with(authBasica())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(crearLegajo))
@@ -58,7 +58,7 @@ class LegajoPersonaIntegrationTest extends IntegrationTestBase {
             .andExpect(jsonPath("$.personaId").value(1))
             .andExpect(jsonPath("$.direccion").value("Calle 123"));
 
-        mockMvc.perform(get("/api/personas/1/legajo")
+        mockMvc.perform(get("/api/v1/personas/1/legajo")
                 .with(authBasica()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.ocupacion").value("Comerciante"));
@@ -75,7 +75,7 @@ class LegajoPersonaIntegrationTest extends IntegrationTestBase {
             }
             """;
 
-        mockMvc.perform(put("/api/personas/1/legajo")
+        mockMvc.perform(put("/api/v1/personas/1/legajo")
                 .with(authBasica())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(actualizarLegajo))

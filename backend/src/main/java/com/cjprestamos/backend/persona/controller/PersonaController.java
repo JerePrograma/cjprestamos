@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/personas")
+@RequestMapping("/api/v1/personas")
 public class PersonaController {
 
     private final PersonaService personaService;

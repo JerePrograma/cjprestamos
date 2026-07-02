@@ -27,7 +27,7 @@ class PersonaIntegrationTest extends IntegrationTestBase {
             }
             """;
 
-        mockMvc.perform(post("/api/personas")
+        mockMvc.perform(post("/api/v1/personas")
                 .with(authBasica())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(request))
@@ -35,7 +35,7 @@ class PersonaIntegrationTest extends IntegrationTestBase {
             .andExpect(jsonPath("$.id").value(1))
             .andExpect(jsonPath("$.nombre").value("Ana Integracion"));
 
-        mockMvc.perform(get("/api/personas")
+        mockMvc.perform(get("/api/v1/personas")
                 .with(authBasica()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$[0].id").value(1))
@@ -71,44 +71,44 @@ class PersonaIntegrationTest extends IntegrationTestBase {
             }
             """;
 
-        mockMvc.perform(post("/api/personas")
+        mockMvc.perform(post("/api/v1/personas")
                 .with(authBasica())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(personaActiva))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.id").value(1));
 
-        mockMvc.perform(post("/api/personas")
+        mockMvc.perform(post("/api/v1/personas")
                 .with(authBasica())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(personaBaja))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.id").value(2));
 
-        mockMvc.perform(delete("/api/personas/2")
+        mockMvc.perform(delete("/api/v1/personas/2")
                 .with(authBasica()))
             .andExpect(status().isNoContent());
 
-        mockMvc.perform(get("/api/personas")
+        mockMvc.perform(get("/api/v1/personas")
                 .with(authBasica()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(1))
             .andExpect(jsonPath("$[0].nombre").value("Activa Integracion"));
 
-        mockMvc.perform(get("/api/personas")
+        mockMvc.perform(get("/api/v1/personas")
                 .param("estado", "bajas")
                 .with(authBasica()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(1))
             .andExpect(jsonPath("$[0].nombre").value("Baja Integracion"));
 
-        mockMvc.perform(get("/api/personas")
+        mockMvc.perform(get("/api/v1/personas")
                 .param("estado", "todas")
                 .with(authBasica()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(2));
 
-        mockMvc.perform(get("/api/personas/2")
+        mockMvc.perform(get("/api/v1/personas/2")
                 .with(authBasica()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.activo").value(false));

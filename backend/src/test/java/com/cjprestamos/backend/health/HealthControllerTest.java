@@ -20,7 +20,7 @@ class HealthControllerTest {
 
     @Test
     void devuelveStatusOk() throws Exception {
-        mockMvc.perform(get("/api/health"))
+        mockMvc.perform(get("/api/v1/health"))
             .andExpect(status().isOk())
             .andExpect(content().json("{\"status\":\"ok\"}"));
     }

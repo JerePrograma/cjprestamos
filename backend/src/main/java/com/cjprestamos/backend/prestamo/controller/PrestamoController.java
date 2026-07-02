@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/prestamos")
+@RequestMapping("/api/v1/prestamos")
 public class PrestamoController {
 
     private final PrestamoService prestamoService;

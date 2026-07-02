@@ -26,7 +26,7 @@ class FlujoPrestamoIntegrationTest extends IntegrationTestBase {
             }
             """;
 
-        mockMvc.perform(post("/api/personas")
+        mockMvc.perform(post("/api/v1/personas")
                 .with(authBasica())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(personaRequest))
@@ -50,7 +50,7 @@ class FlujoPrestamoIntegrationTest extends IntegrationTestBase {
             }
             """;
 
-        mockMvc.perform(post("/api/prestamos")
+        mockMvc.perform(post("/api/v1/prestamos")
                 .with(authBasica())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(prestamoRequest))
@@ -58,7 +58,7 @@ class FlujoPrestamoIntegrationTest extends IntegrationTestBase {
             .andExpect(jsonPath("$.id").value(1))
             .andExpect(jsonPath("$.personaId").value(1));
 
-        mockMvc.perform(post("/api/prestamos/1/cuotas/generar")
+        mockMvc.perform(post("/api/v1/prestamos/1/cuotas/generar")
                 .with(authBasica())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}"))
@@ -77,7 +77,7 @@ class FlujoPrestamoIntegrationTest extends IntegrationTestBase {
             }
             """;
 
-        mockMvc.perform(post("/api/pagos")
+        mockMvc.perform(post("/api/v1/pagos")
                 .with(authBasica())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(pagoRequest))
@@ -85,7 +85,7 @@ class FlujoPrestamoIntegrationTest extends IntegrationTestBase {
             .andExpect(jsonPath("$.prestamoId").value(1))
             .andExpect(jsonPath("$.monto").value(450.00));
 
-        mockMvc.perform(get("/api/prestamos/1/cuotas")
+        mockMvc.perform(get("/api/v1/prestamos/1/cuotas")
                 .with(authBasica()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$[0].estado").value("PAGADA"))
@@ -95,7 +95,7 @@ class FlujoPrestamoIntegrationTest extends IntegrationTestBase {
             .andExpect(jsonPath("$[2].estado").value("PENDIENTE"))
             .andExpect(jsonPath("$[2].montoPagado").value(0.00));
 
-        mockMvc.perform(get("/api/prestamos/1/pagos")
+        mockMvc.perform(get("/api/v1/prestamos/1/pagos")
                 .with(authBasica()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$[0].monto").value(450.00))
@@ -117,7 +117,7 @@ class FlujoPrestamoIntegrationTest extends IntegrationTestBase {
             }
             """;
 
-        mockMvc.perform(post("/api/personas")
+        mockMvc.perform(post("/api/v1/personas")
                 .with(authBasica())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(personaRequest))
@@ -141,7 +141,7 @@ class FlujoPrestamoIntegrationTest extends IntegrationTestBase {
             }
             """;
 
-        mockMvc.perform(post("/api/prestamos")
+        mockMvc.perform(post("/api/v1/prestamos")
                 .with(authBasica())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(prestamoRequest))
@@ -149,7 +149,7 @@ class FlujoPrestamoIntegrationTest extends IntegrationTestBase {
             .andExpect(jsonPath("$.id").value(1))
             .andExpect(jsonPath("$.eliminado").value(false));
 
-        mockMvc.perform(post("/api/prestamos/1/cuotas/generar")
+        mockMvc.perform(post("/api/v1/prestamos/1/cuotas/generar")
                 .with(authBasica())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}"))
@@ -166,43 +166,43 @@ class FlujoPrestamoIntegrationTest extends IntegrationTestBase {
             }
             """;
 
-        mockMvc.perform(post("/api/pagos")
+        mockMvc.perform(post("/api/v1/pagos")
                 .with(authBasica())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(pagoRequest))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.prestamoId").value(1));
 
-        mockMvc.perform(delete("/api/prestamos/1")
+        mockMvc.perform(delete("/api/v1/prestamos/1")
                 .with(authBasica()))
             .andExpect(status().isNoContent());
 
-        mockMvc.perform(get("/api/prestamos")
+        mockMvc.perform(get("/api/v1/prestamos")
                 .with(authBasica()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(0));
 
-        mockMvc.perform(get("/api/prestamos/activos")
+        mockMvc.perform(get("/api/v1/prestamos/activos")
                 .with(authBasica()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(0));
 
-        mockMvc.perform(get("/api/prestamos/1")
+        mockMvc.perform(get("/api/v1/prestamos/1")
                 .with(authBasica()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.eliminado").value(true));
 
-        mockMvc.perform(get("/api/prestamos/1/cuotas")
+        mockMvc.perform(get("/api/v1/prestamos/1/cuotas")
                 .with(authBasica()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(2));
 
-        mockMvc.perform(get("/api/prestamos/1/pagos")
+        mockMvc.perform(get("/api/v1/prestamos/1/pagos")
                 .with(authBasica()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$[0].monto").value(450.00));
 
-        mockMvc.perform(get("/api/dashboard/resumen")
+        mockMvc.perform(get("/api/v1/dashboard/resumen")
                 .with(authBasica()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.prestamosActivos").value(0));
