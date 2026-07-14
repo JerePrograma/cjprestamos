@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const baseURL = import.meta.env.VITE_API_BASE_URL ?? '/api';
+const baseURL = import.meta.env.VITE_API_BASE_URL ?? '/api/v1';
 
 let manejadorNoAutorizado: (() => void) | null = null;
 
@@ -15,7 +15,10 @@ type CredencialesOperadora = {
 };
 
 export function configurarSesionApi(credenciales: CredencialesOperadora) {
-  api.defaults.headers.common.Authorization = `Basic ${btoa(`${credenciales.usuario}:${credenciales.password}`)}`;
+  const valor = `${credenciales.usuario}:${credenciales.password}`;
+
+  api.defaults.headers.common.Authorization =
+    `Basic ${btoa(valor)}`;
 }
 
 export function limpiarSesionApi() {
